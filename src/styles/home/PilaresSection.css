@@ -1,0 +1,90 @@
+/* Sección principal */
+.pilares-section {
+  width: 100%;
+  max-width: 1300px;
+  margin: auto;
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+/* Subtítulo */
+.pilares-subtitle {
+  color: #6d6d6d;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Título */
+.pilares-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  color: #212121;
+  margin-bottom: 3rem;
+}
+
+/* Grid principal */
+.pilares-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .pilares-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Item */
+.pilar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.8rem;
+  border-radius: 1rem;
+  background: white;
+  border: 1px solid #e9e9e9;
+  transition: all 0.3s ease;
+}
+
+.pilar-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0px 18px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Icono */
+.pilar-icon {
+  height: 4rem;
+  width: 4rem;
+  border-radius: 50%;
+  background: rgba(214, 50, 0, 0.15);
+  color: #d63200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  transition: background 0.3s ease;
+}
+
+.pilar-item:hover .pilar-icon {
+  background: #d63200;
+  color: white;
+}
+
+/* Nombre del pilar */
+.pilar-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #212121;
+  margin-bottom: 0.5rem;
+}
+
+/* Descripción */
+.pilar-description {
+  color: #5d5d5d;
+  line-height: 1.6rem;
+  max-width: 320px;
+}

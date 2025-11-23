@@ -1,0 +1,87 @@
+.footer-container {
+  width: 100%;
+  padding: 3rem 0;
+  background-color: var(--footer-bg);
+  color: var(--footer-text);
+}
+
+.footer-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .footer-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Títulos de sección */
+.footer-title {
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Enlaces */
+.footer-link {
+  color: var(--footer-link);
+  font-size: 0.9rem;
+  transition: 0.2s ease;
+}
+
+.footer-link:hover {
+  color: var(--footer-link-hover);
+}
+
+/* Iconos */
+.social-icons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.social-icons a {
+  font-size: 1.5rem;
+  color: var(--footer-link);
+  transition: 0.2s ease;
+}
+
+.social-icons a:hover {
+  color: var(--footer-link-hover);
+}
+
+/* Línea final */
+.footer-bottom {
+  margin-top: 3rem;
+  text-align: center;
+  padding-top: 2rem;
+  border-top: 1px solid var(--footer-border);
+  font-size: 0.9rem;
+}
+
+/* Variables claras para dark/light mode */
+:root {
+  --footer-bg: #f3f4f6;
+  --footer-text: #212121;
+  --footer-link: #6b7280;
+  --footer-link-hover: #2563eb;
+  --footer-border: #d1d5db;
+}
+
+.dark {
+  --footer-bg: #111827;
+  --footer-text: #ffffff;
+  --footer-link: #9ca3af;
+  --footer-link-hover: #3b82f6;
+  --footer-border: #374151;
+}
+
