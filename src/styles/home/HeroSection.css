@@ -1,0 +1,103 @@
+/* Contenedor principal */
+.hero-section {
+  width: 100%;
+  position: relative;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Fondo */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: all 0.5s ease-in-out;
+}
+
+/* Oscurecedor */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.40);
+}
+
+/* Contenido */
+.hero-content {
+  position: relative;
+  z-index: 10;
+  color: white;
+  text-align: center;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Título */
+.hero-title {
+  font-weight: 900;               /* font-black */
+  letter-spacing: -0.04em;        /* tracking-tighter */
+  text-transform: uppercase;
+
+  font-size: 3rem;                /* text-5xl */
+  line-height: 1.1;
+
+  max-width: 48rem;               /* max-w-3xl */
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: 4.5rem;            /* md:text-7xl */
+  }
+}
+
+/* Descripción */
+.hero-description {
+  max-width: 35rem;
+  font-size: 1.125rem;
+  color: #e5e5e5;
+}
+
+@media (min-width: 768px) {
+  .hero-description {
+    font-size: 1.25rem;
+  }
+}
+
+/* Botón */
+.hero-button {
+  min-width: 84px;
+  max-width: 480px;
+  height: 3.5rem;
+  padding: 0 2rem;
+  border-radius: 9999px;
+  background: #d63200;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-button:hover {
+  opacity: 0.9;
+}

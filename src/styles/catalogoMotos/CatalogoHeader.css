@@ -1,0 +1,156 @@
+/* CONTENEDOR PRINCIPAL */
+.catalogo-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+/* TEXTOS */
+.catalogo-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.catalogo-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #111318;
+  letter-spacing: -0.03em;
+}
+
+.catalogo-subtitle {
+  font-size: 1rem;
+  color: #616f89;
+}
+
+/* ACCIONES: BUSCADOR + ORDENAR */
+.catalogo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .catalogo-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* BUSCADOR */
+.catalogo-search-box {
+  position: relative;
+  width: 100%;
+}
+
+.catalogo-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 1.3rem;
+}
+
+.catalogo-search-input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.8rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 1rem;
+  color: #111318;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.25s ease;
+}
+
+.catalogo-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.catalogo-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  outline: none;
+}
+
+/* ORDENAR */
+.catalogo-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.catalogo-sort-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.catalogo-sort-buttons {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 50px;
+}
+
+.catalogo-sort-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.catalogo-sort-btn:hover {
+  background: #f3f4f6;
+  color: #111318;
+}
+
+.catalogo-sort-btn.active {
+  background: #2563eb;
+  color: white;
+}
+
+/* MODO OSCURO */
+.dark .catalogo-title {
+  color: white;
+}
+
+.dark .catalogo-subtitle {
+  color: #a1a1aa;
+}
+
+.dark .catalogo-search-input {
+  background: #1f2937;
+  border-color: #374151;
+  color: white;
+}
+
+.dark .catalogo-sort-buttons {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .catalogo-sort-btn {
+  color: #9ca3af;
+}
+
+.dark .catalogo-sort-btn:hover {
+  background: #374151;
+  color: white;
+}
+
+.dark .catalogo-sort-btn.active {
+  background: #2563eb;
+  color: white;
+}

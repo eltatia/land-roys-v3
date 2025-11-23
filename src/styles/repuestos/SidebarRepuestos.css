@@ -1,0 +1,171 @@
+/* =========================================
+   CONTENEDOR PRINCIPAL (DESKTOP)
+   ========================================= */
+.sr-container {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sr-container {
+    display: block;
+    width: 18rem;
+    flex-shrink: 0;
+    border-right: 1px solid #e5e7eb;
+    background: #fafafa;
+
+    /* Mantener tamaño fijo y evitar crecimiento */
+    height: calc(100vh - 5rem); /* Ajusta si tu header mide distinto */
+    position: sticky;
+    top: 5rem;
+
+    /* Scroll interno elegante si el contenido es largo */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2rem 0 2.5rem;
+  }
+
+  /* Scrollbar suave */
+  .sr-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sr-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+  }
+
+  .sr-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* =========================================
+   CONTENIDO INTERNO
+   ========================================= */
+.sr-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 0 1.5rem;
+}
+
+/* =========================================
+   TÍTULO PRINCIPAL
+   ========================================= */
+.sr-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+/* =========================================
+   CATEGORÍAS
+   ========================================= */
+.sr-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sr-subtitle {
+  padding-left: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 0.2rem;
+}
+
+.sr-item {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  color: #475569;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.sr-item:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  transform: translateX(4px);
+}
+
+.sr-item.active {
+  background: #dbeafe;
+  font-weight: 600;
+  color: #1d4ed8;
+  border-left: 4px solid #1d4ed8;
+  padding-left: calc(0.9rem - 4px);
+}
+
+/* =========================================
+   PROMOCIONES
+   ========================================= */
+.sr-promo {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 1.25rem;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+}
+
+.sr-promo-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1e3a8a;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.sr-promo-icon {
+  color: #1e40af;
+  font-size: 1.3rem;
+}
+
+.sr-promo p {
+  font-size: 0.9rem;
+  color: #1e40af;
+  line-height: 1.35rem;
+}
+
+.strong {
+  font-weight: 800;
+  color: #1e40af;
+}
+
+/* =========================================
+   BOTÓN
+   ========================================= */
+.sr-button {
+  width: 100%;
+  padding: 0.7rem 0;
+  background: #1d4ed8;
+  color: white;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.25s ease;
+  border: none;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.15);
+}
+
+.sr-button:hover {
+  background: #1e3a8a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.3);
+}

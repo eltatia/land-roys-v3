@@ -1,0 +1,140 @@
+/* ================================
+   SCOPE: SOLO PARA REPUESTOS
+   ================================ */
+
+.repuestos-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding-bottom: 1rem;
+}
+
+/* ===== TEXTOS ===== */
+.rh-text-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rh-title {
+  font-size: 2.3rem;
+  font-weight: 900;
+  color: #111318;
+  letter-spacing: -0.03em;
+}
+
+.dark .rh-title {
+  color: #ffffff;
+}
+
+.rh-subtitle {
+  font-size: 1rem;
+  color: #616f89;
+}
+
+.dark .rh-subtitle {
+  color: #9ca3af;
+}
+
+/* ===== FILTROS ===== */
+.rh-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .rh-filters {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* ===== BUSCADOR ===== */
+.rh-search-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.rh-search-input {
+  width: 100%;
+  padding: 12px 16px 12px 46px;
+  border-radius: 50px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 1rem;
+  color: #111318;
+  transition: border-color .2s;
+}
+
+.rh-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.rh-search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.dark .rh-search-input {
+  background: #1f2937;
+  border-color: #374151;
+  color: white;
+}
+
+.dark .rh-search-input::placeholder {
+  color: #6b7280;
+}
+
+.rh-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  width: 20px;
+  height: 20px;
+}
+
+.dark .rh-search-icon {
+  color: #6b7280;
+}
+
+/* ===== ORDENAR ===== */
+.rh-order-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.rh-order-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.dark .rh-order-label {
+  color: #9ca3af;
+}
+
+.rh-order-select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111318;
+  font-size: 0.85rem;
+  transition: border-color .2s;
+}
+
+.rh-order-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.dark .rh-order-select {
+  background: #1f2937;
+  border-color: #374151;
+  color: white;
+}

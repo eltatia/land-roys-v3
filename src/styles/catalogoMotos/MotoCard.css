@@ -1,0 +1,114 @@
+/* CONTENEDOR PRINCIPAL */
+.moto-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: all 0.25s ease;
+}
+
+.moto-card:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+/* IMAGEN */
+.moto-card-img {
+  overflow: hidden;
+}
+
+.moto-card-img-bg {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.35s ease;
+}
+
+.moto-card:hover .moto-card-img-bg {
+  transform: scale(1.06);
+}
+
+/* TEXTO */
+.moto-card-info {
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.moto-card-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #111318;
+}
+
+.moto-card-desc {
+  font-size: 0.9rem;
+  color: #616f89;
+}
+
+/* PRECIO */
+.moto-card-price {
+  margin-top: 0.3rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+/* BOTÓN */
+.moto-card-btn-box {
+  padding: 0 1.2rem 1rem;
+  margin-top: auto;
+}
+
+.moto-card-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: #f3f4f6;
+  color: #111318;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.moto-card-btn:hover {
+  background: #e5e7eb;
+}
+
+/* DARK MODE */
+.dark .moto-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .moto-card-title {
+  color: white;
+}
+
+.dark .moto-card-desc {
+  color: #9ca3af;
+}
+
+.dark .moto-card-price {
+  color: #60a5fa;
+}
+
+.dark .moto-card-btn {
+  background: #374151;
+  color: white;
+}
+
+.dark .moto-card-btn:hover {
+  background: #4b5563;
+}

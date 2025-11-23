@@ -1,0 +1,73 @@
+/* CONTENEDOR PRINCIPAL */
+.trust-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2.5rem;
+  padding: 3.5rem 1.5rem;
+  background: #ffffff;
+}
+
+/* DESKTOP */
+@media (min-width: 768px) {
+  .trust-container {
+    flex-direction: row;
+    justify-content: center;  /* CENTRADO */
+    text-align: center;       /* CENTRADO */
+    gap: 6rem;                /* MÁS ESPACIO ENTRE BLOQUES */
+  }
+}
+
+/* CAJA DEL NÚMERO */
+.trust-number-box {
+  background: #ffffff;
+  padding: 1.6rem 2.4rem;
+  border-radius: 18px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center; /* ICONO + NÚMERO CENTRADOS */
+  gap: 1rem;
+}
+
+/* ICONO */
+.trust-icon {
+  font-size: 2.4rem;
+  color: #1a1a1a;
+  opacity: 0.85;
+}
+
+/* NÚMERO */
+.trust-number {
+  font-size: clamp(2.4rem, 4.5vw, 3.4rem);
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+/* TEXTOS */
+.trust-texts {
+  max-width: 512px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* CENTRADO */
+  gap: 0.5rem;
+}
+
+/* TÍTULO */
+.trust-title {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  font-weight: 800;
+  color: #0d0d0d;
+}
+
+/* SUBTÍTULO */
+.trust-subtitle {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b6b6b;
+  margin-top: 0.2rem;
+}
+

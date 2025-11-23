@@ -1,0 +1,107 @@
+/* Card contenedor */
+.repuesto-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.dark .repuesto-card {
+  background: #111827;
+  border-color: #1f2937;
+}
+
+/* Imagen */
+.repuesto-img-wrapper {
+  overflow: hidden;
+}
+
+.repuesto-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #f3f4f6;
+}
+
+.dark .repuesto-img {
+  background-color: #1f2937;
+}
+
+/* Contenido */
+.repuesto-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+}
+
+.repuesto-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111318;
+}
+
+.dark .repuesto-title {
+  color: white;
+}
+
+.repuesto-description {
+  font-size: 0.875rem;
+  color: #616f89;
+}
+
+.dark .repuesto-description {
+  color: #9ca3af;
+}
+
+.repuesto-price {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.dark .repuesto-price {
+  color: #60a5fa;
+}
+
+/* Botón */
+.repuesto-btn-wrapper {
+  padding: 0 16px 16px 16px;
+}
+
+.repuesto-btn {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px;
+  background: #2563eb;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.repuesto-btn:hover {
+  background: #1e40af;
+}
+
+.dark .repuesto-btn:hover {
+  background: #3b82f6;
+}
+
+.icon {
+  stroke-width: 2;
+}
