@@ -1,7 +1,7 @@
-import React from 'react'
 import { FiArrowRight} from "react-icons/fi"
+import { Link } from "react-router-dom";
 import "../../../styles/repuestos/RepuestoCard.css";
-const RepuestoCard = ({ title, description, price, image }) => {
+const RepuestoCard = ({ title, description, price, image, slug, item }) => {
   return (
     <div className="repuesto-card group">
 
@@ -19,10 +19,10 @@ const RepuestoCard = ({ title, description, price, image }) => {
       </div>
 
       <div className="repuesto-btn-wrapper">
-        <button className="repuesto-btn">
+        <Link className="repuesto-btn" to={`/repuestos/${slug}`} state={{ repuesto: item }}>
           <span className="truncate">Ver Detalles</span>
           <FiArrowRight size={18} className="icon" />
-        </button>
+        </Link>
       </div>
 
     </div>

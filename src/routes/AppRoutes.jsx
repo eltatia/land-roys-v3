@@ -6,7 +6,9 @@ import LayoutCatalogoMotos from "../layout/LayoutCatalogoMotos";
 import LayoutRepuestos from "../layout/LayoutRepuestos";
 
 import CatalogoMotos from "../pages/client/catalogoMotos/CatalogoMotos";
+import MotoDetail from "../pages/client/catalogoMotos/MotoDetail";
 import Repuestos from "../pages/client/repuestos/Repuestos";
+import RepuestoDetail from "../pages/client/repuestos/RepuestoDetail";
 import Nosotros from "../pages/nosotros/Nosotros";
 import Descuentos from "../pages/descuentos/Descuentos";
 
@@ -83,6 +85,9 @@ const AppRoutes = () => {
                 <Route path="/descuentos" element={<Descuentos />} />
                 <Route path="/contacto" element={<Contact />} />
             </Route>
+
+            <Route path="/motos/:slug" element={<MotoDetail />} />
+            <Route path="/repuestos/:slug" element={<RepuestoDetail />} />
 
             {/* Layout exclusivo con sidebar de catálogo */}
             <Route element={<LayoutCatalogoMotos />}>
