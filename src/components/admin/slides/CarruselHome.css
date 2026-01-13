@@ -1,0 +1,146 @@
+/* ------------------------------ */
+/* TITULO Y BOTÓN SUPERIOR */
+/* ------------------------------ */
+
+.title-admin {
+  color: var(--text-light);
+  font-size: 2.5rem;
+  font-weight: 900;
+}
+
+.dark .title-admin {
+  color: var(--text-dark);
+}
+
+.btn-add-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-add-slide:hover {
+  opacity: 0.9;
+}
+
+/* ------------------------------ */
+/* CARD DE SLIDE */
+/* ------------------------------ */
+
+.slide-card {
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid var(--subtle-light);
+  background: var(--background-light);
+}
+
+.dark .slide-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.slide-hidden {
+  opacity: 0.55;
+}
+
+/* ------------------------------ */
+/* IMAGEN DEL SLIDE */
+/* ------------------------------ */
+
+.slide-image {
+  width: 128px;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+}
+
+/* ------------------------------ */
+/* TEXTOS */
+/* ------------------------------ */
+
+.slide-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.dark .slide-title {
+  color: var(--text-dark);
+}
+
+.slide-description {
+  font-size: 0.85rem;
+  color: var(--subtle-text-light);
+}
+
+.dark .slide-description {
+  color: var(--subtle-text-dark);
+}
+
+/* ------------------------------ */
+/* BOTONES */
+/* ------------------------------ */
+
+.drag-btn {
+  color: var(--subtle-text-light);
+  cursor: grab;
+}
+
+.drag-btn:hover {
+  color: var(--text-light);
+}
+
+.toggle-btn.visible {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.toggle-btn.hidden {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-btn {
+  background: var(--subtle-light);
+  color: var(--text-light);
+}
+
+.edit-btn:hover {
+  background: rgba(0, 122, 255, 0.2);
+  color: var(--primary);
+}
+
+.delete-btn {
+  background: var(--subtle-light);
+  color: var(--text-light);
+}
+
+.delete-btn:hover {
+  background: rgba(255, 0, 0, 0.2);
+  color: #dc2626;
+}

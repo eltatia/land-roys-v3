@@ -6,12 +6,12 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   transition: all 0.25s ease;
 }
 
 .moto-card:hover {
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
@@ -56,7 +56,7 @@
   margin-top: 0.3rem;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #2563eb;
+  color: #D4AF37;
 }
 
 /* BOTÓN */
@@ -75,15 +75,15 @@
   border-radius: 10px;
   font-size: 0.9rem;
   font-weight: 700;
-  background: #f3f4f6;
-  color: #111318;
+  background: #000000;
+  color: #D4AF37;
   border: none;
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .moto-card-btn:hover {
-  background: #e5e7eb;
+  background: #333333;
 }
 
 /* DARK MODE */
@@ -101,12 +101,12 @@
 }
 
 .dark .moto-card-price {
-  color: #60a5fa;
+  color: #D4AF37;
 }
 
 .dark .moto-card-btn {
-  background: #374151;
-  color: white;
+  background: #000000;
+  color: #D4AF37;
 }
 
 .dark .moto-card-btn:hover {

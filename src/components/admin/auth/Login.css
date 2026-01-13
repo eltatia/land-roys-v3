@@ -1,0 +1,165 @@
+/* Wrapper general */
+.login-wrapper {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  padding: 24px;
+}
+
+/* Contenedor */
+.login-container {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Logo */
+.login-logo {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 40px;
+  font-weight: 900;
+  color: #000; /* negro */
+}
+
+.login-title-accent {
+  color: #f97316; /* naranja */
+}
+
+/* Card */
+.login-card {
+  width: 100%;
+  background: #fff;
+  padding: 40px;
+  border-radius: 18px;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Títulos */
+.login-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login-header-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111;
+}
+
+.login-header-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Texto adicional debajo del subtítulo */
+.login-header-text {
+  display: block;
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Link Register (color naranja) */
+.login-link {
+  margin-left: 6px;
+  color: #f97316; /* naranja */
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+  color: #ea6a10; /* naranja oscuro */
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Inputs */
+.login-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-label-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.login-input {
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  border-radius: 8px;
+  color: #111;
+  transition: all 0.2s ease;
+}
+
+.login-input::placeholder {
+  color: #a0a0a0;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25);
+}
+
+/* Forgot Password */
+.login-forgot {
+  margin-top: -8px;
+  text-align: right;
+}
+
+.login-forgot-link {
+  font-size: 13px;
+  color: #6b7280;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.login-forgot-link:hover {
+  color: #f97316;
+}
+
+/* Botón */
+.login-button {
+  height: 48px;
+  background: #f97316; /* naranja */
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 12px rgba(249, 115, 22, 0.3);
+}
+
+.login-button:hover {
+  background: #ea6a10;
+}
+
+.login-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
+}

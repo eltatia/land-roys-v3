@@ -6,7 +6,7 @@
   overflow: hidden;
   background: white;
   border: 1px solid #e5e5e5;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .dark .repuesto-card {
@@ -65,11 +65,11 @@
   padding-top: 8px;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #2563eb;
+  color: #D4AF37;
 }
 
 .dark .repuesto-price {
-  color: #60a5fa;
+  color: #D4AF37;
 }
 
 /* Botón */
@@ -81,8 +81,8 @@
   width: 100%;
   height: 40px;
   padding: 0 16px;
-  background: #2563eb;
-  color: white;
+  background: #000000;
+  color: #D4AF37;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 700;
@@ -95,11 +95,11 @@
 }
 
 .repuesto-btn:hover {
-  background: #1e40af;
+  background: #333333;
 }
 
 .dark .repuesto-btn:hover {
-  background: #3b82f6;
+  background: #333333;
 }
 
 .icon {

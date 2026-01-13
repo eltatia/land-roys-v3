@@ -1,0 +1,65 @@
+/* CARDS */
+.card-admin {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dark .card-admin {
+  background: #1f1f1f;
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* TEXTOS */
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.card-positive {
+  font-size: .9rem;
+  color: #16a34a;
+}
+
+.card-negative {
+  font-size: .9rem;
+  color: #dc2626;
+}
+
+/* CHARTS */
+.chart-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* TABLA */
+.th-admin {
+  padding: 10px;
+  font-size: .8rem;
+  text-transform: uppercase;
+}
+
+.td-admin {
+  padding: 14px;
+  font-size: .9rem;
+}
+
+.tr-admin:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.dark .tr-admin:hover {
+  background: rgba(255,255,255,0.08);
+}

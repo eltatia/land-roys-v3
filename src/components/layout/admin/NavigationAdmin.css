@@ -1,0 +1,120 @@
+/********************************************/
+/* NAVBAR GENERAL */
+/********************************************/
+.admin-navbar {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+
+    background: #ffffff; /* blanco principal */
+    border-bottom: 1px solid #e5e7eb;
+
+    color: #2d2d2d;
+
+    backdrop-filter: blur(8px);
+}
+
+/********************************************/
+/* IZQUIERDA */
+/********************************************/
+.admin-navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-logo-icon {
+    width: 28px;
+    height: 28px;
+    color: #f27f0d; /* naranja */
+}
+
+.admin-logo-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #1a1a1a;
+}
+
+/********************************************/
+/* DERECHA */
+/********************************************/
+.admin-navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+/********************************************/
+/* LINKS DE NAVEGACIÓN */
+/********************************************/
+.admin-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    font-size: 0.95rem;
+    font-weight: 500;
+
+    color: #444;
+
+    transition: 0.25s ease;
+}
+
+.admin-link span.material-symbols-outlined {
+    font-size: 20px;
+    translate: 0 1px;
+    color: #707070;
+}
+
+.admin-link:hover {
+    color: #f27f0d;
+}
+
+.admin-link:hover span.material-symbols-outlined {
+    color: #f27f0d;
+}
+
+/********************************************/
+/* BOTÓN DE SALIR (ROJO) */
+/********************************************/
+.admin-logout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+
+    color: #d62828; /* rojo profesional */
+    background: rgba(214, 40, 40, 0.08); /* rojo suave translúcido */
+    border: 1px solid rgba(214, 40, 40, 0.25);
+    border-radius: 8px;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+/* Hover elegante */
+.admin-logout:hover {
+    background: rgba(214, 40, 40, 0.18);
+    color: #b71c1c; /* rojo más profundo */
+    border-color: rgba(214, 40, 40, 0.45);
+    transform: translateY(-1px);
+}
+
+/* Click */
+.admin-logout:active {
+    transform: translateY(0);
+    background: rgba(214, 40, 40, 0.25);
+}
+
+.admin-logout span.material-symbols-outlined {
+    font-size: 20px;
+    translate: 0 1px;
+}
+
+

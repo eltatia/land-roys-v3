@@ -58,6 +58,16 @@
   gap: 12px;
 }
 
+.two-columns>div {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.two-columns label {
+  margin-bottom: 4px;
+}
+
 label {
   font-weight: 700;
   color: #0f172a;
@@ -75,8 +85,8 @@ textarea {
 input:focus,
 textarea:focus {
   outline: none;
-  border-color: #e60000;
-  box-shadow: 0 0 0 3px rgba(230, 0, 0, 0.15);
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
 textarea {
@@ -87,8 +97,8 @@ textarea {
   display: inline-flex;
   gap: 8px;
   align-items: center;
-  background: #e60000;
-  color: #fff;
+  background: #000000;
+  color: #D4AF37;
   border: none;
   padding: 12px 16px;
   border-radius: 10px;
@@ -98,7 +108,7 @@ textarea {
 }
 
 .form-submit:hover {
-  background: #c30000;
+  background: #333333;
   transform: translateY(-2px);
 }
 
@@ -113,46 +123,89 @@ textarea {
   gap: 12px;
 }
 
+/* Tarjeta principal */
 .aside-card {
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 18px;
-  background: linear-gradient(135deg, #fff, #f8fafc);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 22px;
+  background: #ffffff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s, box-shadow 0.25s;
 }
 
-.aside-card.secondary {
-  background: #0f172a;
-  color: #e5e7eb;
+.aside-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
 }
 
 .aside-card h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 10px;
 }
 
 .aside-card p {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: inherit;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  color: #475569;
+  margin-bottom: 14px;
 }
 
 .aside-card ul {
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   padding-left: 18px;
-  color: inherit;
+  color: #334155;
+}
+
+.aside-card ul li {
+  padding: 3px 0;
 }
 
 .aside-link {
-  display: inline-block;
-  color: #e60000;
-  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: #000000;
+  color: #D4AF37;
+  border-radius: 10px;
   font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.aside-link:hover {
+  background: #333333;
+  transform: translateY(-2px);
+}
+
+/* Tarjeta secundaria corregida */
+.aside-card.secondary {
+  border: 1px solid #1e293b;
+  border-radius: 20px;
+  padding: 22px;
+  background: #0f172a;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  color: #e2e8f0;
+}
+
+.aside-card.secondary h3 {
+  color: #f1f5f9;
+  margin-bottom: 10px;
+}
+
+.aside-card.secondary p {
+  color: #cbd5e1;
+  margin-bottom: 14px;
 }
 
 .aside-card.secondary .aside-link {
-  color: #f97316;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.aside-card.secondary .aside-link:hover {
+  background: #e2e8f0;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 900px) {

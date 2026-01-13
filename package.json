@@ -10,11 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
+    "@supabase/supabase-js": "^2.86.2",
     "@tailwindcss/vite": "^4.1.17",
+    "chart.js": "^4.5.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.9.6",
+    "sweetalert2": "^11.26.4",
     "tailwindcss": "^4.1.17"
   },
   "devDependencies": {

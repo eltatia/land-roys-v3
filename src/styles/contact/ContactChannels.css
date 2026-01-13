@@ -12,8 +12,8 @@
 
 .channels-badge {
   display: inline-block;
-  background: #f1f5ff;
-  color: #204ecf;
+  background: #fffbeb;
+  color: #b45309;
   padding: 6px 12px;
   border-radius: 999px;
   font-weight: 700;
@@ -55,8 +55,8 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: #fef2f2;
-  color: #e60000;
+  background: #000000;
+  color: #D4AF37;
   display: grid;
   place-items: center;
   font-size: 1.4rem;
@@ -82,12 +82,12 @@
 .channel-action {
   grid-column: 1 / -1;
   margin-top: 8px;
-  color: #e60000;
+  color: #D4AF37;
   text-decoration: none;
   font-weight: 700;
   transition: color 0.2s;
 }
 
 .channel-card:hover .channel-action {
-  color: #c30000;
+  color: #b5952f;
 }

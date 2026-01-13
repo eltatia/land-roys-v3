@@ -60,8 +60,8 @@
   height: 4rem;
   width: 4rem;
   border-radius: 50%;
-  background: rgba(214, 50, 0, 0.15);
-  color: #d63200;
+  background: rgba(212, 175, 55, 0.15);
+  color: #D4AF37;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,8 +70,8 @@
 }
 
 .pilar-item:hover .pilar-icon {
-  background: #d63200;
-  color: white;
+  background: #D4AF37;
+  color: black;
 }
 
 /* Nombre del pilar */

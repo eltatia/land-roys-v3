@@ -1,0 +1,149 @@
+:root {
+  --white: #ffffff;
+  --orange: #ff7b00;
+  --gray-border: #e5e5e5;
+  --gray-text: #4a4a4a;
+
+  --green: #22c55e;
+  --green-hover: #16a34a;
+
+  --red: #ef4444;
+  --red-hover: #dc2626;
+
+  --radius: 12px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* Overlay */
+.edit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  z-index: 999;
+}
+
+/* Modal */
+.edit-modal-card {
+  background: var(--white);
+  width: 100%;
+  max-width: 600px;
+  padding: 2rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* Title */
+.modal-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--gray-text);
+  margin-bottom: 1.2rem;
+}
+
+/* Inputs */
+.input-label {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.modal-input {
+  width: 100%;
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  margin-top: 0.4rem;
+  transition: 0.2s border, 0.2s box-shadow;
+}
+
+.modal-input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255,123,0,0.25);
+  outline: none;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* File upload box */
+.image-upload-box {
+  border: 2px dashed var(--orange);
+  background: #fff7f0;
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  margin-top: 0.6rem;
+  text-align: center;
+}
+
+.file-input {
+  margin-top: 0.6rem;
+}
+
+.text-orange {
+  color: var(--orange);
+}
+
+/* Switch */
+.switch-box {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 1rem 0;
+  font-weight: 600;
+}
+
+/* Buttons */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.6rem;
+  gap: 1rem;
+}
+
+.btn-save {
+  background: var(--green);
+  color: white;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-save:hover {
+  background: var(--green-hover);
+}
+
+.btn-cancel {
+  background: var(--red);
+  color: white;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-cancel:hover {
+  background: var(--red-hover);
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

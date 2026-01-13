@@ -70,18 +70,17 @@
 
 /* Variables claras para dark/light mode */
 :root {
-  --footer-bg: #f3f4f6;
-  --footer-text: #212121;
-  --footer-link: #6b7280;
-  --footer-link-hover: #2563eb;
-  --footer-border: #d1d5db;
+  --footer-bg: #f8f8f8;
+  --footer-text: #1a1a1a;
+  --footer-link: #666666;
+  --footer-link-hover: #D4AF37;
+  --footer-border: #e5e5e5;
 }
 
 .dark {
-  --footer-bg: #111827;
+  --footer-bg: #000000;
   --footer-text: #ffffff;
   --footer-link: #9ca3af;
-  --footer-link-hover: #3b82f6;
-  --footer-border: #374151;
+  --footer-link-hover: #D4AF37;
+  --footer-border: #333333;
 }
-

@@ -1,0 +1,58 @@
+.table-wrapper {
+  overflow: hidden;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.dark .table-wrapper {
+  background: #1f1f1f;
+  border-color: rgba(255,255,255,0.1);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-table thead {
+  background: #f9fafb;
+}
+
+.dark .admin-table thead {
+  background: rgba(255,255,255,0.05);
+}
+
+.admin-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.dark .admin-table th {
+  color: #ccc;
+}
+
+.admin-table td {
+  padding: 14px;
+  color: #444;
+}
+
+.dark .admin-table td {
+  color: #ddd;
+}
+
+.admin-table tr:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+.dark .admin-table tr:hover {
+  background: rgba(255,255,255,0.06);
+}

@@ -16,8 +16,8 @@
 
 .contact-hero__badge {
   align-self: flex-start;
-  background: #ffe8e6;
-  color: #c30000;
+  background: #fffbeb;
+  color: #b45309;
   padding: 6px 12px;
   border-radius: 999px;
   font-weight: 700;
@@ -54,14 +54,14 @@
 }
 
 .btn-primary {
-  background: #e60000;
-  color: #fff;
-  box-shadow: 0 10px 30px rgba(230, 0, 0, 0.25);
+  background: #000000;
+  color: #D4AF37;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  background: #c30000;
+  background: #333333;
 }
 
 .btn-outline {
@@ -71,8 +71,8 @@
 }
 
 .btn-outline:hover {
-  border-color: #c30000;
-  color: #c30000;
+  border-color: #D4AF37;
+  color: #D4AF37;
   transform: translateY(-2px);
 }
 
@@ -95,7 +95,7 @@
 }
 
 .highlight-icon {
-  color: #e60000;
+  color: #D4AF37;
   font-size: 1.4rem;
 }
 
@@ -140,17 +140,17 @@
 .panel-link {
   display: inline-flex;
   margin-top: 10px;
-  color: #fff;
+  color: #D4AF37;
   text-decoration: none;
   font-weight: 700;
   padding: 10px 14px;
-  background: #e60000;
+  background: #000000;
   border-radius: 10px;
   transition: background 0.2s, transform 0.2s;
 }
 
 .panel-link:hover {
-  background: #c30000;
+  background: #333333;
   transform: translateY(-2px);
 }
 
