@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import "../../../styles/repuestos/RepuestoDetail.css";
+import BrandLoader from "../../../components/ui/BrandLoader";
 
 const repuestosFallback = [
   {
@@ -61,9 +63,15 @@ const repuestosFallback = [
 const RepuestoDetail = () => {
   const { slug } = useParams();
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
   const repuestoFromState = location.state?.repuesto;
   const fallbackRepuesto = repuestosFallback.find((item) => item.slug === slug);
   const repuesto = fallbackRepuesto || repuestoFromState ? { ...fallbackRepuesto, ...repuestoFromState } : null;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 900);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!repuesto) {
     return (
@@ -93,6 +101,10 @@ const RepuestoDetail = () => {
       description: "Respaldo Land Roys y soporte técnico especializado.",
     },
   ];
+
+  if (isLoading) {
+    return <BrandLoader />;
+  }
 
   return (
     <div className="repuesto-detail-page bg-background-light dark:bg-background-dark text-white overflow-x-hidden">
@@ -157,13 +169,13 @@ const RepuestoDetail = () => {
             {repuesto.heroTitle} <span className="text-stroke-gold">{repuesto.heroHighlight}</span>
           </h1>
           <div className="flex flex-wrap justify-center gap-4">
-            <button className="min-w-[200px] h-14 bg-primary text-black font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 hover:scale-105 transition-transform group">
+            <button className="min-w-[200px] h-14 bg-primary text-black font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(244,192,37,0.4)] group">
               <span>Comprar ahora</span>
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
                 arrow_forward
               </span>
             </button>
-            <button className="min-w-[200px] h-14 border border-white/30 backdrop-blur-md text-white font-bold uppercase tracking-widest rounded-lg hover:bg-white/10 transition-colors">
+            <button className="min-w-[200px] h-14 border border-white/30 backdrop-blur-md text-white font-bold uppercase tracking-widest rounded-lg transition-all duration-300 hover:bg-white/10 hover:border-white/50">
               Ver disponibilidad
             </button>
           </div>
@@ -203,10 +215,10 @@ const RepuestoDetail = () => {
               </div>
             </div>
             <div className="flex flex-wrap gap-4 mt-4">
-              <button className="px-8 py-4 bg-primary text-black font-bold uppercase tracking-widest rounded-lg hover:shadow-[0_0_20px_rgba(244,192,37,0.4)] transition-all">
+              <button className="px-8 py-4 bg-primary text-black font-bold uppercase tracking-widest rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(244,192,37,0.4)] hover:-translate-y-0.5">
                 Añadir al carrito
               </button>
-              <button className="px-8 py-4 bg-white/10 text-white font-bold uppercase tracking-widest rounded-lg hover:bg-white/20 transition-all border border-white/10">
+              <button className="px-8 py-4 bg-white/10 text-white font-bold uppercase tracking-widest rounded-lg transition-all duration-300 hover:bg-white/20 hover:border-white/40 border border-white/10">
                 Ver compatibilidad
               </button>
             </div>
