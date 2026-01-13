@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../services/Supabase';
-import { uploadMotoImage } from '../../../services/motosService';
+import { uploadMotoImage, uploadMotoImages } from '../../../services/motosService';
 import { MdAdd, MdEdit, MdDelete, MdClose, MdImage, MdUploadFile } from 'react-icons/md';
 import Swal from 'sweetalert2';
 
@@ -13,12 +13,38 @@ const Modelos = () => {
     // Form States
     const [formData, setFormData] = useState({
         titulo: '',
+        slug: '',
         descripcion: '',
         precio: '',
+        priceSoles: '',
+        priceUsd: '',
+        power: '',
+        torque: '',
+        weight: '',
+        displacement: '',
+        engineType: '',
+        suspension: '',
+        brakes: '',
+        consumption: '',
+        autonomy: '',
+        heroTagline: '',
+        heroTitle: '',
+        heroHighlight: '',
+        heroDescription: '',
+        heroImage: '',
+        bikeImage: '',
+        performanceImage: '',
+        videoUrls: '',
+        marketingHighlights: '',
         active: true
     });
     const [file, setFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
+    const [heroFile, setHeroFile] = useState(null);
+    const [bikeFile, setBikeFile] = useState(null);
+    const [performanceFile, setPerformanceFile] = useState(null);
+    const [galleryFiles, setGalleryFiles] = useState([]);
+    const [galleryUrls, setGalleryUrls] = useState([]);
 
     useEffect(() => {
         fetchMotos();
@@ -56,27 +82,111 @@ const Modelos = () => {
         }
     };
 
+    const handleHeroFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            setHeroFile(selectedFile);
+            setFormData((prev) => ({ ...prev, heroImage: URL.createObjectURL(selectedFile) }));
+        }
+    };
+
+    const handleBikeFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            setBikeFile(selectedFile);
+            setFormData((prev) => ({ ...prev, bikeImage: URL.createObjectURL(selectedFile) }));
+        }
+    };
+
+    const handlePerformanceFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            setPerformanceFile(selectedFile);
+            setFormData((prev) => ({ ...prev, performanceImage: URL.createObjectURL(selectedFile) }));
+        }
+    };
+
+    const handleGalleryFilesChange = (e) => {
+        const selectedFiles = Array.from(e.target.files || []);
+        if (selectedFiles.length) {
+            setGalleryFiles(selectedFiles);
+            setGalleryUrls(selectedFiles.map((file) => URL.createObjectURL(file)));
+        }
+    };
+
     const openModal = (moto = null) => {
         if (moto) {
             setEditingId(moto.id);
             setFormData({
                 titulo: moto.titulo,
+                slug: moto.slug || '',
                 descripcion: moto.descripcion || '',
                 precio: moto.precio || '',
+                priceSoles: moto.price_soles || '',
+                priceUsd: moto.price_usd || '',
+                power: moto.power || '',
+                torque: moto.torque || '',
+                weight: moto.weight || '',
+                displacement: moto.displacement || moto.cilindrada || '',
+                engineType: moto.engine_type || '',
+                suspension: moto.suspension || '',
+                brakes: moto.brakes || '',
+                consumption: moto.consumption || '',
+                autonomy: moto.autonomy || '',
+                heroTagline: moto.hero_tagline || '',
+                heroTitle: moto.hero_title || '',
+                heroHighlight: moto.hero_highlight || '',
+                heroDescription: moto.hero_description || '',
+                heroImage: moto.hero_image || '',
+                bikeImage: moto.bike_image || '',
+                performanceImage: moto.performance_image || '',
+                videoUrls: Array.isArray(moto.video_urls) ? moto.video_urls.join('\n') : '',
+                marketingHighlights: Array.isArray(moto.marketing_highlights) ? moto.marketing_highlights.join('\n') : '',
                 active: moto.active
             });
             setPreviewUrl(moto.imagen || '');
             setFile(null);
+            setHeroFile(null);
+            setBikeFile(null);
+            setPerformanceFile(null);
+            setGalleryFiles([]);
+            setGalleryUrls(Array.isArray(moto.gallery_images) ? moto.gallery_images : []);
         } else {
             setEditingId(null);
             setFormData({
                 titulo: '',
+                slug: '',
                 descripcion: '',
                 precio: '',
+                priceSoles: '',
+                priceUsd: '',
+                power: '',
+                torque: '',
+                weight: '',
+                displacement: '',
+                engineType: '',
+                suspension: '',
+                brakes: '',
+                consumption: '',
+                autonomy: '',
+                heroTagline: '',
+                heroTitle: '',
+                heroHighlight: '',
+                heroDescription: '',
+                heroImage: '',
+                bikeImage: '',
+                performanceImage: '',
+                videoUrls: '',
+                marketingHighlights: '',
                 active: true
             });
             setPreviewUrl('');
             setFile(null);
+            setHeroFile(null);
+            setBikeFile(null);
+            setPerformanceFile(null);
+            setGalleryFiles([]);
+            setGalleryUrls([]);
         }
         setShowModal(true);
     };
@@ -85,6 +195,11 @@ const Modelos = () => {
         setShowModal(false);
         setEditingId(null);
         setFile(null);
+        setHeroFile(null);
+        setBikeFile(null);
+        setPerformanceFile(null);
+        setGalleryFiles([]);
+        setGalleryUrls([]);
         setPreviewUrl('');
     };
 
@@ -94,6 +209,10 @@ const Modelos = () => {
             Swal.showLoading();
 
             let imageUrl = previewUrl;
+            let heroImageUrl = formData.heroImage;
+            let bikeImageUrl = formData.bikeImage;
+            let performanceImageUrl = formData.performanceImage;
+            let galleryImageUrls = galleryUrls;
 
             // 1. Subir imagen si hay archivo nuevo
             if (file) {
@@ -104,11 +223,71 @@ const Modelos = () => {
                 imageUrl = data.url;
             }
 
+            if (heroFile) {
+                const { data, error } = await uploadMotoImage(heroFile);
+                if (error) {
+                    throw new Error("Error al subir la imagen hero.");
+                }
+                heroImageUrl = data.url;
+            }
+
+            if (bikeFile) {
+                const { data, error } = await uploadMotoImage(bikeFile);
+                if (error) {
+                    throw new Error("Error al subir la imagen de la moto.");
+                }
+                bikeImageUrl = data.url;
+            }
+
+            if (performanceFile) {
+                const { data, error } = await uploadMotoImage(performanceFile);
+                if (error) {
+                    throw new Error("Error al subir la imagen de performance.");
+                }
+                performanceImageUrl = data.url;
+            }
+
+            if (galleryFiles.length) {
+                const { data, error } = await uploadMotoImages(galleryFiles);
+                if (error) {
+                    throw new Error("Error al subir la galería de imágenes.");
+                }
+                galleryImageUrls = data.map((item) => item.url);
+            }
+
             const motoData = {
                 titulo: formData.titulo,
+                slug: formData.slug || formData.titulo.toLowerCase().replace(/\s+/g, "-"),
                 descripcion: formData.descripcion,
                 precio: formData.precio ? parseFloat(formData.precio) : null,
                 imagen: imageUrl, // Guardamos la URL (nueva o existente)
+                hero_tagline: formData.heroTagline,
+                hero_title: formData.heroTitle,
+                hero_highlight: formData.heroHighlight,
+                hero_description: formData.heroDescription,
+                price_soles: formData.priceSoles,
+                price_usd: formData.priceUsd,
+                power: formData.power,
+                torque: formData.torque,
+                weight: formData.weight,
+                displacement: formData.displacement,
+                engine_type: formData.engineType,
+                suspension: formData.suspension,
+                brakes: formData.brakes,
+                consumption: formData.consumption,
+                autonomy: formData.autonomy,
+                hero_image: heroImageUrl,
+                bike_image: bikeImageUrl,
+                performance_image: performanceImageUrl,
+                gallery_images: galleryImageUrls,
+                video_urls: formData.videoUrls
+                    .split("\n")
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+                marketing_highlights: formData.marketingHighlights
+                    .split("\n")
+                    .map((item) => item.trim())
+                    .filter(Boolean),
                 active: formData.active
             };
 
@@ -277,6 +456,18 @@ const Modelos = () => {
                             </div>
 
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+                                <input
+                                    type="text"
+                                    name="slug"
+                                    value={formData.slug}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                    placeholder="lr-scrambler-800"
+                                />
+                            </div>
+
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Precio</label>
                                 <input
                                     type="number"
@@ -286,6 +477,142 @@ const Modelos = () => {
                                     className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
                                     placeholder="0.00"
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Precio en soles</label>
+                                    <input
+                                        type="text"
+                                        name="priceSoles"
+                                        value={formData.priceSoles}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="S/ 68,900"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Precio en USD</label>
+                                    <input
+                                        type="text"
+                                        name="priceUsd"
+                                        value={formData.priceUsd}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="$ 18,900 USD"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Potencia</label>
+                                    <input
+                                        type="text"
+                                        name="power"
+                                        value={formData.power}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="84 HP"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Torque</label>
+                                    <input
+                                        type="text"
+                                        name="torque"
+                                        value={formData.torque}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="78 Nm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Peso</label>
+                                    <input
+                                        type="text"
+                                        name="weight"
+                                        value={formData.weight}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="198 kg"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Cilindrada</label>
+                                    <input
+                                        type="text"
+                                        name="displacement"
+                                        value={formData.displacement}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="798 cc"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de motor</label>
+                                    <input
+                                        type="text"
+                                        name="engineType"
+                                        value={formData.engineType}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="Bicilíndrico, 4 tiempos"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Suspensión</label>
+                                    <input
+                                        type="text"
+                                        name="suspension"
+                                        value={formData.suspension}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="Horquilla invertida"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Frenos</label>
+                                    <input
+                                        type="text"
+                                        name="brakes"
+                                        value={formData.brakes}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="ABS, doble disco"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Consumo</label>
+                                    <input
+                                        type="text"
+                                        name="consumption"
+                                        value={formData.consumption}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="4.8 L/100 km"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Autonomía</label>
+                                    <input
+                                        type="text"
+                                        name="autonomy"
+                                        value={formData.autonomy}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="350 km"
+                                    />
+                                </div>
                             </div>
 
                             {/* Upload de Imagen */}
@@ -322,6 +649,59 @@ const Modelos = () => {
                             </div>
 
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Imagen Hero</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleHeroFileChange}
+                                    className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700"
+                                />
+                                {formData.heroImage && (
+                                    <p className="text-xs text-gray-500 mt-1">Imagen hero cargada</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Imagen de Moto</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleBikeFileChange}
+                                    className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700"
+                                />
+                                {formData.bikeImage && (
+                                    <p className="text-xs text-gray-500 mt-1">Imagen de moto cargada</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Imagen Performance</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handlePerformanceFileChange}
+                                    className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700"
+                                />
+                                {formData.performanceImage && (
+                                    <p className="text-xs text-gray-500 mt-1">Imagen performance cargada</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Galería (múltiples imágenes)</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleGalleryFilesChange}
+                                    className="w-full rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700"
+                                />
+                                {galleryUrls.length > 0 && (
+                                    <p className="text-xs text-gray-500 mt-1">{galleryUrls.length} imágenes cargadas</p>
+                                )}
+                            </div>
+
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
                                 <textarea
                                     name="descripcion"
@@ -330,6 +710,79 @@ const Modelos = () => {
                                     rows="3"
                                     className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400 resize-none"
                                     placeholder="Breve descripción..."
+                                ></textarea>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Tagline</label>
+                                <input
+                                    type="text"
+                                    name="heroTagline"
+                                    value={formData.heroTagline}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                    placeholder="The Legend Returns"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Hero Title</label>
+                                    <input
+                                        type="text"
+                                        name="heroTitle"
+                                        value={formData.heroTitle}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="DOMINATE EVERY"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Hero Highlight</label>
+                                    <input
+                                        type="text"
+                                        name="heroHighlight"
+                                        value={formData.heroHighlight}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400"
+                                        placeholder="TERRAIN."
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Hero Description</label>
+                                <textarea
+                                    name="heroDescription"
+                                    value={formData.heroDescription}
+                                    onChange={handleInputChange}
+                                    rows="3"
+                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400 resize-none"
+                                    placeholder="Descripción principal del hero."
+                                ></textarea>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Highlights de marketing (uno por línea)</label>
+                                <textarea
+                                    name="marketingHighlights"
+                                    value={formData.marketingHighlights}
+                                    onChange={handleInputChange}
+                                    rows="3"
+                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400 resize-none"
+                                    placeholder="Tecnología Adventure\nControl total en ruta\nDiseño premium"
+                                ></textarea>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Videos (uno por línea)</label>
+                                <textarea
+                                    name="videoUrls"
+                                    value={formData.videoUrls}
+                                    onChange={handleInputChange}
+                                    rows="3"
+                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-gray-900 placeholder-gray-400 resize-none"
+                                    placeholder="https://youtu.be/..."
                                 ></textarea>
                             </div>
 

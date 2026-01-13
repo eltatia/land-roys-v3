@@ -33,6 +33,18 @@
   gap: 2rem;
 }
 
+.models-loader {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.models-empty {
+  text-align: center;
+  color: #6b6b6b;
+  font-weight: 600;
+}
+
 @media (min-width: 768px) {
   .models-grid {
     grid-template-columns: repeat(2, 1fr);
