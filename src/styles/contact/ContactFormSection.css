@@ -118,6 +118,16 @@ textarea {
   font-weight: 700;
 }
 
+.form-status.is-error {
+  color: #dc2626;
+}
+
+.form-error {
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .form-aside {
   display: grid;
   gap: 12px;

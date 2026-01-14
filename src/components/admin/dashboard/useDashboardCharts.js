@@ -10,7 +10,8 @@ export default function useDashboardCharts(refs) {
       consultasPendientesRef,
       ventasMesRef,
       salesChartRef,
-      modelPopularityRef
+      modelPopularityRef,
+      charts: chartData,
     } = refs;
 
     // Validación
@@ -38,16 +39,20 @@ export default function useDashboardCharts(refs) {
       elements: { point: { radius: 0 } },
     };
 
-    const charts = [];
+    const instances = [];
+
+    const labels = chartData?.labels?.length ? chartData.labels : ["Ene", "Feb", "Mar", "Abr", "May", "Jun"];
+    const ventasData = chartData?.ventas?.length ? chartData.ventas : [0, 0, 0, 0, 0, 0];
+    const pedidosData = chartData?.pedidos?.length ? chartData.pedidos : [0, 0, 0, 0, 0, 0];
 
     // Mini chart – pedidos
-    charts.push(
+    instances.push(
       new Chart(totalPedidosRef.current, {
         type: "line",
         data: {
-          labels: ["1","2","3","4","5","6","7"],
+          labels,
           datasets: [{
-            data: [65, 59, 80, 81, 56, 55, 90],
+            data: pedidosData,
             borderColor: "#f27f0d",
             backgroundColor: "rgba(242,127,13,0.1)",
             fill: true,
@@ -59,13 +64,13 @@ export default function useDashboardCharts(refs) {
     );
 
     // Mini chart – nuevos usuarios
-    charts.push(
+    instances.push(
       new Chart(nuevosUsuariosRef.current, {
         type: "bar",
         data: {
-          labels: ["1","2","3","4","5","6","7"],
+          labels,
           datasets: [{
-            data: [20, 30, 45, 40, 50, 65, 88],
+            data: pedidosData.map((value) => Math.max(1, Math.round(value / 2))),
             backgroundColor: isDarkMode ? "#ffe5cf" : "#f27f0d",
             borderRadius: 4,
           }],
@@ -75,13 +80,13 @@ export default function useDashboardCharts(refs) {
     );
 
     // Mini chart – consultas pendientes
-    charts.push(
+    instances.push(
       new Chart(consultasPendientesRef.current, {
         type: "line",
         data: {
-          labels: ["1","2","3","4","5","6","7"],
+          labels,
           datasets: [{
-            data: [15, 18, 14, 16, 13, 11, 12],
+            data: ventasData.map((value) => Math.max(0, Math.round(value / 500))),
             borderColor: isDarkMode ? "#fff" : "#4b5563",
             tension: 0.4,
           }],
@@ -91,13 +96,13 @@ export default function useDashboardCharts(refs) {
     );
 
     // Mini chart – ventas
-    charts.push(
+    instances.push(
       new Chart(ventasMesRef.current, {
         type: "line",
         data: {
-          labels: ["1","2","3","4","5","6","7"],
+          labels,
           datasets: [{
-            data: [10000,15000,12000,25000,30000,38000,45678],
+            data: ventasData,
             borderColor: "#f27f0d",
             backgroundColor: "rgba(242,127,13,0.1)",
             fill: true,
@@ -109,14 +114,14 @@ export default function useDashboardCharts(refs) {
     );
 
     // Main chart – sales
-    charts.push(
+    instances.push(
       new Chart(salesChartRef.current, {
         type: "line",
         data: {
-          labels: ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
+          labels,
           datasets: [{
             label: "Ventas ($)",
-            data: [22000,25000,31000,35000,32000,38000,41000,45678,43000,47000,51000,55000],
+            data: ventasData,
             borderColor: "#f27f0d",
             backgroundColor: "rgba(242,127,13,0.1)",
             fill: true,
@@ -134,13 +139,13 @@ export default function useDashboardCharts(refs) {
     );
 
     // Doughnut chart
-    charts.push(
+    instances.push(
       new Chart(modelPopularityRef.current, {
         type: "doughnut",
         data: {
-          labels: ["Scrambler 400X", "Adventure Pro", "Urban Classic", "Café Racer"],
+          labels,
           datasets: [{
-            data: [300,150,220,180],
+            data: pedidosData.length ? pedidosData : [0, 0, 0, 0],
             backgroundColor: ["#f27f0d", "#f9a14a", "#fcc28c", "#ffe5cf"],
           }],
         },
@@ -155,6 +160,6 @@ export default function useDashboardCharts(refs) {
       })
     );
 
-    return () => charts.forEach((chart) => chart.destroy());
-  }, []);
+    return () => instances.forEach((chart) => chart.destroy());
+  }, [chartData]);
 }

@@ -1,5 +1,22 @@
 import { supabase } from "./Supabase";
 
+/* OBTENER MOTOS */
+export async function fetchMotos() {
+    return await supabase
+        .from("motos")
+        .select("*")
+        .eq("active", true)
+        .order("created_at", { ascending: false });
+}
+
+export async function fetchMotoBySlug(slug) {
+    return await supabase
+        .from("motos")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+}
+
 /* SUBIR IMAGEN */
 export async function uploadMotoImage(file) {
     const uuid = crypto.randomUUID();
@@ -24,6 +41,20 @@ export async function uploadMotoImage(file) {
             path: fileName,
             url: data.publicUrl,
         },
+        error: null,
+    };
+}
+
+/* SUBIR MULTIPLES IMAGENES */
+export async function uploadMotoImages(files) {
+    const uploads = await Promise.all(files.map((file) => uploadMotoImage(file)));
+    const errors = uploads.filter((result) => result.error);
+    if (errors.length) {
+        return { error: errors[0].error, data: null };
+    }
+
+    return {
+        data: uploads.map((result) => result.data),
         error: null,
     };
 }

@@ -1,8 +1,9 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import useDashboardCharts from "./useDashboardCharts";
 import CardAdmin from "./CardAdmin";
 import "./Dashboard.css";
 import ConsultasTable from "./ConsultasTable";
+import { fetchDashboardMetrics } from "../../../services/dashboardService";
 
 export default function Dashboard() {
   // Referencias
@@ -13,6 +14,38 @@ export default function Dashboard() {
   const salesChartRef = useRef(null);
   const modelPopularityRef = useRef(null);
 
+  const [metrics, setMetrics] = useState({
+    totals: {
+      totalPedidos: 0,
+      nuevosUsuarios: 0,
+      consultasPendientes: 0,
+      ventasMes: 0,
+      totalConsultas: 0,
+    },
+    charts: {
+      labels: [],
+      ventas: [],
+      pedidos: [],
+    },
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMetrics = async () => {
+      try {
+        const data = await fetchDashboardMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error("Error loading dashboard metrics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMetrics();
+  }, []);
+
   // Hook separado
   useDashboardCharts({
     totalPedidosRef,
@@ -21,6 +54,7 @@ export default function Dashboard() {
     ventasMesRef,
     salesChartRef,
     modelPopularityRef,
+    charts: metrics.charts,
   });
 
   return (
@@ -42,8 +76,8 @@ export default function Dashboard() {
 
           <CardAdmin
             title="Total Pedidos"
-            value="1,234"
-            change="+2.5% vs. mes anterior"
+            value={metrics.totals.totalPedidos.toLocaleString("es-PE")}
+            change={loading ? "Cargando métricas..." : "Actualizado en tiempo real"}
             positive
           >
             <canvas ref={totalPedidosRef}></canvas>
@@ -51,8 +85,8 @@ export default function Dashboard() {
 
           <CardAdmin
             title="Nuevos Usuarios"
-            value="88"
-            change="+5.1% vs. mes anterior"
+            value={metrics.totals.nuevosUsuarios.toLocaleString("es-PE")}
+            change={loading ? "Cargando métricas..." : "Usuarios registrados"}
             positive
           >
             <canvas ref={nuevosUsuariosRef}></canvas>
@@ -60,8 +94,8 @@ export default function Dashboard() {
 
           <CardAdmin
             title="Consultas Pendientes"
-            value="12"
-            change="-1.2% vs. mes anterior"
+            value={metrics.totals.consultasPendientes.toLocaleString("es-PE")}
+            change={loading ? "Cargando métricas..." : `${metrics.totals.totalConsultas} consultas totales`}
             positive={false}
           >
             <canvas ref={consultasPendientesRef}></canvas>
@@ -69,8 +103,8 @@ export default function Dashboard() {
 
           <CardAdmin
             title="Ventas del Mes"
-            value="$45,678"
-            change="+15% vs. mes anterior"
+            value={`S/ ${metrics.totals.ventasMes.toLocaleString("es-PE")}`}
+            change={loading ? "Cargando métricas..." : "Basado en pedidos registrados"}
             positive
           >
             <canvas ref={ventasMesRef}></canvas>
