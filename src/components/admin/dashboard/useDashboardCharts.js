@@ -2,17 +2,16 @@
 import { useEffect } from "react";
 import Chart from "chart.js/auto";
 
-export default function useDashboardCharts(refs) {
+export default function useDashboardCharts({
+  totalPedidosRef,
+  nuevosUsuariosRef,
+  consultasPendientesRef,
+  ventasMesRef,
+  salesChartRef,
+  modelPopularityRef,
+  charts: chartData,
+}) {
   useEffect(() => {
-    const {
-      totalPedidosRef,
-      nuevosUsuariosRef,
-      consultasPendientesRef,
-      ventasMesRef,
-      salesChartRef,
-      modelPopularityRef,
-      charts: chartData,
-    } = refs;
 
     // Validación
     if (
@@ -161,5 +160,13 @@ export default function useDashboardCharts(refs) {
     );
 
     return () => instances.forEach((chart) => chart.destroy());
-  }, [chartData]);
+  }, [
+    chartData,
+    totalPedidosRef,
+    nuevosUsuariosRef,
+    consultasPendientesRef,
+    ventasMesRef,
+    salesChartRef,
+    modelPopularityRef,
+  ]);
 }
