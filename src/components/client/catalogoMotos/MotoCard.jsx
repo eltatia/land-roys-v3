@@ -1,8 +1,8 @@
-import React from "react";
 import { FiArrowRight } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import "../../../styles/catalogoMotos/MotoCard.css";
 
-const MotoCard = ({ imagen, titulo, descripcion, precio }) => {
+const MotoCard = ({ imagen, titulo, descripcion, precio, slug, moto }) => {
   return (
     <div className="moto-card">
 
@@ -25,13 +25,12 @@ const MotoCard = ({ imagen, titulo, descripcion, precio }) => {
 
       {/* Botón */}
       <div className="moto-card-btn-box">
-        <button className="moto-card-btn">
+        <Link className="moto-card-btn" to={`/motos/${slug}`} state={{ moto }}>
           Ver Detalles <FiArrowRight size={18} />
-        </button>
+        </Link>
       </div>
     </div>
   );
 };
 
 export default MotoCard;
-

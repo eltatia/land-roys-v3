@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { HiPaperAirplane } from "react-icons/hi";
+import { supabase } from "../../services/Supabase";
 import "../../styles/contact/ContactFormSection.css";
 
 const initialState = {
@@ -13,16 +14,56 @@ const initialState = {
 const ContactFormSection = () => {
   const [formData, setFormData] = useState(initialState);
   const [status, setStatus] = useState("");
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSubmit = (event) => {
+  const validateForm = () => {
+    const nextErrors = {};
+    if (!formData.nombre.trim()) nextErrors.nombre = "El nombre es obligatorio.";
+    if (!formData.email.trim()) {
+      nextErrors.email = "El correo es obligatorio.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      nextErrors.email = "Ingresa un correo válido.";
+    }
+    if (!formData.telefono.trim()) nextErrors.telefono = "El teléfono es obligatorio.";
+    if (!formData.asunto.trim()) nextErrors.asunto = "El asunto es obligatorio.";
+    if (!formData.mensaje.trim()) nextErrors.mensaje = "El mensaje es obligatorio.";
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setStatus("Recibimos tus datos. Un asesor se comunicará pronto.");
-    setFormData(initialState);
+    setStatus("");
+    if (!validateForm()) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("consultas").insert({
+        nombre: formData.nombre,
+        email: formData.email,
+        telefono: formData.telefono,
+        asunto: formData.asunto,
+        mensaje: formData.mensaje,
+      });
+
+      if (error) throw error;
+
+      setStatus("Recibimos tus datos. Un asesor se comunicará pronto.");
+      setFormData(initialState);
+    } catch (error) {
+      console.error("Error sending consulta:", error);
+      setStatus("No pudimos enviar tu consulta. Intenta nuevamente.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -46,6 +87,7 @@ const ContactFormSection = () => {
               placeholder="Ingresa tu nombre"
               required
             />
+            {errors.nombre && <span className="form-error">{errors.nombre}</span>}
           </div>
 
           <div className="form-row two-columns">
@@ -60,6 +102,7 @@ const ContactFormSection = () => {
                 placeholder="contacto@correo.com"
                 required
               />
+              {errors.email && <span className="form-error">{errors.email}</span>}
             </div>
             <div>
               <label htmlFor="telefono">Teléfono</label>
@@ -72,6 +115,7 @@ const ContactFormSection = () => {
                 placeholder="+51 999 888 777"
                 required
               />
+              {errors.telefono && <span className="form-error">{errors.telefono}</span>}
             </div>
           </div>
 
@@ -86,6 +130,7 @@ const ContactFormSection = () => {
               placeholder="Cotización, financiamiento, repuestos..."
               required
             />
+            {errors.asunto && <span className="form-error">{errors.asunto}</span>}
           </div>
 
           <div className="form-row">
@@ -99,13 +144,16 @@ const ContactFormSection = () => {
               placeholder="Cuéntanos más detalles sobre lo que buscas"
               required
             />
+            {errors.mensaje && <span className="form-error">{errors.mensaje}</span>}
           </div>
 
-          <button className="form-submit" type="submit">
-            <HiPaperAirplane /> Enviar mensaje
+          <button className="form-submit" type="submit" disabled={submitting}>
+            <HiPaperAirplane /> {submitting ? "Enviando..." : "Enviar mensaje"}
           </button>
 
-          {status && <p className="form-status">{status}</p>}
+          {status && (
+            <p className={`form-status ${status.startsWith("No") ? "is-error" : ""}`}>{status}</p>
+          )}
         </form>
 
         <div className="form-aside">

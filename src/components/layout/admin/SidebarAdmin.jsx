@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../../services/Supabase";
 import "./SidebarAdmin.css";
 
-import { MdDashboard, MdPeople, MdShoppingCart, MdBarChart, MdSlideshow } from "react-icons/md";
+import { MdDashboard, MdPeople, MdShoppingCart, MdBarChart, MdSlideshow, MdBuild } from "react-icons/md";
 import { FaMotorcycle } from "react-icons/fa";
 
 export default function SidebarAdmin() {
@@ -68,6 +68,14 @@ export default function SidebarAdmin() {
           </Link>
 
           <Link
+            to="/admin/repuestos"
+            className={`admin-sidebar-link ${isActive("/admin/repuestos") ? "active" : ""}`}
+          >
+            <MdBuild size={20} className="admin-icon" />
+            <p>Gestión de Repuestos</p>
+          </Link>
+
+          <Link
             to="/admin/pedidos"
             className={`admin-sidebar-link ${isActive("/admin/pedidos") ? "active" : ""}`}
           >
@@ -101,4 +109,3 @@ export default function SidebarAdmin() {
     </aside>
   );
 }
-
