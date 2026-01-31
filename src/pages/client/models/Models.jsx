@@ -23,14 +23,9 @@ const Models = () => {
         fetchMotos();
     }, []);
 
-    const brandFilters = useMemo(() => {
-        const brands = new Set(motos.map((moto) => moto.marca).filter(Boolean));
-        return ['all', ...Array.from(brands)];
-    }, [motos]);
-
     const filteredBikes = filter === 'all'
         ? motos
-        : motos.filter(moto => moto.marca?.toLowerCase() === filter.toLowerCase());
+        : motos.filter(moto => moto.estado?.toLowerCase() === filter.toLowerCase());
 
     if (loading) {
         return (
@@ -65,7 +60,7 @@ const Models = () => {
                     <div className="flex items-center gap-2 mr-4 text-gray-500 font-bold uppercase tracking-wider text-sm">
                         <Filter size={18} /> Filtrar por:
                     </div>
-                    {brandFilters.map((cat) => (
+                    {['all', 'disponible', 'reservado', 'vendido'].map((cat) => (
                         <button
                             key={cat}
                             onClick={() => setFilter(cat)}
@@ -98,7 +93,7 @@ const Models = () => {
                                     || moto.imagen_moto?.[0]?.imagen?.url_imagen
                                     || 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=2070&auto=format&fit=crop'
                                 }
-                                alt={`${moto.marca} ${moto.modelo}`}
+                                alt={moto.modelo}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                             <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm text-yellow-400 font-bold px-3 py-1 rounded-full text-sm border border-yellow-500/30">
@@ -118,7 +113,7 @@ const Models = () => {
                         <div className="p-6 flex-1 flex flex-col">
                             <div className="flex justify-between items-start mb-4">
                                 <h3 className="text-2xl font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">
-                                    {moto.marca} {moto.modelo}
+                                    {moto.modelo}
                                 </h3>
                                 <span className="text-xl font-extrabold text-black">
                                     ${moto.precio?.toLocaleString()}
@@ -129,7 +124,7 @@ const Models = () => {
                             <div className="grid grid-cols-3 gap-2 mt-auto pt-4 border-t border-gray-100">
                                 <div className="text-center">
                                     <div className="flex justify-center text-gray-400 mb-1"><Target size={16} /></div>
-                                    <div className="text-xs font-bold text-gray-800">{moto.cilindrada || '---'}</div>
+                                    <div className="text-xs font-bold text-gray-800">{moto.cilindrada_cc || '---'}</div>
                                     <div className="text-[10px] text-gray-500 uppercase">Motor</div>
                                 </div>
                                 <div className="text-center border-l border-gray-100">

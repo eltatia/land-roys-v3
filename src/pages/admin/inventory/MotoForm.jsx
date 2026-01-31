@@ -11,10 +11,9 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
     const [imageIdsByOrder, setImageIdsByOrder] = useState({});
     const { user } = useAuth();
     const [formData, setFormData] = useState({
-        marca: "",
         modelo: "",
         anio: new Date().getFullYear(),
-        cilindrada: "",
+        cilindrada_cc: "",
         precio: "",
         descripcion: "",
         estado: "disponible",
@@ -22,6 +21,14 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
         imagen_accion_url: null,
         video_url: null,
         use_video: true,
+        capacidad_tanque_l: "",
+        maxima_velocidad_kmh: "",
+        velocidades: "",
+        motor_especificacion: "",
+        torque_max_nm: "",
+        torque_max_rpm: "",
+        potencia_max_hp: "",
+        potencia_max_rpm: "",
     });
 
     useEffect(() => {
@@ -36,10 +43,9 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
             const videoImage = images.find((img) => img.orden === 2) || images[2];
 
             setFormData({
-                marca: initialData.marca || "",
                 modelo: initialData.modelo || "",
                 anio: initialData.anio || new Date().getFullYear(),
-                cilindrada: initialData.cilindrada || "",
+                cilindrada_cc: initialData.cilindrada_cc || "",
                 precio: initialData.precio || "",
                 descripcion: initialData.descripcion || "",
                 estado: initialData.estado || "disponible",
@@ -47,6 +53,14 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 imagen_accion_url: actionImage?.url_imagen || null,
                 video_url: videoImage?.url_imagen || null,
                 use_video: Boolean(videoImage?.url_imagen),
+                capacidad_tanque_l: initialData.capacidad_tanque_l || "",
+                maxima_velocidad_kmh: initialData.maxima_velocidad_kmh || "",
+                velocidades: initialData.velocidades || "",
+                motor_especificacion: initialData.motor_especificacion || "",
+                torque_max_nm: initialData.torque_max_nm || "",
+                torque_max_rpm: initialData.torque_max_rpm || "",
+                potencia_max_hp: initialData.potencia_max_hp || "",
+                potencia_max_rpm: initialData.potencia_max_rpm || "",
             });
 
             setImageIdsByOrder({
@@ -105,13 +119,20 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
         try {
             // 1. Guardar la Moto
             const motoData = {
-                marca: formData.marca,
                 modelo: formData.modelo,
                 anio: parseInt(formData.anio),
-                cilindrada: formData.cilindrada,
+                cilindrada_cc: formData.cilindrada_cc ? parseInt(formData.cilindrada_cc) : null,
                 precio: parseFloat(formData.precio),
                 descripcion: formData.descripcion,
                 estado: formData.estado,
+                capacidad_tanque_l: formData.capacidad_tanque_l ? parseFloat(formData.capacidad_tanque_l) : null,
+                maxima_velocidad_kmh: formData.maxima_velocidad_kmh ? parseInt(formData.maxima_velocidad_kmh) : null,
+                velocidades: formData.velocidades ? parseInt(formData.velocidades) : null,
+                motor_especificacion: formData.motor_especificacion || null,
+                torque_max_nm: formData.torque_max_nm ? parseFloat(formData.torque_max_nm) : null,
+                torque_max_rpm: formData.torque_max_rpm ? parseInt(formData.torque_max_rpm) : null,
+                potencia_max_hp: formData.potencia_max_hp ? parseFloat(formData.potencia_max_hp) : null,
+                potencia_max_rpm: formData.potencia_max_rpm ? parseInt(formData.potencia_max_rpm) : null,
             };
 
             let motoId;
@@ -290,18 +311,6 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Marca</label>
-                            <input
-                                type="text"
-                                name="marca"
-                                required
-                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
-                                value={formData.marca}
-                                onChange={handleChange}
-                                placeholder="Ej. Yamaha"
-                            />
-                        </div>
-                        <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">Modelo</label>
                             <input
                                 type="text"
@@ -310,12 +319,9 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                                 className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
                                 value={formData.modelo}
                                 onChange={handleChange}
-                                placeholder="Ej. MT-09"
+                                placeholder="Ej. Land Roys RTM"
                             />
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">Año</label>
                             <input
@@ -327,16 +333,104 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                                 onChange={handleChange}
                             />
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Cilindrada</label>
+                            <label className="text-sm font-bold text-gray-700">Cilindrada (cc)</label>
                             <input
-                                type="text"
-                                name="cilindrada"
-                                required
+                                type="number"
+                                name="cilindrada_cc"
                                 className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
-                                value={formData.cilindrada}
+                                value={formData.cilindrada_cc}
                                 onChange={handleChange}
-                                placeholder="Ej. 890cc"
+                                placeholder="Ej. 471"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Capacidad tanque (L)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                name="capacidad_tanque_l"
+                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                value={formData.capacidad_tanque_l}
+                                onChange={handleChange}
+                                placeholder="Ej. 17.1"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Velocidad máx (km/h)</label>
+                            <input
+                                type="number"
+                                name="maxima_velocidad_kmh"
+                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                value={formData.maxima_velocidad_kmh}
+                                onChange={handleChange}
+                                placeholder="Ej. 180"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Velocidades</label>
+                            <input
+                                type="number"
+                                name="velocidades"
+                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                value={formData.velocidades}
+                                onChange={handleChange}
+                                placeholder="Ej. 6"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Torque máx (Nm)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                name="torque_max_nm"
+                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                value={formData.torque_max_nm}
+                                onChange={handleChange}
+                                placeholder="Ej. 43.2"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Torque RPM</label>
+                            <input
+                                type="number"
+                                name="torque_max_rpm"
+                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                value={formData.torque_max_rpm}
+                                onChange={handleChange}
+                                placeholder="Ej. 6500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Potencia máx (HP)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                name="potencia_max_hp"
+                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                value={formData.potencia_max_hp}
+                                onChange={handleChange}
+                                placeholder="Ej. 46.9"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Potencia RPM</label>
+                            <input
+                                type="number"
+                                name="potencia_max_rpm"
+                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                value={formData.potencia_max_rpm}
+                                onChange={handleChange}
+                                placeholder="Ej. 8500"
                             />
                         </div>
                         <div className="space-y-2">
@@ -351,6 +445,18 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                                 placeholder="0.00"
                             />
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-700">Motor (especificación)</label>
+                        <input
+                            type="text"
+                            name="motor_especificacion"
+                            className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                            value={formData.motor_especificacion}
+                            onChange={handleChange}
+                            placeholder="Ej. 2 Cilindros / 4T / DOHC"
+                        />
                     </div>
 
                     <div className="space-y-2">

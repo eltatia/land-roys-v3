@@ -66,10 +66,33 @@ const ModelDetail = () => {
   const videoEmbed = isYouTubeUrl(videoUrl) ? getYouTubeEmbedUrl(videoUrl) : "";
 
   const specs = [
-    { icon: <Bike size={18} />, label: "Marca", value: moto?.marca || "---" },
-    { icon: <BadgeCheck size={18} />, label: "Modelo", value: moto?.modelo || "---" },
-    { icon: <Gauge size={18} />, label: "Cilindrada", value: moto?.cilindrada || "---" },
+    { icon: <Bike size={18} />, label: "Modelo", value: moto?.modelo || "---" },
     { icon: <ShieldCheck size={18} />, label: "Año", value: moto?.anio || "---" },
+    { icon: <Gauge size={18} />, label: "Cilindrada (cc)", value: moto?.cilindrada_cc || "---" },
+    { icon: <BadgeCheck size={18} />, label: "Velocidades", value: moto?.velocidades || "---" },
+    { icon: <Gauge size={18} />, label: "Tanque (L)", value: moto?.capacidad_tanque_l || "---" },
+    { icon: <Gauge size={18} />, label: "Velocidad máx", value: moto?.maxima_velocidad_kmh ? `${moto.maxima_velocidad_kmh} km/h` : "---" },
+    {
+      icon: <Gauge size={18} />,
+      label: "Torque máx",
+      value: moto?.torque_max_nm ? `${moto.torque_max_nm} Nm` : "---",
+    },
+    {
+      icon: <Gauge size={18} />,
+      label: "Torque RPM",
+      value: moto?.torque_max_rpm ? `${moto.torque_max_rpm} RPM` : "---",
+    },
+    {
+      icon: <Gauge size={18} />,
+      label: "Potencia máx",
+      value: moto?.potencia_max_hp ? `${moto.potencia_max_hp} HP` : "---",
+    },
+    {
+      icon: <Gauge size={18} />,
+      label: "Potencia RPM",
+      value: moto?.potencia_max_rpm ? `${moto.potencia_max_rpm} RPM` : "---",
+    },
+    { icon: <BadgeCheck size={18} />, label: "Motor", value: moto?.motor_especificacion || "---" },
   ];
 
   const handleInputChange = (event) => {
@@ -142,7 +165,7 @@ const ModelDetail = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
             <div className="absolute bottom-10 left-6 md:left-16 z-20 text-white max-w-xl space-y-3">
               <h1 className="text-4xl md:text-6xl font-black italic tracking-tight">
-                {moto.marca} <span className="text-yellow-400">{moto.modelo}</span>
+                {moto.modelo}
               </h1>
             </div>
             <div className="absolute inset-0">
@@ -184,7 +207,7 @@ const ModelDetail = () => {
               <div className="relative slide-reveal">
                 <img
                   src={mainImage?.url_imagen || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1200&auto=format&fit=crop"}
-                  alt={`${moto.marca} ${moto.modelo}`}
+                  alt={moto.modelo}
                   className="w-full h-[620px] object-contain transition-transform duration-1000 hover:scale-[1.03]"
                 />
               </div>
@@ -195,7 +218,7 @@ const ModelDetail = () => {
                 </div>
                 <div className="space-y-4">
                   <h2 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
-                    {moto.marca} <span className="text-yellow-500">{moto.modelo}</span>
+                    {moto.modelo}
                   </h2>
                   <p className="text-gray-500 text-base md:text-lg leading-relaxed">
                     {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
@@ -226,7 +249,7 @@ const ModelDetail = () => {
           <div className="relative overflow-hidden rounded-[2.5rem] shadow-2xl slide-reveal">
             <img
               src={mainImage?.url_imagen || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1200&auto=format&fit=crop"}
-              alt={`${moto.marca} ${moto.modelo}`}
+              alt={moto.modelo}
               className="w-full h-[560px] object-cover transition-transform duration-700 hover:scale-105"
             />
           </div>
@@ -238,7 +261,7 @@ const ModelDetail = () => {
             </div>
             <div className="space-y-4">
               <h2 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
-                {moto.marca} <span className="text-yellow-500">{moto.modelo}</span>
+                {moto.modelo}
               </h2>
               <p className="text-gray-500 text-base md:text-lg leading-relaxed">
                 {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
@@ -306,7 +329,7 @@ const ModelDetail = () => {
         <div className="relative w-[80%] mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl group">
           <img
             src={actionImage?.url_imagen || mainImage?.url_imagen || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=1200&auto=format&fit=crop"}
-            alt={`${moto.marca} ${moto.modelo} en acción`}
+            alt={`${moto.modelo} en acción`}
             className="w-full h-[80vh] object-cover group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent opacity-80" />
