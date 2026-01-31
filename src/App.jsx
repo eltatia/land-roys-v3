@@ -11,6 +11,7 @@ import AdminLayout from "./layout/AdminLayout";
 /* Páginas cliente */
 import Home from "./pages/client/home/Home";
 import Models from "./pages/client/models/Models";
+import ModelDetail from "./pages/client/models/ModelDetail";
 import Spares from "./pages/client/spares/Spares";
 import About from "./pages/client/about/About";
 
@@ -36,6 +37,7 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/modelos" element={<Models />} />
+            <Route path="/modelos/:id" element={<ModelDetail />} />
             <Route path="/repuestos" element={<Spares />} />
             <Route path="/nosotros" element={<About />} />
           </Route>

@@ -8,7 +8,9 @@ export const getMotos = async () => {
       *,
       imagen_moto (
         imagen (
-          url_imagen
+          id_imagen,
+          url_imagen,
+          orden
         )
       )
     `)
@@ -26,7 +28,9 @@ export const getMotoById = async (id) => {
       *,
       imagen_moto (
         imagen (
-          url_imagen
+          id_imagen,
+          url_imagen,
+          orden
         )
       )
     `)

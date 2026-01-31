@@ -3,10 +3,13 @@ import { X, Upload, Save, Loader2 } from "lucide-react";
 import Swal from "sweetalert2";
 import { supabase } from "../../../api/Supabase.provider";
 import { createMoto, updateMoto } from "../../../services/Moto.service";
+import { useAuth } from "../../../context/AuthContext";
 
 const MotoForm = ({ onClose, onSave, initialData }) => {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [imageIdsByOrder, setImageIdsByOrder] = useState({});
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         marca: "",
         modelo: "",
@@ -15,15 +18,39 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
         precio: "",
         descripcion: "",
         estado: "disponible",
-        imagen_url: null, // Para visualización/subida
+        imagen_url: null,
+        imagen_accion_url: null,
+        video_url: null,
     });
 
     useEffect(() => {
         if (initialData) {
+            const images = (initialData.imagen_moto || [])
+                .map((item) => item.imagen)
+                .filter(Boolean)
+                .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+
+            const mainImage = images.find((img) => img.orden === 0) || images[0];
+            const actionImage = images.find((img) => img.orden === 1) || images[1];
+            const videoImage = images.find((img) => img.orden === 2) || images[2];
+
             setFormData({
-                ...initialData,
-                // Si ya tiene imagen, la mostramos (asumiendo que viene en el objeto inicial)
-                imagen_url: initialData.imagen_moto?.[0]?.imagen?.url_imagen || null
+                marca: initialData.marca || "",
+                modelo: initialData.modelo || "",
+                anio: initialData.anio || new Date().getFullYear(),
+                cilindrada: initialData.cilindrada || "",
+                precio: initialData.precio || "",
+                descripcion: initialData.descripcion || "",
+                estado: initialData.estado || "disponible",
+                imagen_url: mainImage?.url_imagen || null,
+                imagen_accion_url: actionImage?.url_imagen || null,
+                video_url: videoImage?.url_imagen || null,
+            });
+
+            setImageIdsByOrder({
+                0: mainImage?.id_imagen,
+                1: actionImage?.id_imagen,
+                2: videoImage?.id_imagen,
             });
         }
     }, [initialData]);
@@ -33,7 +60,7 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleImageUpload = async (e) => {
+    const handleMediaUpload = async (e, field, folder) => {
         try {
             setUploading(true);
             const file = e.target.files[0];
@@ -41,7 +68,7 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
 
             const fileExt = file.name.split(".").pop();
             const fileName = `${Math.random()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            const filePath = `${folder}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from("motos")
@@ -51,11 +78,11 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
 
             const { data } = supabase.storage.from("motos").getPublicUrl(filePath);
 
-            setFormData((prev) => ({ ...prev, imagen_url: data.publicUrl }));
+            setFormData((prev) => ({ ...prev, [field]: data.publicUrl }));
 
         } catch (error) {
-            console.error("Error subiendo imagen:", error);
-            Swal.fire("Error", "No se pudo subir la imagen", "error");
+            console.error("Error subiendo archivo:", error);
+            Swal.fire("Error", "No se pudo subir el archivo", "error");
         } finally {
             setUploading(false);
         }
@@ -85,29 +112,43 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 motoId = updated.id_moto;
             } else {
                 // Crear
-                const created = await createMoto(motoData);
+                const created = await createMoto({
+                    ...motoData,
+                    id_usuario: user?.id || null,
+                });
                 motoId = created.id_moto;
             }
 
-            // 2. Guardar la Imagen (Si hay una nueva URL y no es edición sin cambios)
-            // Nota: Para simplificar, en este MVP si subes foto, creamos una nueva entrada en imagen e imagen_moto
-            // En un sistema real borraríamos las viejas o reutilizaríamos.
-            if (formData.imagen_url && (!initialData || initialData.imagen_moto?.[0]?.imagen?.url_imagen !== formData.imagen_url)) {
+            const upsertImageForOrder = async (order, url) => {
+                if (!url) return;
 
-                // Crear registro en tabla IMAGEN
+                const existingId = imageIdsByOrder[order];
+                if (existingId) {
+                    const { error: updateError } = await supabase
+                        .from("imagen")
+                        .update({ url_imagen: url, estado: "activo", orden: order })
+                        .eq("id_imagen", existingId);
+
+                    if (updateError) throw updateError;
+                    return;
+                }
+
                 const { data: imgData, error: imgError } = await supabase
                     .from("imagen")
-                    .insert([{ url_imagen: formData.imagen_url, estado: 'activo' }])
+                    .insert([{ url_imagen: url, estado: "activo", orden: order }])
                     .select()
                     .single();
 
                 if (imgError) throw imgError;
 
-                // Crear relación en IMAGEN_MOTO
                 await supabase
                     .from("imagen_moto")
                     .insert([{ id_moto: motoId, id_imagen: imgData.id_imagen }]);
-            }
+            };
+
+            await upsertImageForOrder(0, formData.imagen_url);
+            await upsertImageForOrder(1, formData.imagen_accion_url);
+            await upsertImageForOrder(2, formData.video_url);
 
             Swal.fire({
                 icon: "success",
@@ -141,32 +182,76 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Imagen Upload */}
-                    <div className="flex justify-center">
+                    {/* Media Uploads */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="relative group w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-yellow-400 transition-colors cursor-pointer">
                             {formData.imagen_url ? (
-                                <img src={formData.imagen_url} alt="Preview" className="w-full h-full object-cover" />
+                                <img src={formData.imagen_url} alt="Principal" className="w-full h-full object-cover" />
                             ) : (
                                 <div className="flex flex-col items-center text-gray-400">
                                     <Upload size={32} className="mb-2" />
-                                    <span className="text-sm font-medium">Click para subir imagen</span>
+                                    <span className="text-sm font-medium">Imagen principal</span>
                                 </div>
                             )}
 
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={handleImageUpload}
+                                onChange={(e) => handleMediaUpload(e, "imagen_url", "motos")}
                                 className="absolute inset-0 opacity-0 cursor-pointer"
                                 disabled={uploading}
                             />
+                        </div>
 
-                            {uploading && (
-                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                    <Loader2 className="animate-spin text-white" size={32} />
+                        <div className="relative group w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-yellow-400 transition-colors cursor-pointer">
+                            {formData.imagen_accion_url ? (
+                                <img src={formData.imagen_accion_url} alt="Acción" className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="flex flex-col items-center text-gray-400">
+                                    <Upload size={32} className="mb-2" />
+                                    <span className="text-sm font-medium">Imagen en acción</span>
                                 </div>
                             )}
+
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleMediaUpload(e, "imagen_accion_url", "motos")}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                disabled={uploading}
+                            />
                         </div>
+
+                        <div className="relative group w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-yellow-400 transition-colors cursor-pointer">
+                            {formData.video_url ? (
+                                <video src={formData.video_url} className="w-full h-full object-cover" muted />
+                            ) : (
+                                <div className="flex flex-col items-center text-gray-400">
+                                    <Upload size={32} className="mb-2" />
+                                    <span className="text-sm font-medium text-center px-3">Video (archivo)</span>
+                                </div>
+                            )}
+
+                            <input
+                                type="file"
+                                accept="video/*"
+                                onChange={(e) => handleMediaUpload(e, "video_url", "motos/videos")}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                disabled={uploading}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-700">URL de video (opcional)</label>
+                        <input
+                            type="text"
+                            name="video_url"
+                            className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                            value={formData.video_url || ""}
+                            onChange={handleChange}
+                            placeholder="https://... (YouTube o MP4)"
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

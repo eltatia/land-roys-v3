@@ -20,6 +20,18 @@ export const getSolicitudes = async () => {
     return data;
 };
 
+// CREATE SOLICITUD
+export const createSolicitud = async (solicitudData) => {
+    const { data, error } = await supabase
+        .from("solicitud_compra")
+        .insert([solicitudData])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
 // UPDATE SOLICITUD STATUS
 export const updateSolicitudStatus = async (id, estado) => {
     const { data, error } = await supabase
