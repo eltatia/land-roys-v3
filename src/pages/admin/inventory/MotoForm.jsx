@@ -85,7 +85,11 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+            ...(name === "video_url" && value ? { use_video: true } : {}),
+        }));
     };
 
     const handleToggleVideo = () => {
