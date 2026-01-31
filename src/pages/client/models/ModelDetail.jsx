@@ -5,9 +5,7 @@ import {
   BadgeCheck,
   Bike,
   Gauge,
-  PlayCircle,
   ShieldCheck,
-  Sparkles,
   PhoneCall,
 } from "lucide-react";
 import Swal from "sweetalert2";
@@ -56,7 +54,7 @@ const ModelDetail = () => {
     if (!moto?.imagen_moto) return [];
     return moto.imagen_moto
       .map((item) => item.imagen)
-      .filter(Boolean)
+      .filter((img) => img?.url_imagen)
       .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
   }, [moto]);
 
@@ -128,29 +126,27 @@ const ModelDetail = () => {
     );
   }
 
+  const hasVideo = Boolean(videoUrl);
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      <section className="model-detail-hero model-detail-section">
-        <div className="absolute top-6 left-6 z-20">
-          <Link to="/modelos" className="inline-flex items-center gap-2 text-white/70 hover:text-yellow-400 transition-colors">
-            <ArrowLeft size={18} />
-            Volver a modelos
-          </Link>
-        </div>
-        <div className="relative w-full h-[70vh] md:h-screen bg-black overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
-          <div className="absolute bottom-10 left-6 md:left-16 z-20 text-white max-w-xl space-y-3">
-            <span className="inline-flex items-center gap-2 bg-yellow-400 text-black text-[10px] font-black px-3 py-1 rounded-full tracking-widest uppercase">
-              <Sparkles size={14} />
-              Nuevo lanzamiento
-            </span>
-            <h1 className="text-4xl md:text-6xl font-black italic tracking-tight">
-              {moto.marca} <span className="text-yellow-400">{moto.modelo}</span>
-            </h1>
+      {hasVideo ? (
+        <section className="model-detail-hero model-detail-section">
+          <div className="absolute top-6 left-6 z-20">
+            <Link to="/modelos" className="inline-flex items-center gap-2 text-white/70 hover:text-yellow-400 transition-colors">
+              <ArrowLeft size={18} />
+              Volver a modelos
+            </Link>
           </div>
-          <div className="absolute inset-0">
-            {videoUrl ? (
-              isVideoFile(videoUrl) ? (
+          <div className="relative w-full h-[70vh] md:h-screen bg-black overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
+            <div className="absolute bottom-10 left-6 md:left-16 z-20 text-white max-w-xl space-y-3">
+              <h1 className="text-4xl md:text-6xl font-black italic tracking-tight">
+                {moto.marca} <span className="text-yellow-400">{moto.modelo}</span>
+              </h1>
+            </div>
+            <div className="absolute inset-0">
+              {isVideoFile(videoUrl) ? (
                 <video
                   src={videoUrl}
                   autoPlay
@@ -168,22 +164,64 @@ const ModelDetail = () => {
                   allowFullScreen
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-white/60 gap-3">
-                  <PlayCircle size={42} />
-                  <span className="text-sm">El enlace de video no es compatible</span>
+                <div className="w-full h-full flex items-center justify-center text-white/60 text-sm">
+                  Video no disponible
                 </div>
-              )
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-white/60 gap-3">
-                <PlayCircle size={42} />
-                <span className="text-sm">Agrega un video para esta moto</span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section className="model-detail-hero model-detail-section">
+          <div className="absolute top-6 left-6 z-20">
+            <Link to="/modelos" className="inline-flex items-center gap-2 text-gray-500 hover:text-yellow-500 transition-colors">
+              <ArrowLeft size={18} />
+              Volver a modelos
+            </Link>
+          </div>
+          <div className="w-full min-h-screen flex items-center bg-white">
+            <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-12 items-center">
+              <div className="relative overflow-hidden rounded-[2.5rem] shadow-2xl slide-reveal">
+                <img
+                  src={mainImage?.url_imagen || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1200&auto=format&fit=crop"}
+                  alt={`${moto.marca} ${moto.modelo}`}
+                  className="w-full h-[560px] object-cover transition-transform duration-700 hover:scale-105"
+                />
+              </div>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-yellow-500">
+                  <Bike size={24} className="icon-float" />
+                  <h3 className="text-xl font-black text-gray-900">Tu próxima moto</h3>
+                </div>
+                <div className="space-y-4">
+                  <h2 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
+                    {moto.marca} <span className="text-yellow-500">{moto.modelo}</span>
+                  </h2>
+                  <p className="text-gray-500 text-base md:text-lg leading-relaxed">
+                    {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="bg-gray-900 text-white px-6 py-3 rounded-2xl">
+                    <span className="text-xs uppercase text-white/60 tracking-widest">Precio</span>
+                    <div className="text-2xl font-black">${moto.precio?.toLocaleString()}</div>
+                  </div>
+                  <div className="bg-yellow-100 text-yellow-700 px-6 py-3 rounded-2xl">
+                    <span className="text-xs uppercase tracking-widest">Estado</span>
+                    <div className="text-base font-black">{moto.estado}</div>
+                  </div>
+                  <button className="bg-black text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
+                    Agendar prueba
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
-      <section className="max-w-7xl mx-auto px-6 pb-24 model-detail-section delay-2">
+      {hasVideo && (
+        <section className="max-w-7xl mx-auto px-6 pb-16 model-detail-section delay-2">
         <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-12 items-center">
           <div className="relative overflow-hidden rounded-[2.5rem] shadow-2xl slide-reveal">
             <img
@@ -222,41 +260,42 @@ const ModelDetail = () => {
           </div>
         </div>
       </section>
+      )}
 
-      <section className="w-full bg-black text-white model-detail-section delay-3">
+      <section className="w-full bg-white model-detail-section delay-3">
         <div className="max-w-7xl mx-auto px-6 py-16 min-h-[80vh] flex flex-col justify-center">
           <div className="text-center mb-12">
-            <h3 className="text-3xl md:text-4xl font-black tracking-[0.2em] uppercase">Especificaciones</h3>
+            <h3 className="text-3xl md:text-4xl font-black tracking-[0.2em] uppercase text-gray-900">Especificaciones</h3>
             <div className="w-12 h-1 bg-yellow-400 mx-auto mt-4" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex flex-wrap justify-center gap-8">
             {specs.map((spec) => (
-              <div key={spec.label} className="flex flex-col items-center gap-3 bg-white/5 p-6 rounded-3xl text-center border border-white/10">
-                <div className="w-12 h-12 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center">
+              <div key={spec.label} className="flex flex-col items-center gap-3 bg-gray-50 p-6 rounded-3xl text-center border border-gray-100 w-[240px]">
+                <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-500 flex items-center justify-center">
                   {spec.icon}
                 </div>
                 <div>
-                  <div className="text-xs uppercase text-white/60">{spec.label}</div>
-                  <div className="text-lg font-black text-white">{spec.value}</div>
+                  <div className="text-xs uppercase text-gray-400 tracking-widest">{spec.label}</div>
+                  <div className="text-lg font-black text-gray-900">{spec.value}</div>
                 </div>
               </div>
             ))}
-            <div className="flex flex-col items-center gap-3 bg-white/5 p-6 rounded-3xl text-center border border-white/10">
-              <div className="w-12 h-12 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 bg-gray-50 p-6 rounded-3xl text-center border border-gray-100 w-[240px]">
+              <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-500 flex items-center justify-center">
                 <BadgeCheck size={18} />
               </div>
               <div>
-                <div className="text-xs uppercase text-white/60">Estado</div>
-                <div className="text-lg font-black text-white">{moto.estado}</div>
+                <div className="text-xs uppercase text-gray-400 tracking-widest">Estado</div>
+                <div className="text-lg font-black text-gray-900">{moto.estado}</div>
               </div>
             </div>
-            <div className="flex flex-col items-center gap-3 bg-white/5 p-6 rounded-3xl text-center border border-white/10">
-              <div className="w-12 h-12 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 bg-gray-50 p-6 rounded-3xl text-center border border-gray-100 w-[240px]">
+              <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-500 flex items-center justify-center">
                 <Gauge size={18} />
               </div>
               <div>
-                <div className="text-xs uppercase text-white/60">Precio</div>
-                <div className="text-lg font-black text-white">${moto.precio?.toLocaleString()}</div>
+                <div className="text-xs uppercase text-gray-400 tracking-widest">Precio</div>
+                <div className="text-lg font-black text-gray-900">${moto.precio?.toLocaleString()}</div>
               </div>
             </div>
           </div>
@@ -273,7 +312,7 @@ const ModelDetail = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent opacity-80" />
           <div className="absolute inset-0 flex items-end p-8">
             <div className="text-white max-w-md space-y-3">
-              <span className="text-xs uppercase tracking-widest text-yellow-400">Diferencial</span>
+              <span className="text-sm uppercase tracking-widest text-yellow-400">Diferencial</span>
               <h3 className="text-3xl font-black">Una experiencia que destaca</h3>
               <p className="text-sm text-white/70">
                 Vive el desempeño y la estética que te harán sobresalir en cada ruta. Tecnología y diseño en perfecta armonía.

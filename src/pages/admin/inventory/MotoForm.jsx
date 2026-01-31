@@ -21,6 +21,7 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
         imagen_url: null,
         imagen_accion_url: null,
         video_url: null,
+        use_video: true,
     });
 
     useEffect(() => {
@@ -45,6 +46,7 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 imagen_url: mainImage?.url_imagen || null,
                 imagen_accion_url: actionImage?.url_imagen || null,
                 video_url: videoImage?.url_imagen || null,
+                use_video: Boolean(videoImage?.url_imagen),
             });
 
             setImageIdsByOrder({
@@ -58,6 +60,14 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleToggleVideo = () => {
+        setFormData((prev) => ({
+            ...prev,
+            use_video: !prev.use_video,
+            video_url: prev.use_video ? null : prev.video_url,
+        }));
     };
 
     const handleMediaUpload = async (e, field, folder) => {
@@ -148,7 +158,16 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
 
             await upsertImageForOrder(0, formData.imagen_url);
             await upsertImageForOrder(1, formData.imagen_accion_url);
-            await upsertImageForOrder(2, formData.video_url);
+            if (formData.use_video) {
+                await upsertImageForOrder(2, formData.video_url);
+            } else if (imageIdsByOrder[2]) {
+                const { error: deactivateError } = await supabase
+                    .from("imagen")
+                    .update({ url_imagen: null, estado: "inactivo", orden: 2 })
+                    .eq("id_imagen", imageIdsByOrder[2]);
+
+                if (deactivateError) throw deactivateError;
+            }
 
             Swal.fire({
                 icon: "success",
@@ -183,6 +202,17 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {/* Media Uploads */}
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Medios principales</h3>
+                        <button
+                            type="button"
+                            onClick={handleToggleVideo}
+                            className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-colors ${formData.use_video ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-gray-100 text-gray-500 border-gray-200"}`}
+                        >
+                            {formData.use_video ? "Video activo" : "Sin video"}
+                        </button>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="relative group w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-yellow-400 transition-colors cursor-pointer">
                             {formData.imagen_url ? (
@@ -222,27 +252,30 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                             />
                         </div>
 
-                        <div className="relative group w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-yellow-400 transition-colors cursor-pointer">
-                            {formData.video_url ? (
-                                <video src={formData.video_url} className="w-full h-full object-cover" muted />
-                            ) : (
-                                <div className="flex flex-col items-center text-gray-400">
-                                    <Upload size={32} className="mb-2" />
-                                    <span className="text-sm font-medium text-center px-3">Video (archivo)</span>
-                                </div>
-                            )}
+                        {formData.use_video && (
+                            <div className="relative group w-full h-48 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-yellow-400 transition-colors cursor-pointer">
+                                {formData.video_url ? (
+                                    <video src={formData.video_url} className="w-full h-full object-cover" muted />
+                                ) : (
+                                    <div className="flex flex-col items-center text-gray-400">
+                                        <Upload size={32} className="mb-2" />
+                                        <span className="text-sm font-medium text-center px-3">Video (archivo)</span>
+                                    </div>
+                                )}
 
-                            <input
-                                type="file"
-                                accept="video/*"
-                                onChange={(e) => handleMediaUpload(e, "video_url", "motos/videos")}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                disabled={uploading}
-                            />
-                        </div>
+                                <input
+                                    type="file"
+                                    accept="video/*"
+                                    onChange={(e) => handleMediaUpload(e, "video_url", "motos/videos")}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    disabled={uploading}
+                                />
+                            </div>
+                        )}
                     </div>
 
-                    <div className="space-y-2">
+                    {formData.use_video && (
+                        <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-700">URL de video (opcional)</label>
                         <input
                             type="text"
@@ -252,7 +285,8 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                             onChange={handleChange}
                             placeholder="https://... (YouTube o MP4)"
                         />
-                    </div>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
