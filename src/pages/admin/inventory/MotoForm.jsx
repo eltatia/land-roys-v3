@@ -30,6 +30,10 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
         torque_max_rpm: "",
         potencia_max_hp: "",
         potencia_max_rpm: "",
+        use_diferencial: true,
+        diferencial_titulo: "",
+        diferencial_subtitulo: "",
+        diferencial_texto: "",
     });
 
     useEffect(() => {
@@ -64,6 +68,10 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 torque_max_rpm: initialData.torque_max_rpm || "",
                 potencia_max_hp: initialData.potencia_max_hp || "",
                 potencia_max_rpm: initialData.potencia_max_rpm || "",
+                use_diferencial: initialData.use_diferencial ?? true,
+                diferencial_titulo: initialData.diferencial_titulo || "",
+                diferencial_subtitulo: initialData.diferencial_subtitulo || "",
+                diferencial_texto: initialData.diferencial_texto || "",
             });
 
             setImageIdsByOrder({
@@ -137,6 +145,10 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 torque_max_rpm: formData.torque_max_rpm ? parseInt(formData.torque_max_rpm) : null,
                 potencia_max_hp: formData.potencia_max_hp ? parseFloat(formData.potencia_max_hp) : null,
                 potencia_max_rpm: formData.potencia_max_rpm ? parseInt(formData.potencia_max_rpm) : null,
+                use_diferencial: formData.use_diferencial,
+                diferencial_titulo: formData.use_diferencial ? formData.diferencial_titulo || null : null,
+                diferencial_subtitulo: formData.use_diferencial ? formData.diferencial_subtitulo || null : null,
+                diferencial_texto: formData.use_diferencial ? formData.diferencial_texto || null : null,
             };
 
             let motoId;
@@ -511,6 +523,57 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                             onChange={handleChange}
                             placeholder="Ej. 2 Cilindros / 4T / DOHC"
                         />
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-widest">Bloque diferencial</h3>
+                            <button
+                                type="button"
+                                onClick={() => setFormData((prev) => ({ ...prev, use_diferencial: !prev.use_diferencial }))}
+                                className={`text-[10px] font-bold px-3 py-1 rounded-full border transition-colors ${formData.use_diferencial ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-gray-100 text-gray-500 border-gray-200"}`}
+                            >
+                                {formData.use_diferencial ? "Mostrar texto" : "Ocultar texto"}
+                            </button>
+                        </div>
+
+                        {formData.use_diferencial && (
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700">Etiqueta (pequeña)</label>
+                                    <input
+                                        type="text"
+                                        name="diferencial_titulo"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                        value={formData.diferencial_titulo}
+                                        onChange={handleChange}
+                                        placeholder="Ej. DIFERENCIAL"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700">Título principal</label>
+                                    <input
+                                        type="text"
+                                        name="diferencial_subtitulo"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                        value={formData.diferencial_subtitulo}
+                                        onChange={handleChange}
+                                        placeholder="Ej. Una experiencia que destaca"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-700">Descripción</label>
+                                    <textarea
+                                        name="diferencial_texto"
+                                        rows="3"
+                                        className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none resize-none"
+                                        value={formData.diferencial_texto}
+                                        onChange={handleChange}
+                                        placeholder="Texto breve sobre el diferencial del modelo."
+                                    ></textarea>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">

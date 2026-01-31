@@ -266,19 +266,27 @@ const ModelDetail = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent opacity-80" />
           <div className="absolute inset-0 flex items-end p-8">
-            <div className="text-white max-w-md space-y-3">
-              <span className="text-sm uppercase tracking-widest text-yellow-400">Diferencial</span>
-              <h3 className="text-3xl font-black">Una experiencia que destaca</h3>
-              <p className="text-sm text-white/70">
-                Vive el desempeño y la estética que te harán sobresalir en cada ruta. Tecnología y diseño en perfecta armonía.
-              </p>
-            </div>
+            {(moto.use_diferencial ?? true) && (
+              <div className="text-white max-w-md space-y-3">
+                <span className="text-sm uppercase tracking-widest text-yellow-400">
+                  {moto.diferencial_titulo || "Diferencial"}
+                </span>
+                <h3 className="text-3xl font-black">
+                  {moto.diferencial_subtitulo || "Una experiencia que destaca"}
+                </h3>
+                <p className="text-sm text-white/70">
+                  {moto.diferencial_texto
+                    || "Vive el desempeño y la estética que te harán sobresalir en cada ruta. Tecnología y diseño en perfecta armonía."}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       <section className="max-w-6xl mx-auto px-6 pb-24 model-detail-section delay-5">
-        <div className="bg-white rounded-[2.5rem] shadow-xl p-8 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div className="border-t border-gray-100 mt-10 pt-10">
+          <div className="bg-white rounded-[2.5rem] shadow-xl p-8 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="space-y-6">
             <div className="flex items-center gap-3 text-yellow-500">
               <PhoneCall size={24} className="icon-float" />
@@ -350,6 +358,7 @@ const ModelDetail = () => {
               {submitting ? "Enviando..." : "Solicitar cotización"}
             </button>
           </form>
+        </div>
         </div>
       </section>
     </div>
