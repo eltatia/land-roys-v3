@@ -23,6 +23,8 @@ const getYouTubeEmbedUrl = (url) => {
 };
 
 const isVideoFile = (url) => /\.(mp4|webm|ogg)$/i.test(url || "");
+const isVideoUrl = (url) => isYouTubeUrl(url) || isVideoFile(url);
+const getOrder = (image) => Number(image?.orden ?? 0);
 
 const ModelDetail = () => {
   const { id } = useParams();
@@ -55,13 +57,14 @@ const ModelDetail = () => {
     return moto.imagen_moto
       .map((item) => item.imagen)
       .filter((img) => img?.url_imagen)
-      .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+      .sort((a, b) => getOrder(a) - getOrder(b));
   }, [moto]);
 
-  const mainImage = media.find((img) => img.orden === 0) || media[0];
-  const actionImage = media.find((img) => img.orden === 1) || media[1];
-  const videoMedia = media.find((img) => img.orden === 2);
-  const logoImage = media.find((img) => img.orden === 3);
+  const mainImage = media.find((img) => getOrder(img) === 0) || media[0];
+  const actionImage = media.find((img) => getOrder(img) === 1) || media[1];
+  const videoMedia =
+    media.find((img) => getOrder(img) === 2) || media.find((img) => isVideoUrl(img.url_imagen));
+  const logoImage = media.find((img) => getOrder(img) === 3);
 
   const videoUrl = videoMedia?.url_imagen || "";
   const videoEmbed = isYouTubeUrl(videoUrl) ? getYouTubeEmbedUrl(videoUrl) : "";

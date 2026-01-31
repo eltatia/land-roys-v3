@@ -38,15 +38,16 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
 
     useEffect(() => {
         if (initialData) {
+            const getOrder = (image) => Number(image?.orden ?? 0);
             const images = (initialData.imagen_moto || [])
                 .map((item) => item.imagen)
                 .filter(Boolean)
-                .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+                .sort((a, b) => getOrder(a) - getOrder(b));
 
-            const mainImage = images.find((img) => img.orden === 0) || images[0];
-            const actionImage = images.find((img) => img.orden === 1) || images[1];
-            const videoImage = images.find((img) => img.orden === 2) || images[2];
-            const logoImage = images.find((img) => img.orden === 3) || images[3];
+            const mainImage = images.find((img) => getOrder(img) === 0) || images[0];
+            const actionImage = images.find((img) => getOrder(img) === 1) || images[1];
+            const videoImage = images.find((img) => getOrder(img) === 2) || images[2];
+            const logoImage = images.find((img) => getOrder(img) === 3) || images[3];
 
             setFormData({
                 modelo: initialData.modelo || "",
