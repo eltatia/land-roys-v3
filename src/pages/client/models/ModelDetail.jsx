@@ -148,7 +148,7 @@ const ModelDetail = () => {
                 <img
                   src={logoImage.url_imagen}
                   alt={`Logo ${moto.modelo}`}
-                  className="h-16 md:h-24 w-auto object-contain drop-shadow-lg"
+                  className="h-20 md:h-28 w-auto object-contain drop-shadow-lg"
                 />
               ) : null}
             </div>
@@ -206,7 +206,7 @@ const ModelDetail = () => {
                   <img
                     src={logoImage.url_imagen}
                     alt={`Logo ${moto.modelo}`}
-                    className="h-16 md:h-20 w-auto object-contain"
+                    className="h-20 md:h-24 w-auto object-contain"
                   />
                 ) : (
                   <h2 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
