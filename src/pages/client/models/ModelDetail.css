@@ -61,5 +61,5 @@
 
 .slide-reveal {
   opacity: 0;
-  animation: slide-in-right 0.9s ease forwards;
+  animation: slide-in-right 1.6s ease-out forwards;
 }

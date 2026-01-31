@@ -180,12 +180,12 @@ const ModelDetail = () => {
             </Link>
           </div>
           <div className="w-full min-h-screen flex items-center bg-white">
-            <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-12 items-center">
-              <div className="relative overflow-hidden rounded-[2.5rem] shadow-2xl slide-reveal">
+            <div className="w-full max-w-[1400px] mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-10 items-center">
+              <div className="relative slide-reveal">
                 <img
                   src={mainImage?.url_imagen || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1200&auto=format&fit=crop"}
                   alt={`${moto.marca} ${moto.modelo}`}
-                  className="w-full h-[560px] object-cover transition-transform duration-700 hover:scale-105"
+                  className="w-full h-[620px] object-contain transition-transform duration-1000 hover:scale-[1.03]"
                 />
               </div>
               <div className="space-y-6">
