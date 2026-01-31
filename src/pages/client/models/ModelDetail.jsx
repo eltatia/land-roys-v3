@@ -147,13 +147,6 @@ const ModelDetail = () => {
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tight">
               {moto.marca} <span className="text-yellow-400">{moto.modelo}</span>
             </h1>
-            <p className="text-white/70 text-sm md:text-base">
-              {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
-            </p>
-            <div className="flex items-end gap-4">
-              <span className="text-3xl font-black text-white">${moto.precio?.toLocaleString()}</span>
-              <span className="text-xs text-white/40 uppercase tracking-widest">Precio referencial</span>
-            </div>
           </div>
           <div className="absolute inset-0">
             {videoUrl ? (
@@ -190,19 +183,14 @@ const ModelDetail = () => {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-20 model-detail-section delay-2">
-        <div className="relative bg-white rounded-[2.5rem] shadow-2xl p-8 md:p-12 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
-          <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl group slide-reveal">
+      <section className="max-w-7xl mx-auto px-6 pb-24 model-detail-section delay-2">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-12 items-center">
+          <div className="relative overflow-hidden rounded-[2.5rem] shadow-2xl slide-reveal">
             <img
               src={mainImage?.url_imagen || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1200&auto=format&fit=crop"}
               alt={`${moto.marca} ${moto.modelo}`}
-              className="w-full h-[480px] object-cover group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-[560px] object-cover transition-transform duration-700 hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-60" />
-            <div className="absolute bottom-6 left-6 text-white">
-              <span className="text-xs uppercase tracking-widest text-white/70">Diseño premium</span>
-              <h2 className="text-2xl font-black">{moto.marca} {moto.modelo}</h2>
-            </div>
           </div>
 
           <div className="space-y-6">
@@ -214,7 +202,7 @@ const ModelDetail = () => {
               <h2 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
                 {moto.marca} <span className="text-yellow-500">{moto.modelo}</span>
               </h2>
-              <p className="text-gray-500 text-sm md:text-base leading-relaxed">
+              <p className="text-gray-500 text-base md:text-lg leading-relaxed">
                 {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
               </p>
             </div>
@@ -235,52 +223,52 @@ const ModelDetail = () => {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-20 model-detail-section delay-3">
-        <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 md:p-12 space-y-6">
-          <div className="flex items-center gap-3 text-yellow-500">
-            <Bike size={24} className="icon-float" />
-            <h3 className="text-xl font-black text-gray-900">Especificaciones técnicas</h3>
+      <section className="w-full bg-black text-white model-detail-section delay-3">
+        <div className="max-w-7xl mx-auto px-6 py-16 min-h-[80vh] flex flex-col justify-center">
+          <div className="text-center mb-12">
+            <h3 className="text-3xl md:text-4xl font-black tracking-[0.2em] uppercase">Especificaciones</h3>
+            <div className="w-12 h-1 bg-yellow-400 mx-auto mt-4" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {specs.map((spec) => (
-              <div key={spec.label} className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl">
-                <div className="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center">
+              <div key={spec.label} className="flex flex-col items-center gap-3 bg-white/5 p-6 rounded-3xl text-center border border-white/10">
+                <div className="w-12 h-12 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center">
                   {spec.icon}
                 </div>
                 <div>
-                  <div className="text-xs uppercase text-gray-400">{spec.label}</div>
-                  <div className="text-sm font-bold text-gray-900">{spec.value}</div>
+                  <div className="text-xs uppercase text-white/60">{spec.label}</div>
+                  <div className="text-lg font-black text-white">{spec.value}</div>
                 </div>
               </div>
             ))}
-            <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl">
-              <div className="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 bg-white/5 p-6 rounded-3xl text-center border border-white/10">
+              <div className="w-12 h-12 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center">
                 <BadgeCheck size={18} />
               </div>
               <div>
-                <div className="text-xs uppercase text-gray-400">Estado</div>
-                <div className="text-sm font-bold text-gray-900">{moto.estado}</div>
+                <div className="text-xs uppercase text-white/60">Estado</div>
+                <div className="text-lg font-black text-white">{moto.estado}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl">
-              <div className="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 bg-white/5 p-6 rounded-3xl text-center border border-white/10">
+              <div className="w-12 h-12 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center">
                 <Gauge size={18} />
               </div>
               <div>
-                <div className="text-xs uppercase text-gray-400">Precio</div>
-                <div className="text-sm font-bold text-gray-900">${moto.precio?.toLocaleString()}</div>
+                <div className="text-xs uppercase text-white/60">Precio</div>
+                <div className="text-lg font-black text-white">${moto.precio?.toLocaleString()}</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-20 model-detail-section delay-4">
-        <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl group">
+      <section className="model-detail-section delay-4">
+        <div className="relative w-[80%] mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl group">
           <img
             src={actionImage?.url_imagen || mainImage?.url_imagen || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=1200&auto=format&fit=crop"}
             alt={`${moto.marca} ${moto.modelo} en acción`}
-            className="w-full h-[460px] object-cover group-hover:scale-105 transition-transform duration-700"
+            className="w-full h-[80vh] object-cover group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent opacity-80" />
           <div className="absolute inset-0 flex items-end p-8">
