@@ -186,12 +186,27 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
             if (formData.use_video) {
                 await upsertImageForOrder(2, formData.video_url);
             } else if (imageIdsByOrder[2]) {
-                const { error: deactivateError } = await supabase
-                    .from("imagen")
-                    .update({ url_imagen: null, estado: "inactivo", orden: 2 })
-                    .eq("id_imagen", imageIdsByOrder[2]);
+                const videoImageId = imageIdsByOrder[2];
 
-                if (deactivateError) throw deactivateError;
+                const { error: unlinkError } = await supabase
+                    .from("imagen_moto")
+                    .delete()
+                    .eq("id_imagen", videoImageId)
+                    .eq("id_moto", motoId);
+
+                if (unlinkError) throw unlinkError;
+
+                const { error: deleteError } = await supabase
+                    .from("imagen")
+                    .delete()
+                    .eq("id_imagen", videoImageId);
+
+                if (deleteError) throw deleteError;
+
+                setImageIdsByOrder((prev) => {
+                    const { [2]: _removed, ...rest } = prev;
+                    return rest;
+                });
             }
 
             await upsertImageForOrder(3, formData.logo_url);
