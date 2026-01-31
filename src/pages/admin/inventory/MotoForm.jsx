@@ -20,6 +20,7 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
         imagen_url: null,
         imagen_accion_url: null,
         video_url: null,
+        logo_url: null,
         use_video: true,
         capacidad_tanque_l: "",
         maxima_velocidad_kmh: "",
@@ -41,6 +42,7 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
             const mainImage = images.find((img) => img.orden === 0) || images[0];
             const actionImage = images.find((img) => img.orden === 1) || images[1];
             const videoImage = images.find((img) => img.orden === 2) || images[2];
+            const logoImage = images.find((img) => img.orden === 3) || images[3];
 
             setFormData({
                 modelo: initialData.modelo || "",
@@ -52,6 +54,7 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 imagen_url: mainImage?.url_imagen || null,
                 imagen_accion_url: actionImage?.url_imagen || null,
                 video_url: videoImage?.url_imagen || null,
+                logo_url: logoImage?.url_imagen || null,
                 use_video: Boolean(videoImage?.url_imagen),
                 capacidad_tanque_l: initialData.capacidad_tanque_l || "",
                 maxima_velocidad_kmh: initialData.maxima_velocidad_kmh || "",
@@ -67,6 +70,7 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 0: mainImage?.id_imagen,
                 1: actionImage?.id_imagen,
                 2: videoImage?.id_imagen,
+                3: logoImage?.id_imagen,
             });
         }
     }, [initialData]);
@@ -190,6 +194,8 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                 if (deactivateError) throw deactivateError;
             }
 
+            await upsertImageForOrder(3, formData.logo_url);
+
             Swal.fire({
                 icon: "success",
                 title: initialData ? "Moto actualizada" : "Moto creada",
@@ -293,6 +299,39 @@ const MotoForm = ({ onClose, onSave, initialData }) => {
                                 />
                             </div>
                         )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="relative group w-full h-40 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-yellow-400 transition-colors cursor-pointer">
+                            {formData.logo_url ? (
+                                <img src={formData.logo_url} alt="Logo" className="w-full h-full object-contain p-4" />
+                            ) : (
+                                <div className="flex flex-col items-center text-gray-400">
+                                    <Upload size={28} className="mb-2" />
+                                    <span className="text-sm font-medium text-center px-3">Logo para hero</span>
+                                </div>
+                            )}
+
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleMediaUpload(e, "logo_url", "motos")}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                disabled={uploading}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Logo por URL (opcional)</label>
+                            <input
+                                type="text"
+                                name="logo_url"
+                                className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                                value={formData.logo_url || ""}
+                                onChange={handleChange}
+                                placeholder="https://... (logo para hero)"
+                            />
+                        </div>
                     </div>
 
                     {formData.use_video && (

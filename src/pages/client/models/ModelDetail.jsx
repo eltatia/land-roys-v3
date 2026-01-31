@@ -61,6 +61,7 @@ const ModelDetail = () => {
   const mainImage = media.find((img) => img.orden === 0) || media[0];
   const actionImage = media.find((img) => img.orden === 1) || media[1];
   const videoMedia = media.find((img) => img.orden === 2);
+  const logoImage = media.find((img) => img.orden === 3);
 
   const videoUrl = videoMedia?.url_imagen || "";
   const videoEmbed = isYouTubeUrl(videoUrl) ? getYouTubeEmbedUrl(videoUrl) : "";
@@ -142,13 +143,14 @@ const ModelDetail = () => {
           </div>
           <div className="relative w-full h-[70vh] md:h-screen bg-black overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
-            <div className="absolute bottom-10 left-6 md:left-16 z-20 text-white max-w-xl space-y-3">
-              <h1 className="text-3xl md:text-5xl font-black italic tracking-tight">
-                {moto.modelo}
-              </h1>
-              <p className="text-4xl md:text-6xl font-black text-yellow-400">
-                Land Roys
-              </p>
+            <div className="absolute bottom-10 left-6 md:left-16 z-20">
+              {logoImage?.url_imagen ? (
+                <img
+                  src={logoImage.url_imagen}
+                  alt={`Logo ${moto.modelo}`}
+                  className="h-16 md:h-24 w-auto object-contain drop-shadow-lg"
+                />
+              ) : null}
             </div>
             <div className="absolute inset-0">
               {isVideoFile(videoUrl) ? (
@@ -199,10 +201,18 @@ const ModelDetail = () => {
                 <Bike size={24} className="icon-float" />
                 <h3 className="text-xl font-black text-gray-900">Tu próxima moto</h3>
               </div>
-              <div className="space-y-4">
-                <h2 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
-                  {moto.modelo}
-                </h2>
+            <div className="space-y-4">
+                {logoImage?.url_imagen ? (
+                  <img
+                    src={logoImage.url_imagen}
+                    alt={`Logo ${moto.modelo}`}
+                    className="h-16 md:h-20 w-auto object-contain"
+                  />
+                ) : (
+                  <h2 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
+                    {moto.modelo}
+                  </h2>
+                )}
                 <p className="text-gray-500 text-base md:text-lg leading-relaxed">
                   {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
                 </p>
@@ -217,7 +227,7 @@ const ModelDetail = () => {
                   <div className="text-base font-black">{moto.estado}</div>
                 </div>
                 <button className="bg-black text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
-                  Agendar prueba
+                  Ver ficha técnica
                 </button>
               </div>
             </div>
