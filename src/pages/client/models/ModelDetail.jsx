@@ -131,20 +131,41 @@ const ModelDetail = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <section className="model-detail-hero model-detail-section">
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <Link to="/modelos" className="inline-flex items-center gap-2 text-gray-400 hover:text-yellow-500 transition-colors">
+        <div className="absolute top-6 left-6 z-20">
+          <Link to="/modelos" className="inline-flex items-center gap-2 text-white/70 hover:text-yellow-400 transition-colors">
             <ArrowLeft size={18} />
             Volver a modelos
           </Link>
         </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-6 pb-16 model-detail-section delay-1">
-        <div className="bg-black rounded-[2.5rem] overflow-hidden shadow-2xl">
-          <div className="relative aspect-video bg-black">
+        <div className="relative w-full h-[70vh] md:h-screen bg-black overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
+          <div className="absolute bottom-10 left-6 md:left-16 z-20 text-white max-w-xl space-y-3">
+            <span className="inline-flex items-center gap-2 bg-yellow-400 text-black text-[10px] font-black px-3 py-1 rounded-full tracking-widest uppercase">
+              <Sparkles size={14} />
+              Nuevo lanzamiento
+            </span>
+            <h1 className="text-4xl md:text-6xl font-black italic tracking-tight">
+              {moto.marca} <span className="text-yellow-400">{moto.modelo}</span>
+            </h1>
+            <p className="text-white/70 text-sm md:text-base">
+              {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
+            </p>
+            <div className="flex items-end gap-4">
+              <span className="text-3xl font-black text-white">${moto.precio?.toLocaleString()}</span>
+              <span className="text-xs text-white/40 uppercase tracking-widest">Precio referencial</span>
+            </div>
+          </div>
+          <div className="absolute inset-0">
             {videoUrl ? (
               isVideoFile(videoUrl) ? (
-                <video src={videoUrl} controls className="w-full h-full object-cover" />
+                <video
+                  src={videoUrl}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
               ) : videoEmbed ? (
                 <iframe
                   title="Video Moto"
@@ -169,13 +190,13 @@ const ModelDetail = () => {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-16 model-detail-section delay-2">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-          <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl group">
+      <section className="max-w-6xl mx-auto px-6 pb-20 model-detail-section delay-2">
+        <div className="relative bg-white rounded-[2.5rem] shadow-2xl p-8 md:p-12 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 items-center">
+          <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl group slide-reveal">
             <img
               src={mainImage?.url_imagen || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=1200&auto=format&fit=crop"}
               alt={`${moto.marca} ${moto.modelo}`}
-              className="w-full h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-[480px] object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-60" />
             <div className="absolute bottom-6 left-6 text-white">
@@ -184,30 +205,38 @@ const ModelDetail = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-[2rem] shadow-xl p-8 space-y-6">
-            <div className="inline-flex items-center gap-2 bg-yellow-400 text-black text-[10px] font-black px-3 py-1 rounded-full tracking-widest uppercase">
-              <Sparkles size={14} />
-              Nuevo lanzamiento
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 text-yellow-500">
+              <Bike size={24} className="icon-float" />
+              <h3 className="text-xl font-black text-gray-900">Tu próxima moto</h3>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
-              {moto.marca} <span className="text-yellow-500">{moto.modelo}</span>
-            </h1>
-            <p className="text-gray-500 text-sm md:text-base">
-              {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
-            </p>
-            <div className="flex items-end gap-4">
-              <span className="text-3xl font-black text-gray-900">${moto.precio?.toLocaleString()}</span>
-              <span className="text-xs text-gray-400 uppercase tracking-widest">Precio referencial</span>
+            <div className="space-y-4">
+              <h2 className="text-4xl md:text-5xl font-black italic tracking-tight text-gray-900">
+                {moto.marca} <span className="text-yellow-500">{moto.modelo}</span>
+              </h2>
+              <p className="text-gray-500 text-sm md:text-base leading-relaxed">
+                {moto.descripcion || "Potencia, estilo y tecnología en una moto diseñada para conquistar cada kilómetro."}
+              </p>
             </div>
-            <button className="bg-black text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
-              Agendar prueba
-            </button>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="bg-gray-900 text-white px-6 py-3 rounded-2xl">
+                <span className="text-xs uppercase text-white/60 tracking-widest">Precio</span>
+                <div className="text-2xl font-black">${moto.precio?.toLocaleString()}</div>
+              </div>
+              <div className="bg-yellow-100 text-yellow-700 px-6 py-3 rounded-2xl">
+                <span className="text-xs uppercase tracking-widest">Estado</span>
+                <div className="text-base font-black">{moto.estado}</div>
+              </div>
+              <button className="bg-black text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors">
+                Agendar prueba
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-16 model-detail-section delay-3">
-        <div className="bg-white rounded-[2rem] shadow-xl p-8 space-y-6">
+      <section className="max-w-6xl mx-auto px-6 pb-20 model-detail-section delay-3">
+        <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 md:p-12 space-y-6">
           <div className="flex items-center gap-3 text-yellow-500">
             <Bike size={24} className="icon-float" />
             <h3 className="text-xl font-black text-gray-900">Especificaciones técnicas</h3>
@@ -246,12 +275,12 @@ const ModelDetail = () => {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-16 model-detail-section delay-4">
+      <section className="max-w-6xl mx-auto px-6 pb-20 model-detail-section delay-4">
         <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl group">
           <img
             src={actionImage?.url_imagen || mainImage?.url_imagen || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=1200&auto=format&fit=crop"}
             alt={`${moto.marca} ${moto.modelo} en acción`}
-            className="w-full h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"
+            className="w-full h-[460px] object-cover group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent opacity-80" />
           <div className="absolute inset-0 flex items-end p-8">
