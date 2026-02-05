@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #ffd900;       /* Blanco como color principal */
+  --color-secondary: #778da9;     /* Azul secundario */
+  --color-accent: #caf0f8;        /* Celeste para botones o iconos */
+  --color-background: #ffffff;    /* Fondo general */
+  --color-text: #1a1a1a;          /* Texto general */
+  --color-text-light: #ffffff;    /* Texto claro sobre fondo oscuro */
+  --color-gold: #d4af37;          /* Dorado para destacar elementos */
+
+  --font-h1: 'Montserrat', sans-serif;
+  --font-h2: 'Montserrat', sans-serif;
+  --font-h3: 'Raleway', sans-serif;
+  --font-h4: 'Raleway', sans-serif;
+  --font-body: 'Raleway', sans-serif;
+}
+
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+.main-content{
+  border: solid 1px red;
+}
+
+h1 {
+  font-family: var(--font-h1);
+  font-size: 36px;
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+h2 {
+  font-family: var(--font-h2);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+h3 {
+  font-family: var(--font-h3);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--color-secondary);
+}
+
+h4 {
+  font-family: var(--font-h4);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--color-secondary);
+}
+
+a {
+  text-decoration: none;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}

@@ -1,0 +1,15 @@
+/* Paginación como línea */
+.swiper .swiper-pagination-bullet {
+    background-color: #4b5563;  
+    opacity: 1;
+    width: 30px;                
+    height: 3px;                 
+    border-radius: 2px;          
+    margin: 0 4px;             
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.swiper .swiper-pagination-bullet-active {
+    background-color: #facc15;   
+    width: 50px;                 
+}
