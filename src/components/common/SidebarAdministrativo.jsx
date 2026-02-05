@@ -39,6 +39,26 @@ const SidebarAdministrativo = () => {
             path: "/admin/inventarios",
         },
         {
+            icon: <Wrench size={22} />,
+            label: "Repuestos",
+            path: "/admin/repuestos",
+        },
+        {
+            icon: <Tag size={22} />,
+            label: "Promociones",
+            path: "/admin/promociones",
+        },
+        {
+            icon: <Calendar size={22} />,
+            label: "Eventos",
+            path: "/admin/eventos",
+        },
+        {
+            icon: <SettingsIcon size={22} />,
+            label: "Configuración",
+            path: "/admin/configuracion",
+        },
+        {
             icon: <CircleDollarSign size={22} />,
             label: "Ventas",
             path: "/admin/ventas",

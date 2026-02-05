@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Función para cargar rol
+  // Función para cargar rol
   const loadRole = async (userId) => {
     try {
       const { data, error } = await supabase
