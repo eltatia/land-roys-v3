@@ -14,7 +14,7 @@ const Seccion_Slider = () => {
   useEffect(() => {
     const fetchSlides = async () => {
       const { data, error } = await supabase
-        .from("slider")
+        .from("slider_home")
         .select("*")
         .eq("estado", "activo")
         .order("orden", { ascending: true });

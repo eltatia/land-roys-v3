@@ -3,7 +3,7 @@ import { supabase } from "../api/Supabase.provider";
 // GET ALL MOTOS
 export const getMotos = async () => {
     const { data, error } = await supabase
-        .from("moto")
+        .from("motos")
         .select(`
       *,
       imagen_moto (
@@ -23,7 +23,7 @@ export const getMotos = async () => {
 // GET MOTO BY ID
 export const getMotoById = async (id) => {
     const { data, error } = await supabase
-        .from("moto")
+        .from("motos")
         .select(`
       *,
       imagen_moto (
@@ -44,7 +44,7 @@ export const getMotoById = async (id) => {
 // CREATE MOTO
 export const createMoto = async (motoData) => {
     const { data, error } = await supabase
-        .from("moto")
+        .from("motos")
         .insert([motoData])
         .select()
         .single();
@@ -56,7 +56,7 @@ export const createMoto = async (motoData) => {
 // UPDATE MOTO
 export const updateMoto = async (id, motoData) => {
     const { data, error } = await supabase
-        .from("moto")
+        .from("motos")
         .update(motoData)
         .eq("id_moto", id)
         .select()
@@ -69,7 +69,7 @@ export const updateMoto = async (id, motoData) => {
 // DELETE MOTO
 export const deleteMoto = async (id) => {
     const { error } = await supabase
-        .from("moto")
+        .from("motos")
         .delete()
         .eq("id_moto", id);
 

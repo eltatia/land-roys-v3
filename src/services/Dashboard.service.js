@@ -4,13 +4,13 @@ export const getDashboardStats = async () => {
     try {
         // Count Motos (Total)
         const { count: motosTotal, error: errMotos } = await supabase
-            .from("moto")
+            .from("motos")
             .select("*", { count: "exact", head: true });
         if (errMotos) throw errMotos;
 
         // Count Motos (Disponibles)
         const { count: motosDisponibles } = await supabase
-            .from("moto")
+            .from("motos")
             .select("*", { count: "exact", head: true })
             .eq("estado", "disponible");
 

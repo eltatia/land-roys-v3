@@ -2,7 +2,7 @@ import { supabase } from "../api/Supabase.provider";
 
 export const getMotos = async () => {
   const { data, error } = await supabase
-    .from("moto")
+    .from("motos")
     .select(
       `
       id_moto,
@@ -26,7 +26,7 @@ export const getMotos = async () => {
 
 export const getMotoById = async (id) => {
   const { data, error } = await supabase
-    .from("moto")
+    .from("motos")
     .select(
       `
       id_moto,
@@ -64,7 +64,7 @@ export const getMotoById = async (id) => {
 
 export const getTotalUnidadesMotos = async () => {
   const { data, error } = await supabase
-    .from("moto")
+    .from("motos")
     .select("id_moto");
 
   if (error) throw error;
