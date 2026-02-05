@@ -18,6 +18,14 @@ import About from "./pages/client/about/About";
 /* Páginas admin */
 import Login from "./pages/admin/auth/Login";
 import Dashboard from "./pages/admin/dashboard/Dashboard";
+import Inventory from "./pages/admin/inventory/Inventory";
+import InventorySpares from "./pages/admin/spares/InventorySpares";
+import Promotions from "./pages/admin/promotions/Promotions";
+import Events from "./pages/admin/events/Events";
+import Settings from "./pages/admin/settings/Settings";
+import Clients from "./pages/admin/clients/Clients";
+import Sales from "./pages/admin/sales/Sales";
+import Reports from "./pages/admin/reports/Reports";
 import Slider from "./pages/admin/slider/Slider";
 import Home_secciones from "./pages/admin/home_secciones/Home_secciones";
 import Ranking from "./components/admin/home_secciones/Ranking";
@@ -26,6 +34,7 @@ import Experiencia from "./components/admin/home_secciones/Experiencia";
 
 import Inventarios from "./pages/admin/inventarios/Inventarios";
 import GestionInventarioMoto from "./components/admin/inventarios/motos/GestionInventarioMoto";
+import GestionInventarioRepuesto from "./components/admin/inventarios/repuestos/GestionInventarioRepuesto";
 
 
 
@@ -77,6 +86,7 @@ function App() {
             {/* Inventarios como padre */}
             <Route path="inventarios" element={<Inventarios />} >
               <Route path="gestion_motos" element={<GestionInventarioMoto />} />
+              <Route path="repuestos" element={<GestionInventarioRepuesto />} />
             </Route>
             
           </Route>

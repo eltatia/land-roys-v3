@@ -1,5 +1,6 @@
-import { Bike, MessageSquareQuote } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Bike, MessageSquareQuote, Menu, X } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -38,7 +39,7 @@ const Header = () => {
                 <div className="flex justify-between items-center h-20">
 
                     {/* Logo */}
-                    <div className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                    <NavLink to="/" className="flex items-center gap-2 cursor-pointer flex-shrink-0">
                         <img
                             src="/Logo_land_roys.webp"
                             alt="Land Roys"

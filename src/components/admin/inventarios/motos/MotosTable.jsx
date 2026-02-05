@@ -7,7 +7,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const MotosTable = ({ motos = [] }) => {
+const MotosTable = ({ motos = [], loading = false }) => {
   return (
     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
       {/* Filtros */}
@@ -27,7 +27,7 @@ const MotosTable = ({ motos = [] }) => {
         <table className="w-full">
           <thead className="bg-slate-50/50 ">
             <tr>
-              {["Imagen", "Nombre", "Categoría", "Stock", "Precio", "Acciones"].map(h => (
+              {["Imagen", "Modelo", "Año", "Estado", "Precio", "Acciones"].map(h => (
                 <th key={h} className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   {h}
                 </th>
@@ -36,43 +36,62 @@ const MotosTable = ({ motos = [] }) => {
           </thead>
 
           <tbody className="divide-y divide-slate-50">
-            {motos.map(moto => {
-              const stockCritico = moto.stock > 0 && moto.stock <= 3;
-              const sinStock = moto.stock === 0;
+            {loading && (
+              <tr>
+                <td colSpan={6} className="px-8 py-8 text-center text-sm text-slate-400">
+                  Cargando motos...
+                </td>
+              </tr>
+            )}
+            {!loading && motos.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-8 py-8 text-center text-sm text-slate-400">
+                  No hay motos registradas.
+                </td>
+              </tr>
+            )}
+            {!loading && motos.map(moto => {
+              const imagen = moto.imagen_moto?.[0]?.imagen?.url_imagen;
 
               return (
-                <tr key={moto.id} className="hover:bg-slate-50/30">
+                <tr key={moto.id_moto} className="hover:bg-slate-50/30">
                   <td className="px-8 py-5">
                     <img
-                      src={moto.imagen_url || "https://images.unsplash.com/photo-1558981403-c5f91cbba527?w=200"}
-                      alt={moto.nombre}
+                      src={imagen || "https://images.unsplash.com/photo-1558981403-c5f91cbba527?w=200"}
+                      alt={moto.modelo}
                       className="w-14 h-10 object-cover rounded-lg border"
                     />
                   </td>
 
                   <td className="px-8 py-5">
-                    <div className="font-black text-sm">{moto.nombre}</div>
+                    <div className="font-black text-sm">{moto.modelo}</div>
                     <div className="text-[10px] text-slate-400 break-all">
-                      {moto.id}
+                      {moto.id_moto}
                     </div>
                   </td>
 
                   <td className="px-8 py-5">
-                    <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-3 py-1.5 rounded-full uppercase">
-                      {moto.categoria}
+                    <span className="text-[10px] font-black text-slate-500 uppercase">
+                      {moto.anio || "—"}
                     </span>
                   </td>
 
                   <td className="px-8 py-5 text-center">
-                    <div className={`font-black ${stockCritico ? "text-red-500" : "text-slate-900"}`}>
-                      {moto.stock.toString().padStart(2, "0")}
-                    </div>
-                    {stockCritico && <span className="text-[8px] text-red-400 font-black">CRÍTICO</span>}
-                    {sinStock && <span className="text-[8px] text-slate-300 font-black">SIN STOCK</span>}
+                    <span
+                      className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${
+                        moto.estado === "disponible"
+                          ? "bg-emerald-50 text-emerald-600"
+                          : moto.estado === "reservado"
+                          ? "bg-amber-50 text-amber-600"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {moto.estado || "inactivo"}
+                    </span>
                   </td>
 
                   <td className="px-8 py-5 font-black">
-                    S/ {moto.precio.toLocaleString("es-PE", { minimumFractionDigits: 2 })}
+                    S/ {(moto.precio || 0).toLocaleString("es-PE", { minimumFractionDigits: 2 })}
                   </td>
 
                   <td className="px-8 py-5">
