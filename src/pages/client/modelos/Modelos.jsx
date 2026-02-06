@@ -45,6 +45,22 @@ const Modelos = () => {
     return motos.filter((m) => (m.categoria || "").toLowerCase() === categoriaActiva.toLowerCase());
   }, [motos, categoriaActiva]);
 
+  const handleVerDetalles = (moto) => {
+    Swal.fire({
+      title: moto.nombre,
+      html: `
+        <div style="text-align:left">
+          <p><strong>Categoría:</strong> ${moto.categoria || "No definida"}</p>
+          <p><strong>Precio:</strong> ${currency.format(Number(moto.precio || 0))}</p>
+          <p><strong>Stock:</strong> ${moto.stock ?? 0}</p>
+          <p><strong>Descripción:</strong> ${moto.descripcion || "Sin descripción"}</p>
+        </div>
+      `,
+      confirmButtonText: "Cerrar",
+      confirmButtonColor: "#facc15",
+    });
+  };
+
   return (
     <section className="bg-[#f7f8fa] pb-16">
       <div
@@ -62,10 +78,10 @@ const Modelos = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="-mt-8 bg-white shadow-xl rounded-2xl p-4 md:p-5 flex flex-wrap items-center gap-3 md:gap-4">
-          <div className="flex items-center gap-2 text-gray-500 font-bold text-sm uppercase tracking-wider mr-2">
-            <Filter size={16} /> Filtrar por:
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="-mt-8 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.10)] rounded-2xl px-6 py-5 flex flex-wrap items-center gap-3 md:gap-4 border border-gray-100">
+          <div className="flex items-center gap-2 text-[#5b6b88] font-extrabold text-sm md:text-[15px] uppercase tracking-wider mr-2">
+            <Filter size={18} /> Filtrar por:
           </div>
 
           {categorias.map((cat) => {
@@ -74,8 +90,8 @@ const Modelos = () => {
               <button
                 key={cat}
                 onClick={() => setCategoriaActiva(cat)}
-                className={`px-6 py-2.5 rounded-full text-sm font-bold transition ${
-                  active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                className={`px-8 py-2.5 rounded-full text-base font-extrabold transition ${
+                  active ? "bg-yellow-400 text-black" : "bg-[#f4f6f9] text-[#51617d] hover:bg-gray-200"
                 }`}
               >
                 {cat === "all" ? "All" : cat}
@@ -93,15 +109,24 @@ const Modelos = () => {
 
           {motosFiltradas.map((moto) => (
             <article key={moto.id} className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100">
-              <div className="relative">
+              <div className="relative group">
                 <img
                   src={moto.imagen_url || "https://images.unsplash.com/photo-1511994298241-608e28f14fde?q=80&w=1200&auto=format&fit=crop"}
                   alt={moto.nombre}
-                  className="w-full h-60 object-cover"
+                  className="w-full h-60 object-cover transition-opacity duration-300 group-hover:opacity-60"
                 />
                 <span className="absolute top-3 right-3 bg-[#111] text-yellow-400 text-xs font-black px-3 py-1 rounded-full uppercase">
                   {moto.categoria || "Sin categoría"}
                 </span>
+
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button
+                    onClick={() => handleVerDetalles(moto)}
+                    className="bg-black/85 text-white font-extrabold px-5 py-2.5 rounded-full border border-yellow-400"
+                  >
+                    Ver detalles
+                  </button>
+                </div>
               </div>
 
               <div className="p-5 space-y-3">
