@@ -58,6 +58,25 @@ const removeColumn = (payload, column) => {
   return rest;
 };
 
+const executeWithFallback = async (requestFactory) => {
+  let payload = null;
+  let data = null;
+  let error = null;
+  let attempts = 0;
+
+  while (attempts < 5) {
+    ({ data, error, payload } = await requestFactory(payload));
+    if (!error) return { data, error: null, payload };
+
+    const missingColumn = missingColumnMatch(error);
+    if (!missingColumn || !payload) break;
+    payload = removeColumn(payload, missingColumn);
+    attempts += 1;
+  }
+
+  return { data, error, payload };
+};
+
 export const uploadMotoImage = async (file) => {
   const bucket = getMotoBucket();
   const ext = file.name.split(".").pop();
@@ -92,27 +111,17 @@ export const getMotos = async () => {
 };
 
 export const addMoto = async (moto) => {
-  let motoPayload = pickMotoPayload(moto);
-  let data;
-  let error;
+  const basePayload = pickMotoPayload(moto);
 
-  ({ data, error } = await supabase
-    .from("motos")
-    .insert([motoPayload])
-    .select()
-    .single());
-
-  if (error) {
-    const missingColumn = missingColumnMatch(error);
-    if (missingColumn) {
-      motoPayload = removeColumn(motoPayload, missingColumn);
-      ({ data, error } = await supabase
-        .from("motos")
-        .insert([motoPayload])
-        .select()
-        .single());
-    }
-  }
+  const { data, error } = await executeWithFallback(async (payloadOverride) => {
+    const payload = payloadOverride || basePayload;
+    const response = await supabase
+      .from("motos")
+      .insert([payload])
+      .select()
+      .single();
+    return { ...response, payload };
+  });
 
   if (error) throw error;
 
@@ -129,33 +138,21 @@ export const addMoto = async (moto) => {
 };
 
 export const updateMoto = async (id, moto) => {
-  let motoPayload = {
+  const basePayload = {
     ...pickMotoPayload(moto),
     actualizado_en: new Date().toISOString(),
   };
 
-  let data;
-  let error;
-
-  ({ data, error } = await supabase
-    .from("motos")
-    .update(motoPayload)
-    .eq("id", id)
-    .select()
-    .single());
-
-  if (error) {
-    const missingColumn = missingColumnMatch(error);
-    if (missingColumn) {
-      motoPayload = removeColumn(motoPayload, missingColumn);
-      ({ data, error } = await supabase
-        .from("motos")
-        .update(motoPayload)
-        .eq("id", id)
-        .select()
-        .single());
-    }
-  }
+  const { data, error } = await executeWithFallback(async (payloadOverride) => {
+    const payload = payloadOverride || basePayload;
+    const response = await supabase
+      .from("motos")
+      .update(payload)
+      .eq("id", id)
+      .select()
+      .single();
+    return { ...response, payload };
+  });
 
   if (error) throw error;
 
