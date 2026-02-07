@@ -46,6 +46,18 @@ const pickSpecs = (moto = {}) => normalizeSpecs(moto);
 
 const getMotoBucket = () => import.meta.env.VITE_SUPABASE_MOTOS_BUCKET || "motos";
 
+const missingColumnMatch = (error) => {
+  const message = error?.message || "";
+  const match = message.match(/Could not find the '(.+?)' column of 'motos'/);
+  return match ? match[1] : null;
+};
+
+const removeColumn = (payload, column) => {
+  if (!column) return payload;
+  const { [column]: _removed, ...rest } = payload;
+  return rest;
+};
+
 export const uploadMotoImage = async (file) => {
   const bucket = getMotoBucket();
   const ext = file.name.split(".").pop();
@@ -80,12 +92,27 @@ export const getMotos = async () => {
 };
 
 export const addMoto = async (moto) => {
-  const motoPayload = pickMotoPayload(moto);
-  const { data, error } = await supabase
+  let motoPayload = pickMotoPayload(moto);
+  let data;
+  let error;
+
+  ({ data, error } = await supabase
     .from("motos")
     .insert([motoPayload])
     .select()
-    .single();
+    .single());
+
+  if (error) {
+    const missingColumn = missingColumnMatch(error);
+    if (missingColumn) {
+      motoPayload = removeColumn(motoPayload, missingColumn);
+      ({ data, error } = await supabase
+        .from("motos")
+        .insert([motoPayload])
+        .select()
+        .single());
+    }
+  }
 
   if (error) throw error;
 
@@ -102,17 +129,33 @@ export const addMoto = async (moto) => {
 };
 
 export const updateMoto = async (id, moto) => {
-  const motoPayload = {
+  let motoPayload = {
     ...pickMotoPayload(moto),
     actualizado_en: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase
+  let data;
+  let error;
+
+  ({ data, error } = await supabase
     .from("motos")
     .update(motoPayload)
     .eq("id", id)
     .select()
-    .single();
+    .single());
+
+  if (error) {
+    const missingColumn = missingColumnMatch(error);
+    if (missingColumn) {
+      motoPayload = removeColumn(motoPayload, missingColumn);
+      ({ data, error } = await supabase
+        .from("motos")
+        .update(motoPayload)
+        .eq("id", id)
+        .select()
+        .single());
+    }
+  }
 
   if (error) throw error;
 
