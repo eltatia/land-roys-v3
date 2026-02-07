@@ -39,6 +39,41 @@ const tabs = [
   { key: "repuestos", label: "Repuestos", icon: Wrench },
 ];
 
+const repuestoCategories = [
+  { value: "Motores", label: "Motores" },
+  { value: "Carenados", label: "Carenados" },
+  { value: "Sistema eléctrico", label: "Sistema eléctrico" },
+  { value: "Transmisión", label: "Transmisión" },
+];
+
+const normalizeCategoryKey = (value = "") => value.trim().toLowerCase();
+
+const repuestoCategoryAliases = {
+  motor: "motores",
+  motores: "motores",
+  carenado: "carenados",
+  carenados: "carenados",
+  "sistema electrico": "sistema electrico",
+  "sistema eléctrico": "sistema electrico",
+  electrico: "sistema electrico",
+  eléctrico: "sistema electrico",
+  transmision: "transmision",
+  transmisión: "transmision",
+};
+
+const mapRepuestoCategoryKey = (value = "") =>
+  repuestoCategoryAliases[normalizeCategoryKey(value)] || normalizeCategoryKey(value);
+
+const repuestoCategoryLabelByKey = {
+  motores: "Motores",
+  carenados: "Carenados",
+  "sistema electrico": "Sistema eléctrico",
+  transmision: "Transmisión",
+};
+
+const toRepuestoCategoryLabel = (value = "") =>
+  repuestoCategoryLabelByKey[mapRepuestoCategoryKey(value)] || "Otros";
+
 const estadoClass = {
   disponible: "bg-green-100 text-green-700",
   agotado: "bg-red-100 text-red-600",
@@ -119,13 +154,13 @@ const Inventario = () => {
   }, [motos, filtroCategoria]);
 
   const repuestoCategorias = useMemo(() => {
-    const unique = [...new Set(repuestos.map((r) => r.categoria).filter(Boolean))];
-    return ["all", ...unique];
-  }, [repuestos]);
+    const allowedKeys = ["motores", "carenados", "sistema electrico", "transmision"];
+    return ["all", ...allowedKeys];
+  }, []);
 
   const repuestosFiltrados = useMemo(() => {
     if (repuestoFiltroCategoria === "all") return repuestos;
-    return repuestos.filter((r) => (r.categoria || "").toLowerCase() === repuestoFiltroCategoria.toLowerCase());
+    return repuestos.filter((r) => mapRepuestoCategoryKey(r.categoria) === repuestoFiltroCategoria);
   }, [repuestos, repuestoFiltroCategoria]);
 
   const handleChange = (e) => {
@@ -201,7 +236,10 @@ const Inventario = () => {
 
   const handleOpenRepuestoModal = () => {
     setRepuestoEditingId(null);
-    setRepuestoForm(initialRepuestoForm);
+    setRepuestoForm({
+      ...initialRepuestoForm,
+      categoria: repuestoCategories[0]?.value || "",
+    });
     setRepuestoModalOpen(true);
     setRepuestoImageFile(null);
     setRepuestoImagePreview("");
@@ -233,7 +271,7 @@ const Inventario = () => {
     setRepuestoEditingId(repuesto.id);
     setRepuestoForm({
       nombre: repuesto.nombre || "",
-      categoria: repuesto.categoria || "",
+      categoria: toRepuestoCategoryLabel(repuesto.categoria || ""),
       descripcion: repuesto.descripcion || "",
       precio: String(repuesto.precio ?? ""),
       stock: String(repuesto.stock ?? ""),
@@ -498,7 +536,7 @@ const Inventario = () => {
         <p className="font-bold text-lg leading-tight text-[#1d2b44]">{repuesto.nombre}</p>
         <p className="text-xs text-gray-400">ID: {repuesto.id}</p>
       </div>
-      <p className="text-[#334b68] text-sm">{repuesto.categoria || "-"}</p>
+      <p className="text-[#334b68] text-sm">{toRepuestoCategoryLabel(repuesto.categoria || "-")}</p>
       <p className="text-green-600 text-lg font-bold">${Number(repuesto.precio || 0).toLocaleString()}</p>
       <span className={`inline-flex w-fit px-3 py-1 rounded-full font-bold text-[11px] uppercase ${estadoClass[(repuesto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
         {(repuesto.estado || "disponible").toUpperCase()}
@@ -554,7 +592,7 @@ const Inventario = () => {
                     active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  {cat === "all" ? "Todas" : cat}
+                  {cat === "all" ? "Todas" : toRepuestoCategoryLabel(cat)}
                 </button>
               );
             })}
@@ -790,7 +828,18 @@ const Inventario = () => {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">Categoría</label>
-                <input name="categoria" value={repuestoForm.categoria} onChange={handleRepuestoChange} placeholder="Ej. Motor" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+                <select
+                  name="categoria"
+                  value={repuestoForm.categoria}
+                  onChange={handleRepuestoChange}
+                  className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
+                >
+                  {repuestoCategories.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">Precio</label>

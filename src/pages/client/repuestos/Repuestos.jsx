@@ -18,6 +18,23 @@ const defaultCategories = [
 
 const normalizeCategoryKey = (value = "") => value.trim().toLowerCase();
 
+const categoryAliases = {
+  motor: "motores",
+  motores: "motores",
+  carenado: "carenados",
+  carenados: "carenados",
+  "sistema electrico": "sistema electrico",
+  "sistema eléctrico": "sistema electrico",
+  electrico: "sistema electrico",
+  eléctrico: "sistema electrico",
+  transmision: "transmision",
+  transmisión: "transmision",
+};
+
+const mapCategoryKey = (value = "") => categoryAliases[normalizeCategoryKey(value)] || normalizeCategoryKey(value);
+
+const getCategoryLabel = (key) => defaultCategories.find((cat) => cat.key === key)?.label || "Otros";
+
 const Repuestos = () => {
   const [repuestos, setRepuestos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,23 +64,17 @@ const Repuestos = () => {
   }, []);
 
   const categories = useMemo(() => {
-    const fromData = [...new Set(repuestos.map((item) => item.categoria).filter(Boolean))].map((value) => ({
-      key: normalizeCategoryKey(value),
-      label: value,
-    }));
-
     const combined = [
       { key: "all", label: "Todos" },
       ...defaultCategories,
-      ...fromData.filter((cat) => !defaultCategories.some((base) => base.key === cat.key)),
     ];
 
     return combined;
-  }, [repuestos]);
+  }, []);
 
   const countsByCategory = useMemo(() => {
     const counts = repuestos.reduce((acc, item) => {
-      const key = normalizeCategoryKey(item.categoria || "otros");
+      const key = mapCategoryKey(item.categoria || "otros");
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
@@ -76,7 +87,7 @@ const Repuestos = () => {
     let data = [...repuestos];
 
     if (activeCategory !== "all") {
-      data = data.filter((item) => normalizeCategoryKey(item.categoria) === activeCategory);
+      data = data.filter((item) => mapCategoryKey(item.categoria) === activeCategory);
     }
 
     if (term) {
@@ -192,7 +203,7 @@ const Repuestos = () => {
                   </div>
                   <div className="p-5 space-y-2">
                     <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">
-                      {item.categoria || "Sin categoría"}
+                      {getCategoryLabel(mapCategoryKey(item.categoria || ""))}
                     </span>
                     <h3 className="text-lg font-bold text-slate-800">{item.nombre}</h3>
                     {item.descripcion && <p className="text-sm text-gray-500">{item.descripcion}</p>}
