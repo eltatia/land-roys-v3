@@ -11,6 +11,7 @@ import AdminLayout from "./layout/AdminLayout";
 /* Páginas cliente */
 import Home from "./pages/client/home/Home";
 import Modelos from "./pages/client/modelos/Modelos";
+import Repuestos from "./pages/client/repuestos/Repuestos";
 
 /* Páginas admin */
 import Login from "./pages/admin/auth/Login";
@@ -27,6 +28,7 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/modelos" element={<Modelos />} />
+            <Route path="/repuestos" element={<Repuestos />} />
           </Route>
 
           {/* Login admin */}
