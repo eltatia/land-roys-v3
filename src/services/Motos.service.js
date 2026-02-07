@@ -9,6 +9,24 @@ const normalizeMoto = (moto = {}) => ({
   modelo_codigo: moto.modelo_codigo || null,
 });
 
+const getMotoBucket = () => import.meta.env.VITE_SUPABASE_MOTOS_BUCKET || "motos";
+
+export const uploadMotoImage = async (file) => {
+  const bucket = getMotoBucket();
+  const ext = file.name.split(".").pop();
+  const fileName = `${crypto.randomUUID()}.${ext}`;
+  const filePath = `motos/${fileName}`;
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+  return data.publicUrl;
+};
+
 export const getMotos = async () => {
   const { data, error } = await supabase
     .from("motos")

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
-import { Pencil, Trash2, Plus, PackageSearch, Bike, Wrench, X } from "lucide-react";
-import { addMoto, deleteMoto, getMotos, updateMoto } from "../../../services/Motos.service";
+import { Pencil, Trash2, Plus, PackageSearch, Bike, Wrench, X, UploadCloud } from "lucide-react";
+import { addMoto, deleteMoto, getMotos, updateMoto, uploadMotoImage } from "../../../services/Motos.service";
 
 const initialForm = {
   nombre: "",
@@ -33,10 +33,13 @@ const Inventario = () => {
   const [motos, setMotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [filtroCategoria, setFiltroCategoria] = useState("all");
   const [form, setForm] = useState(initialForm);
   const [modalOpen, setModalOpen] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const fetchMotos = async () => {
     setLoading(true);
@@ -74,12 +77,16 @@ const Inventario = () => {
     setForm(initialForm);
     setEditingId(null);
     setModalOpen(false);
+    setImageFile(null);
+    setImagePreview("");
   };
 
   const handleOpenCreateModal = () => {
     setEditingId(null);
     setForm(initialForm);
     setModalOpen(true);
+    setImageFile(null);
+    setImagePreview("");
   };
 
   const handleEdit = (moto) => {
@@ -97,7 +104,16 @@ const Inventario = () => {
       estado: moto.estado || "disponible",
       imagen_url: moto.imagen_url || "",
     });
+    setImagePreview(moto.imagen_url || "");
+    setImageFile(null);
     setModalOpen(true);
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
@@ -129,6 +145,12 @@ const Inventario = () => {
 
     setSaving(true);
     try {
+      if (imageFile) {
+        setUploading(true);
+        const publicUrl = await uploadMotoImage(imageFile);
+        payload.imagen_url = publicUrl;
+      }
+
       if (editingId) {
         const updated = await updateMoto(editingId, payload);
         setMotos((prev) => prev.map((m) => (m.id === editingId ? updated : m)));
@@ -144,6 +166,7 @@ const Inventario = () => {
       Swal.fire("Error", "No se pudo guardar el modelo", "error");
     } finally {
       setSaving(false);
+      setUploading(false);
     }
   };
 
@@ -172,7 +195,7 @@ const Inventario = () => {
   };
 
   const TableHeader = () => (
-    <div className="grid grid-cols-[110px_1.2fr_1fr_1fr_1fr_120px] items-center bg-[#f5f6f8] text-[#556786] font-bold text-[18px] rounded-t-2xl px-5 py-4 border border-gray-100">
+    <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.9fr_0.9fr_120px] items-center bg-[#f5f6f8] text-[#556786] font-semibold text-[15px] rounded-t-2xl px-5 py-3 border border-gray-100">
       <span>Imagen</span>
       <span>Moto</span>
       <span>Año / CC</span>
@@ -183,27 +206,27 @@ const Inventario = () => {
   );
 
   const MotoRow = ({ moto }) => (
-    <div className="grid grid-cols-[110px_1.2fr_1fr_1fr_1fr_120px] items-center bg-white px-5 py-4 border-x border-b border-gray-100">
+    <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.9fr_0.9fr_120px] items-center bg-white px-5 py-3 border-x border-b border-gray-100">
       <img
         src={moto.imagen_url || "https://images.unsplash.com/photo-1511994298241-608e28f14fde?q=80&w=600&auto=format&fit=crop"}
         alt={moto.nombre}
-        className="w-[86px] h-[58px] object-cover rounded-xl bg-gray-100"
+        className="w-[70px] h-[48px] object-cover rounded-xl bg-gray-100"
       />
       <div>
-        <p className="font-extrabold text-[34px] leading-none text-[#1d2b44]">{moto.nombre}</p>
-        <p className="text-sm text-gray-400">ID: {moto.id}</p>
+        <p className="font-bold text-lg leading-tight text-[#1d2b44]">{moto.nombre}</p>
+        <p className="text-xs text-gray-400">ID: {moto.id}</p>
       </div>
-      <p className="text-[#334b68] text-2xl">{moto.anio || "-"} / {moto.cilindrada_cc || "-"}</p>
-      <p className="text-green-600 text-3xl font-black">${Number(moto.precio || 0).toLocaleString()}</p>
-      <span className={`inline-flex w-fit px-4 py-1 rounded-full font-extrabold text-sm uppercase ${estadoClass[(moto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
+      <p className="text-[#334b68] text-sm">{moto.anio || "-"} / {moto.cilindrada_cc || "-"}</p>
+      <p className="text-green-600 text-lg font-bold">${Number(moto.precio || 0).toLocaleString()}</p>
+      <span className={`inline-flex w-fit px-3 py-1 rounded-full font-bold text-[11px] uppercase ${estadoClass[(moto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
         {(moto.estado || "disponible").toUpperCase()}
       </span>
       <div className="flex justify-end gap-3">
         <button onClick={() => handleEdit(moto)} className="p-2 rounded-lg border border-blue-200 text-blue-600">
-          <Pencil size={18} />
+          <Pencil size={16} />
         </button>
         <button onClick={() => handleDelete(moto.id)} className="p-2 rounded-lg border border-red-200 text-red-500">
-          <Trash2 size={18} />
+          <Trash2 size={16} />
         </button>
       </div>
     </div>
@@ -289,42 +312,84 @@ const Inventario = () => {
 
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleSubmit} className="bg-white w-full max-w-3xl rounded-2xl p-6 space-y-4 relative shadow-2xl">
-            <button
-              type="button"
-              onClick={resetForm}
-              className="absolute top-3 right-3 p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
-            >
-              <X size={18} />
-            </button>
-
-            <h2 className="text-xl font-black text-slate-800">{editingId ? "Editar modelo" : "Nuevo modelo"}</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" className="w-full border rounded-xl px-3 py-2" />
-              <input name="marca" value={form.marca} onChange={handleChange} placeholder="Marca" className="w-full border rounded-xl px-3 py-2" />
-              <input name="modelo_codigo" value={form.modelo_codigo} onChange={handleChange} placeholder="Código modelo" className="w-full border rounded-xl px-3 py-2" />
-              <input name="categoria" value={form.categoria} onChange={handleChange} placeholder="Categoría" className="w-full border rounded-xl px-3 py-2" />
-              <input name="anio" value={form.anio} onChange={handleChange} placeholder="Año" type="number" className="w-full border rounded-xl px-3 py-2" />
-              <input name="cilindrada_cc" value={form.cilindrada_cc} onChange={handleChange} placeholder="Cilindrada (cc)" type="number" className="w-full border rounded-xl px-3 py-2" />
-              <input name="precio" value={form.precio} onChange={handleChange} placeholder="Precio" type="number" step="0.01" className="w-full border rounded-xl px-3 py-2" />
-              <input name="stock" value={form.stock} onChange={handleChange} placeholder="Stock" type="number" className="w-full border rounded-xl px-3 py-2" />
-              <select name="estado" value={form.estado} onChange={handleChange} className="w-full border rounded-xl px-3 py-2 bg-white">
-                <option value="disponible">Disponible</option>
-                <option value="preventa">Preventa</option>
-                <option value="agotado">Agotado</option>
-              </select>
+          <form onSubmit={handleSubmit} className="bg-white w-full max-w-3xl rounded-2xl p-6 space-y-6 relative shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h2 className="text-2xl font-black text-yellow-400">{editingId ? "Editar Motocicleta" : "Nueva Motocicleta"}</h2>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            <input name="imagen_url" value={form.imagen_url} onChange={handleChange} placeholder="URL imagen" className="w-full border rounded-xl px-3 py-2" />
-            <textarea name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="Descripción" rows={3} className="w-full border rounded-xl px-3 py-2 resize-none" />
+            <label className="relative border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center text-center gap-2 py-8 cursor-pointer">
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              {imagePreview ? (
+                <img src={imagePreview} alt="Preview" className="h-40 object-contain" />
+              ) : (
+                <>
+                  <UploadCloud className="text-gray-400" size={32} />
+                  <p className="text-gray-500 font-medium">Click para subir imagen</p>
+                </>
+              )}
+              {uploading && <span className="text-xs text-gray-400">Subiendo imagen...</span>}
+            </label>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button type="button" onClick={resetForm} className="px-4 py-2 rounded-xl border border-gray-300 text-gray-600 font-semibold">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Marca</label>
+                <input name="marca" value={form.marca} onChange={handleChange} placeholder="Ej. Yamaha" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Modelo</label>
+                <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Ej. MT-09" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Año</label>
+                <input name="anio" value={form.anio} onChange={handleChange} placeholder="2026" type="number" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Cilindrada</label>
+                <input name="cilindrada_cc" value={form.cilindrada_cc} onChange={handleChange} placeholder="Ej. 890cc" type="number" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Precio</label>
+                <input name="precio" value={form.precio} onChange={handleChange} placeholder="0.00" type="number" step="0.01" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Categoría</label>
+                <input name="categoria" value={form.categoria} onChange={handleChange} placeholder="Ej. Deportiva" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Stock</label>
+                <input name="stock" value={form.stock} onChange={handleChange} placeholder="0" type="number" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Estado</label>
+                <select name="estado" value={form.estado} onChange={handleChange} className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50">
+                  <option value="disponible">Disponible</option>
+                  <option value="preventa">Preventa</option>
+                  <option value="agotado">Agotado</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Descripción</label>
+              <textarea name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="Detalles adicionales..." rows={4} className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50 resize-none" />
+            </div>
+
+            <div className="flex items-center justify-end gap-4 pt-2">
+              <button type="button" onClick={resetForm} className="text-gray-500 font-semibold">
                 Cancelar
               </button>
-              <button disabled={saving} className="bg-yellow-400 hover:bg-yellow-500 rounded-xl px-5 py-2.5 font-bold text-black flex items-center gap-2">
-                <Plus size={16} /> {editingId ? "Guardar cambios" : "Crear modelo"}
+              <button disabled={saving} className="bg-yellow-400 hover:bg-yellow-500 rounded-xl px-6 py-2.5 font-bold text-black flex items-center gap-2">
+                <Plus size={16} /> {editingId ? "Guardar Moto" : "Guardar Moto"}
               </button>
             </div>
           </form>

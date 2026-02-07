@@ -142,30 +142,33 @@ const Modelos = () => {
 
               <div className="p-5 space-y-3">
                 <div className="flex justify-between items-start gap-3">
-                  <h3 className="text-3xl md:text-[2rem] font-bold text-[#6783b0] leading-tight">{moto.nombre}</h3>
-                  <p className="text-3xl md:text-[2rem] font-black text-black whitespace-nowrap">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#6783b0] leading-tight">{moto.nombre}</h3>
+                    {moto.marca && <p className="text-xs text-gray-400">{moto.marca}</p>}
+                  </div>
+                  <p className="text-xl font-black text-black whitespace-nowrap">
                     {currency.format(Number(moto.precio || 0))}
                   </p>
                 </div>
 
-                {moto.descripcion && <p className="text-sm text-gray-500">{moto.descripcion}</p>}
+                {moto.descripcion && <p className="text-xs text-gray-500">{moto.descripcion}</p>}
 
-                <div className="grid grid-cols-4 gap-2 pt-2 text-[11px] text-gray-500 uppercase font-bold border-t border-gray-100">
+                <div className="grid grid-cols-4 gap-2 pt-2 text-[10px] text-gray-500 uppercase font-semibold border-t border-gray-100">
                   <div className="flex flex-col items-center gap-1 py-2">
-                    <Gauge size={15} />
+                    <Gauge size={14} />
                     <span>{moto.categoria || "n/a"}</span>
                   </div>
                   <div className="flex flex-col items-center gap-1 py-2">
-                    <Boxes size={15} />
+                    <Boxes size={14} />
                     <span>{moto.stock} Stock</span>
                   </div>
                   <div className="flex flex-col items-center gap-1 py-2">
-                    <DollarSign size={15} />
+                    <DollarSign size={14} />
                     <span>{currency.format(Number(moto.precio || 0))}</span>
                   </div>
                   <div className="flex flex-col items-center gap-1 py-2">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] ${stateColors[(moto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}
+                      className={`px-2 py-0.5 rounded-full text-[9px] ${stateColors[(moto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}
                     >
                       {(moto.estado || "disponible").toUpperCase()}
                     </span>
