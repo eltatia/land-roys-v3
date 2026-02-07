@@ -9,6 +9,7 @@ import {
   updateRepuesto,
   uploadRepuestoImage,
 } from "../../../services/Repuestos.service";
+import { getCategoriasRepuestos } from "../../../services/CategoriasRepuestos.service";
 
 const initialForm = {
   nombre: "",
@@ -26,7 +27,7 @@ const initialForm = {
 
 const initialRepuestoForm = {
   nombre: "",
-  categoria: "",
+  categoria_id: "",
   descripcion: "",
   precio: "",
   stock: "",
@@ -39,40 +40,8 @@ const tabs = [
   { key: "repuestos", label: "Repuestos", icon: Wrench },
 ];
 
-const repuestoCategories = [
-  { value: "Motores", label: "Motores" },
-  { value: "Carenados", label: "Carenados" },
-  { value: "Sistema eléctrico", label: "Sistema eléctrico" },
-  { value: "Transmisión", label: "Transmisión" },
-];
-
-const normalizeCategoryKey = (value = "") => value.trim().toLowerCase();
-
-const repuestoCategoryAliases = {
-  motor: "motores",
-  motores: "motores",
-  carenado: "carenados",
-  carenados: "carenados",
-  "sistema electrico": "sistema electrico",
-  "sistema eléctrico": "sistema electrico",
-  electrico: "sistema electrico",
-  eléctrico: "sistema electrico",
-  transmision: "transmision",
-  transmisión: "transmision",
-};
-
-const mapRepuestoCategoryKey = (value = "") =>
-  repuestoCategoryAliases[normalizeCategoryKey(value)] || normalizeCategoryKey(value);
-
-const repuestoCategoryLabelByKey = {
-  motores: "Motores",
-  carenados: "Carenados",
-  "sistema electrico": "Sistema eléctrico",
-  transmision: "Transmisión",
-};
-
-const toRepuestoCategoryLabel = (value = "") =>
-  repuestoCategoryLabelByKey[mapRepuestoCategoryKey(value)] || "Otros";
+const buildRepuestoCategoryLabel = (categorias, categoriaId, fallback = "Otros") =>
+  categorias.find((categoria) => categoria.id === categoriaId)?.nombre || fallback;
 
 const estadoClass = {
   disponible: "bg-green-100 text-green-700",
@@ -111,6 +80,7 @@ const Inventario = () => {
   const [repuestoImageFile, setRepuestoImageFile] = useState(null);
   const [repuestoImagePreview, setRepuestoImagePreview] = useState("");
   const [repuestoImageUrlError, setRepuestoImageUrlError] = useState("");
+  const [categoriasRepuestos, setCategoriasRepuestos] = useState([]);
 
   const fetchMotos = async () => {
     setLoading(true);
@@ -138,9 +108,20 @@ const Inventario = () => {
     }
   };
 
+  const fetchCategoriasRepuestos = async () => {
+    try {
+      const data = await getCategoriasRepuestos();
+      setCategoriasRepuestos(data);
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo cargar las categorías de repuestos", "error");
+    }
+  };
+
   useEffect(() => {
     fetchMotos();
     fetchRepuestos();
+    fetchCategoriasRepuestos();
   }, []);
 
   const categorias = useMemo(() => {
@@ -153,14 +134,11 @@ const Inventario = () => {
     return motos.filter((m) => (m.categoria || "").toLowerCase() === filtroCategoria.toLowerCase());
   }, [motos, filtroCategoria]);
 
-  const repuestoCategorias = useMemo(() => {
-    const allowedKeys = ["motores", "carenados", "sistema electrico", "transmision"];
-    return ["all", ...allowedKeys];
-  }, []);
+  const repuestoCategorias = useMemo(() => ["all", ...categoriasRepuestos.map((cat) => cat.id)], [categoriasRepuestos]);
 
   const repuestosFiltrados = useMemo(() => {
     if (repuestoFiltroCategoria === "all") return repuestos;
-    return repuestos.filter((r) => mapRepuestoCategoryKey(r.categoria) === repuestoFiltroCategoria);
+    return repuestos.filter((r) => r.categoria_id === repuestoFiltroCategoria);
   }, [repuestos, repuestoFiltroCategoria]);
 
   const handleChange = (e) => {
@@ -238,7 +216,7 @@ const Inventario = () => {
     setRepuestoEditingId(null);
     setRepuestoForm({
       ...initialRepuestoForm,
-      categoria: repuestoCategories[0]?.value || "",
+      categoria_id: categoriasRepuestos[0]?.id || "",
     });
     setRepuestoModalOpen(true);
     setRepuestoImageFile(null);
@@ -268,10 +246,14 @@ const Inventario = () => {
   };
 
   const handleRepuestoEdit = (repuesto) => {
+    const categoriaId =
+      repuesto.categoria_id ||
+      categoriasRepuestos.find((categoria) => categoria.nombre === repuesto.categoria)?.id ||
+      "";
     setRepuestoEditingId(repuesto.id);
     setRepuestoForm({
       nombre: repuesto.nombre || "",
-      categoria: toRepuestoCategoryLabel(repuesto.categoria || ""),
+      categoria_id: categoriaId,
       descripcion: repuesto.descripcion || "",
       precio: String(repuesto.precio ?? ""),
       stock: String(repuesto.stock ?? ""),
@@ -376,7 +358,7 @@ const Inventario = () => {
   const handleRepuestoSubmit = async (e) => {
     e.preventDefault();
 
-    if (!repuestoForm.nombre.trim() || !repuestoForm.categoria.trim()) {
+    if (!repuestoForm.nombre.trim() || !repuestoForm.categoria_id) {
       Swal.fire("Validación", "Nombre y categoría son obligatorios", "warning");
       return;
     }
@@ -386,9 +368,11 @@ const Inventario = () => {
       return;
     }
 
+    const selectedCategoria = categoriasRepuestos.find((categoria) => categoria.id === repuestoForm.categoria_id);
     const payload = {
       nombre: repuestoForm.nombre.trim(),
-      categoria: repuestoForm.categoria.trim(),
+      categoria: selectedCategoria?.nombre || "",
+      categoria_id: repuestoForm.categoria_id,
       descripcion: repuestoForm.descripcion.trim() || null,
       precio: Number(repuestoForm.precio),
       stock: Number(repuestoForm.stock),
@@ -536,7 +520,9 @@ const Inventario = () => {
         <p className="font-bold text-lg leading-tight text-[#1d2b44]">{repuesto.nombre}</p>
         <p className="text-xs text-gray-400">ID: {repuesto.id}</p>
       </div>
-      <p className="text-[#334b68] text-sm">{toRepuestoCategoryLabel(repuesto.categoria || "-")}</p>
+      <p className="text-[#334b68] text-sm">
+        {buildRepuestoCategoryLabel(categoriasRepuestos, repuesto.categoria_id, repuesto.categoria || "-")}
+      </p>
       <p className="text-green-600 text-lg font-bold">${Number(repuesto.precio || 0).toLocaleString()}</p>
       <span className={`inline-flex w-fit px-3 py-1 rounded-full font-bold text-[11px] uppercase ${estadoClass[(repuesto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
         {(repuesto.estado || "disponible").toUpperCase()}
@@ -588,14 +574,14 @@ const Inventario = () => {
                 <button
                   key={cat}
                   onClick={() => (activeTab === "motos" ? setFiltroCategoria(cat) : setRepuestoFiltroCategoria(cat))}
-                  className={`px-4 py-2 rounded-full text-xs font-bold ${
-                    active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {cat === "all" ? "Todas" : toRepuestoCategoryLabel(cat)}
-                </button>
-              );
-            })}
+                    className={`px-4 py-2 rounded-full text-xs font-bold ${
+                      active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {cat === "all" ? "Todas" : buildRepuestoCategoryLabel(categoriasRepuestos, cat)}
+                  </button>
+                );
+              })}
           </div>
 
           {activeTab === "motos" ? (
@@ -829,14 +815,14 @@ const Inventario = () => {
               <div>
                 <label className="text-sm font-semibold text-gray-700">Categoría</label>
                 <select
-                  name="categoria"
-                  value={repuestoForm.categoria}
+                  name="categoria_id"
+                  value={repuestoForm.categoria_id}
                   onChange={handleRepuestoChange}
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 >
-                  {repuestoCategories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
+                  {categoriasRepuestos.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.nombre}
                     </option>
                   ))}
                 </select>

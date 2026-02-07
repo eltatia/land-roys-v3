@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Search, ShoppingCart, ChevronDown } from "lucide-react";
 import Swal from "sweetalert2";
 import { getRepuestos } from "../../../services/Repuestos.service";
+import { getCategoriasRepuestos } from "../../../services/CategoriasRepuestos.service";
 
 const currency = new Intl.NumberFormat("es-CO", {
   style: "currency",
@@ -9,34 +10,14 @@ const currency = new Intl.NumberFormat("es-CO", {
   maximumFractionDigits: 0,
 });
 
-const defaultCategories = [
-  { key: "motores", label: "Motores" },
-  { key: "carenados", label: "Carenados" },
-  { key: "sistema electrico", label: "Sistema eléctrico" },
-  { key: "transmision", label: "Transmisión" },
-];
-
-const normalizeCategoryKey = (value = "") => value.trim().toLowerCase();
-
-const categoryAliases = {
-  motor: "motores",
-  motores: "motores",
-  carenado: "carenados",
-  carenados: "carenados",
-  "sistema electrico": "sistema electrico",
-  "sistema eléctrico": "sistema electrico",
-  electrico: "sistema electrico",
-  eléctrico: "sistema electrico",
-  transmision: "transmision",
-  transmisión: "transmision",
+const getCategoryLabel = (categories, key) => {
+  if (key === "otros") return "Otros";
+  return categories.find((cat) => cat.id === key)?.nombre || "Otros";
 };
-
-const mapCategoryKey = (value = "") => categoryAliases[normalizeCategoryKey(value)] || normalizeCategoryKey(value);
-
-const getCategoryLabel = (key) => defaultCategories.find((cat) => cat.key === key)?.label || "Otros";
 
 const Repuestos = () => {
   const [repuestos, setRepuestos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
@@ -46,7 +27,9 @@ const Repuestos = () => {
     const fetchRepuestos = async () => {
       setLoading(true);
       try {
-        const data = await getRepuestos();
+        const [repuestosData, categoriasData] = await Promise.all([getRepuestos(), getCategoriasRepuestos()]);
+        setCategorias(categoriasData);
+        const data = repuestosData;
         setRepuestos(data);
       } catch (error) {
         console.error("Error cargando repuestos:", error);
@@ -64,17 +47,25 @@ const Repuestos = () => {
   }, []);
 
   const categories = useMemo(() => {
-    const combined = [
-      { key: "all", label: "Todos" },
-      ...defaultCategories,
-    ];
+    const base = [{ key: "all", label: "Todos" }, ...categorias.map((cat) => ({ key: cat.id, label: cat.nombre }))];
+    if (repuestos.some((item) => !item.categoria_id)) {
+      base.push({ key: "otros", label: "Otros" });
+    }
+    return base;
+  }, [categorias, repuestos]);
 
-    return combined;
-  }, []);
+  const categoriasById = useMemo(() => {
+    return categorias.reduce((acc, categoria) => {
+      acc[categoria.id] = categoria;
+      return acc;
+    }, {});
+  }, [categorias]);
+
+  const getCategoryKeyForItem = (item) => item.categoria_id || "otros";
 
   const countsByCategory = useMemo(() => {
     const counts = repuestos.reduce((acc, item) => {
-      const key = mapCategoryKey(item.categoria || "otros");
+      const key = getCategoryKeyForItem(item);
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {});
@@ -87,12 +78,16 @@ const Repuestos = () => {
     let data = [...repuestos];
 
     if (activeCategory !== "all") {
-      data = data.filter((item) => mapCategoryKey(item.categoria) === activeCategory);
+      data = data.filter((item) => getCategoryKeyForItem(item) === activeCategory);
     }
 
     if (term) {
       data = data.filter((item) =>
-        [item.nombre, item.descripcion, item.categoria]
+        [
+          item.nombre,
+          item.descripcion,
+          categoriasById[item.categoria_id]?.nombre || item.categoria,
+        ]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(term))
       );
@@ -203,7 +198,7 @@ const Repuestos = () => {
                   </div>
                   <div className="p-5 space-y-2">
                     <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">
-                      {getCategoryLabel(mapCategoryKey(item.categoria || ""))}
+                      {getCategoryLabel(categorias, getCategoryKeyForItem(item))}
                     </span>
                     <h3 className="text-lg font-bold text-slate-800">{item.nombre}</h3>
                     {item.descripcion && <p className="text-sm text-gray-500">{item.descripcion}</p>}
