@@ -28,6 +28,15 @@ const estadoClass = {
   preventa: "bg-blue-100 text-blue-700",
 };
 
+const isValidUrl = (value) => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 const Inventario = () => {
   const [activeTab, setActiveTab] = useState("motos");
   const [motos, setMotos] = useState([]);
@@ -40,6 +49,7 @@ const Inventario = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [imageUrlError, setImageUrlError] = useState("");
 
   const fetchMotos = async () => {
     setLoading(true);
@@ -71,8 +81,22 @@ const Inventario = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    if (name === "imagen_url" && !imageFile) {
-      setImagePreview(value.trim());
+
+    if (name === "imagen_url") {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        setImageUrlError("");
+        if (!imageFile) setImagePreview("");
+        return;
+      }
+
+      if (isValidUrl(trimmed)) {
+        setImageUrlError("");
+        if (!imageFile) setImagePreview(trimmed);
+      } else {
+        setImageUrlError("La URL debe empezar con http:// o https://");
+        if (!imageFile) setImagePreview("");
+      }
     }
   };
 
@@ -82,6 +106,7 @@ const Inventario = () => {
     setModalOpen(false);
     setImageFile(null);
     setImagePreview("");
+    setImageUrlError("");
   };
 
   const handleOpenCreateModal = () => {
@@ -90,6 +115,7 @@ const Inventario = () => {
     setModalOpen(true);
     setImageFile(null);
     setImagePreview("");
+    setImageUrlError("");
   };
 
   const handleEdit = (moto) => {
@@ -109,6 +135,7 @@ const Inventario = () => {
     });
     setImagePreview(moto.imagen_url || "");
     setImageFile(null);
+    setImageUrlError("");
     setModalOpen(true);
   };
 
@@ -117,11 +144,13 @@ const Inventario = () => {
     if (!file) return;
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+    setImageUrlError("");
   };
 
   const handleClearImage = () => {
     setImageFile(null);
     setImagePreview("");
+    setImageUrlError("");
     setForm((prev) => ({ ...prev, imagen_url: "" }));
   };
 
@@ -130,6 +159,11 @@ const Inventario = () => {
 
     if (!form.nombre.trim() || !form.categoria.trim()) {
       Swal.fire("Validación", "Nombre y categoría son obligatorios", "warning");
+      return;
+    }
+
+    if (!imageFile && imageUrlError) {
+      Swal.fire("Validación", "Ingresa una URL válida o sube una imagen local", "warning");
       return;
     }
 
@@ -349,7 +383,7 @@ const Inventario = () => {
             <div className="flex flex-col md:flex-row md:items-center gap-3">
               <div className="flex-1">
                 <label className="text-sm font-semibold text-gray-700">URL de imagen (opcional)</label>
-                <div className="mt-2 flex items-center gap-2 bg-gray-50 border rounded-xl px-3 py-2">
+                <div className={`mt-2 flex items-center gap-2 bg-gray-50 border rounded-xl px-3 py-2 ${imageUrlError ? "border-red-300" : "border-gray-200"}`}>
                   <Link2 size={16} className="text-gray-400" />
                   <input
                     name="imagen_url"
@@ -359,6 +393,7 @@ const Inventario = () => {
                     className="w-full bg-transparent outline-none"
                   />
                 </div>
+                {imageUrlError && <p className="text-xs text-red-500 mt-1">{imageUrlError}</p>}
               </div>
               {(imageFile || form.imagen_url) && (
                 <button

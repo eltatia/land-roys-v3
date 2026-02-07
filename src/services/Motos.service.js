@@ -1,12 +1,16 @@
 import { supabase } from "../api/Supabase.provider";
 
 const normalizeMoto = (moto = {}) => ({
-  ...moto,
-  anio: moto.anio ?? null,
-  cilindrada_cc: moto.cilindrada_cc ?? null,
+  id: moto.id,
+  nombre: moto.nombre ?? "",
+  descripcion: moto.descripcion ?? null,
+  categoria: moto.categoria ?? null,
+  precio: moto.precio ?? 0,
+  stock: moto.stock ?? 0,
+  imagen_url: moto.imagen_url ?? null,
+  marca: moto.marca ?? null,
+  modelo_codigo: moto.modelo_codigo ?? null,
   estado: moto.estado || "disponible",
-  marca: moto.marca || null,
-  modelo_codigo: moto.modelo_codigo || null,
 });
 
 const normalizeSpecs = (specs = {}) => ({
@@ -24,6 +28,18 @@ const normalizeSpecs = (specs = {}) => ({
   diferencial_titulo: specs.diferencial_titulo ?? null,
   diferencial_subtitulo: specs.diferencial_subtitulo ?? null,
   diferencial_texto: specs.diferencial_texto ?? null,
+});
+
+const pickMotoPayload = (moto = {}) => ({
+  nombre: moto.nombre?.trim() || "",
+  descripcion: moto.descripcion?.trim() || null,
+  categoria: moto.categoria?.trim() || null,
+  precio: moto.precio ?? 0,
+  stock: moto.stock ?? 0,
+  imagen_url: moto.imagen_url ?? null,
+  marca: moto.marca || null,
+  modelo_codigo: moto.modelo_codigo || null,
+  estado: moto.estado || "disponible",
 });
 
 const pickSpecs = (moto = {}) => normalizeSpecs(moto);
@@ -56,17 +72,18 @@ export const getMotos = async () => {
 
   return (data || []).map((moto) => {
     const specs = Array.isArray(moto.motos_specs) ? moto.motos_specs[0] : moto.motos_specs;
-    return normalizeMoto({
-      ...moto,
+    return {
+      ...normalizeMoto(moto),
       ...normalizeSpecs(specs || {}),
-    });
+    };
   });
 };
 
 export const addMoto = async (moto) => {
+  const motoPayload = pickMotoPayload(moto);
   const { data, error } = await supabase
     .from("motos")
-    .insert([normalizeMoto(moto)])
+    .insert([motoPayload])
     .select()
     .single();
 
@@ -81,18 +98,18 @@ export const addMoto = async (moto) => {
     if (specsError) throw specsError;
   }
 
-  return normalizeMoto({ ...data, ...specsPayload });
+  return { ...normalizeMoto(data), ...specsPayload };
 };
 
 export const updateMoto = async (id, moto) => {
-  const payload = {
-    ...normalizeMoto(moto),
+  const motoPayload = {
+    ...pickMotoPayload(moto),
     actualizado_en: new Date().toISOString(),
   };
 
   const { data, error } = await supabase
     .from("motos")
-    .update(payload)
+    .update(motoPayload)
     .eq("id", id)
     .select()
     .single();
@@ -108,7 +125,7 @@ export const updateMoto = async (id, moto) => {
     if (specsError) throw specsError;
   }
 
-  return normalizeMoto({ ...data, ...specsPayload });
+  return { ...normalizeMoto(data), ...specsPayload };
 };
 
 export const deleteMoto = async (id) => {
