@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
-import { Pencil, Trash2, Plus, PackageSearch, Bike, Wrench, X, UploadCloud } from "lucide-react";
+import { Pencil, Trash2, Plus, PackageSearch, Bike, Wrench, X, UploadCloud, Link2 } from "lucide-react";
 import { addMoto, deleteMoto, getMotos, updateMoto, uploadMotoImage } from "../../../services/Motos.service";
 
 const initialForm = {
@@ -71,6 +71,9 @@ const Inventario = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (name === "imagen_url" && !imageFile) {
+      setImagePreview(value.trim());
+    }
   };
 
   const resetForm = () => {
@@ -114,6 +117,12 @@ const Inventario = () => {
     if (!file) return;
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleClearImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setForm((prev) => ({ ...prev, imagen_url: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -337,6 +346,31 @@ const Inventario = () => {
               {uploading && <span className="text-xs text-gray-400">Subiendo imagen...</span>}
             </label>
 
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="flex-1">
+                <label className="text-sm font-semibold text-gray-700">URL de imagen (opcional)</label>
+                <div className="mt-2 flex items-center gap-2 bg-gray-50 border rounded-xl px-3 py-2">
+                  <Link2 size={16} className="text-gray-400" />
+                  <input
+                    name="imagen_url"
+                    value={form.imagen_url}
+                    onChange={handleChange}
+                    placeholder="https://..."
+                    className="w-full bg-transparent outline-none"
+                  />
+                </div>
+              </div>
+              {(imageFile || form.imagen_url) && (
+                <button
+                  type="button"
+                  onClick={handleClearImage}
+                  className="text-sm font-semibold text-gray-500 hover:text-gray-700"
+                >
+                  Limpiar imagen
+                </button>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-semibold text-gray-700">Marca</label>
@@ -389,7 +423,7 @@ const Inventario = () => {
                 Cancelar
               </button>
               <button disabled={saving} className="bg-yellow-400 hover:bg-yellow-500 rounded-xl px-6 py-2.5 font-bold text-black flex items-center gap-2">
-                <Plus size={16} /> {editingId ? "Guardar Moto" : "Guardar Moto"}
+                <Plus size={16} /> Guardar Moto
               </button>
             </div>
           </form>
