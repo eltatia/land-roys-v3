@@ -9,6 +9,12 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+const stateColors = {
+  disponible: "bg-green-100 text-green-700",
+  agotado: "bg-red-100 text-red-600",
+  preventa: "bg-blue-100 text-blue-700",
+};
+
 const Modelos = () => {
   const [motos, setMotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,10 +55,13 @@ const Modelos = () => {
     Swal.fire({
       title: moto.nombre,
       html: `
-        <div style="text-align:left">
+        <div style="text-align:left;display:grid;gap:6px">
+          <p><strong>Marca:</strong> ${moto.marca || "No definida"}</p>
           <p><strong>Categoría:</strong> ${moto.categoria || "No definida"}</p>
+          <p><strong>Año / CC:</strong> ${moto.anio || "-"} / ${moto.cilindrada_cc || "-"}</p>
           <p><strong>Precio:</strong> ${currency.format(Number(moto.precio || 0))}</p>
           <p><strong>Stock:</strong> ${moto.stock ?? 0}</p>
+          <p><strong>Estado:</strong> ${(moto.estado || "disponible").toUpperCase()}</p>
           <p><strong>Descripción:</strong> ${moto.descripcion || "Sin descripción"}</p>
         </div>
       `,
@@ -64,7 +73,7 @@ const Modelos = () => {
   return (
     <section className="bg-[#f7f8fa] pb-16">
       <div
-        className="relative h-[310px] bg-cover bg-center"
+        className="relative h-[360px] bg-cover bg-center"
         style={{
           backgroundImage:
             "linear-gradient(to right, rgba(0,0,0,.75), rgba(0,0,0,.45)), url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1600&auto=format&fit=crop')",
@@ -72,34 +81,36 @@ const Modelos = () => {
       >
         <div className="absolute inset-0 flex items-center justify-center text-center px-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-black text-yellow-400">Nuestros Modelos</h1>
-            <p className="text-white text-xl mt-2">Innovación y potencia en cada viaje</p>
+            <h1 className="text-5xl md:text-6xl font-black text-yellow-400">Nuestros Modelos</h1>
+            <p className="text-white text-2xl mt-2">Innovación y potencia en cada viaje</p>
+          </div>
+        </div>
+
+        <div className="absolute left-1/2 -translate-x-1/2 -bottom-8 w-[98%] max-w-[1500px] z-20 px-2">
+          <div className="bg-white shadow-[0_12px_30px_rgba(15,23,42,0.10)] rounded-2xl px-6 py-5 flex flex-wrap items-center gap-3 md:gap-4 border border-gray-100">
+            <div className="flex items-center gap-2 text-[#5b6b88] font-extrabold text-sm md:text-[15px] uppercase tracking-wider mr-2">
+              <Filter size={20} /> Filtrar por:
+            </div>
+
+            {categorias.map((cat) => {
+              const active = categoriaActiva === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setCategoriaActiva(cat)}
+                  className={`px-8 py-2.5 rounded-full text-base font-extrabold transition ${
+                    active ? "bg-yellow-400 text-black" : "bg-[#f4f6f9] text-[#51617d] hover:bg-gray-200"
+                  }`}
+                >
+                  {cat === "all" ? "All" : cat}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="-mt-8 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.10)] rounded-2xl px-6 py-5 flex flex-wrap items-center gap-3 md:gap-4 border border-gray-100">
-          <div className="flex items-center gap-2 text-[#5b6b88] font-extrabold text-sm md:text-[15px] uppercase tracking-wider mr-2">
-            <Filter size={18} /> Filtrar por:
-          </div>
-
-          {categorias.map((cat) => {
-            const active = categoriaActiva === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setCategoriaActiva(cat)}
-                className={`px-8 py-2.5 rounded-full text-base font-extrabold transition ${
-                  active ? "bg-yellow-400 text-black" : "bg-[#f4f6f9] text-[#51617d] hover:bg-gray-200"
-                }`}
-              >
-                {cat === "all" ? "All" : cat}
-              </button>
-            );
-          })}
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 mt-16">
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {!loading && motosFiltradas.length === 0 && (
             <div className="col-span-full bg-white rounded-xl p-8 text-center text-gray-500 font-medium">
@@ -113,7 +124,7 @@ const Modelos = () => {
                 <img
                   src={moto.imagen_url || "https://images.unsplash.com/photo-1511994298241-608e28f14fde?q=80&w=1200&auto=format&fit=crop"}
                   alt={moto.nombre}
-                  className="w-full h-60 object-cover transition-opacity duration-300 group-hover:opacity-60"
+                  className="w-full h-60 object-cover transition-opacity duration-300 group-hover:opacity-55"
                 />
                 <span className="absolute top-3 right-3 bg-[#111] text-yellow-400 text-xs font-black px-3 py-1 rounded-full uppercase">
                   {moto.categoria || "Sin categoría"}
@@ -139,7 +150,7 @@ const Modelos = () => {
 
                 {moto.descripcion && <p className="text-sm text-gray-500">{moto.descripcion}</p>}
 
-                <div className="grid grid-cols-3 gap-2 pt-2 text-[11px] text-gray-500 uppercase font-bold border-t border-gray-100">
+                <div className="grid grid-cols-4 gap-2 pt-2 text-[11px] text-gray-500 uppercase font-bold border-t border-gray-100">
                   <div className="flex flex-col items-center gap-1 py-2">
                     <Gauge size={15} />
                     <span>{moto.categoria || "n/a"}</span>
@@ -151,6 +162,14 @@ const Modelos = () => {
                   <div className="flex flex-col items-center gap-1 py-2">
                     <DollarSign size={15} />
                     <span>{currency.format(Number(moto.precio || 0))}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 py-2">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] ${stateColors[(moto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}
+                    >
+                      {(moto.estado || "disponible").toUpperCase()}
+                    </span>
+                    <span>{moto.anio || "-"} / {moto.cilindrada_cc || "-"}</span>
                   </div>
                 </div>
               </div>

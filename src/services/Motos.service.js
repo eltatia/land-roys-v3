@@ -1,5 +1,14 @@
 import { supabase } from "../api/Supabase.provider";
 
+const normalizeMoto = (moto = {}) => ({
+  ...moto,
+  anio: moto.anio ?? null,
+  cilindrada_cc: moto.cilindrada_cc ?? null,
+  estado: moto.estado || "disponible",
+  marca: moto.marca || null,
+  modelo_codigo: moto.modelo_codigo || null,
+});
+
 export const getMotos = async () => {
   const { data, error } = await supabase
     .from("motos")
@@ -7,23 +16,23 @@ export const getMotos = async () => {
     .order("creado_en", { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map(normalizeMoto);
 };
 
 export const addMoto = async (moto) => {
   const { data, error } = await supabase
     .from("motos")
-    .insert([moto])
+    .insert([normalizeMoto(moto)])
     .select()
     .single();
 
   if (error) throw error;
-  return data;
+  return normalizeMoto(data);
 };
 
 export const updateMoto = async (id, moto) => {
   const payload = {
-    ...moto,
+    ...normalizeMoto(moto),
     actualizado_en: new Date().toISOString(),
   };
 
@@ -35,7 +44,7 @@ export const updateMoto = async (id, moto) => {
     .single();
 
   if (error) throw error;
-  return data;
+  return normalizeMoto(data);
 };
 
 export const deleteMoto = async (id) => {

@@ -5,10 +5,15 @@ import { addMoto, deleteMoto, getMotos, updateMoto } from "../../../services/Mot
 
 const initialForm = {
   nombre: "",
+  marca: "",
+  modelo_codigo: "",
   descripcion: "",
   categoria: "",
+  anio: "",
+  cilindrada_cc: "",
   precio: "",
   stock: "",
+  estado: "disponible",
   imagen_url: "",
 };
 
@@ -16,6 +21,12 @@ const tabs = [
   { key: "motos", label: "Motos", icon: Bike },
   { key: "repuestos", label: "Repuestos", icon: Wrench },
 ];
+
+const estadoClass = {
+  disponible: "bg-green-100 text-green-700",
+  agotado: "bg-red-100 text-red-600",
+  preventa: "bg-blue-100 text-blue-700",
+};
 
 const Inventario = () => {
   const [activeTab, setActiveTab] = useState("motos");
@@ -75,10 +86,15 @@ const Inventario = () => {
     setEditingId(moto.id);
     setForm({
       nombre: moto.nombre || "",
+      marca: moto.marca || "",
+      modelo_codigo: moto.modelo_codigo || "",
       descripcion: moto.descripcion || "",
       categoria: moto.categoria || "",
+      anio: String(moto.anio ?? ""),
+      cilindrada_cc: String(moto.cilindrada_cc ?? ""),
       precio: String(moto.precio ?? ""),
       stock: String(moto.stock ?? ""),
+      estado: moto.estado || "disponible",
       imagen_url: moto.imagen_url || "",
     });
     setModalOpen(true);
@@ -94,10 +110,15 @@ const Inventario = () => {
 
     const payload = {
       nombre: form.nombre.trim(),
+      marca: form.marca.trim() || null,
+      modelo_codigo: form.modelo_codigo.trim() || null,
       descripcion: form.descripcion.trim() || null,
       categoria: form.categoria.trim(),
+      anio: form.anio ? Number(form.anio) : null,
+      cilindrada_cc: form.cilindrada_cc ? Number(form.cilindrada_cc) : null,
       precio: Number(form.precio),
       stock: Number(form.stock),
+      estado: form.estado,
       imagen_url: form.imagen_url.trim() || null,
     };
 
@@ -150,6 +171,44 @@ const Inventario = () => {
     }
   };
 
+  const TableHeader = () => (
+    <div className="grid grid-cols-[110px_1.2fr_1fr_1fr_1fr_120px] items-center bg-[#f5f6f8] text-[#556786] font-bold text-[18px] rounded-t-2xl px-5 py-4 border border-gray-100">
+      <span>Imagen</span>
+      <span>Moto</span>
+      <span>Año / CC</span>
+      <span>Precio</span>
+      <span>Estado</span>
+      <span className="text-right">Acciones</span>
+    </div>
+  );
+
+  const MotoRow = ({ moto }) => (
+    <div className="grid grid-cols-[110px_1.2fr_1fr_1fr_1fr_120px] items-center bg-white px-5 py-4 border-x border-b border-gray-100">
+      <img
+        src={moto.imagen_url || "https://images.unsplash.com/photo-1511994298241-608e28f14fde?q=80&w=600&auto=format&fit=crop"}
+        alt={moto.nombre}
+        className="w-[86px] h-[58px] object-cover rounded-xl bg-gray-100"
+      />
+      <div>
+        <p className="font-extrabold text-[34px] leading-none text-[#1d2b44]">{moto.nombre}</p>
+        <p className="text-sm text-gray-400">ID: {moto.id}</p>
+      </div>
+      <p className="text-[#334b68] text-2xl">{moto.anio || "-"} / {moto.cilindrada_cc || "-"}</p>
+      <p className="text-green-600 text-3xl font-black">${Number(moto.precio || 0).toLocaleString()}</p>
+      <span className={`inline-flex w-fit px-4 py-1 rounded-full font-extrabold text-sm uppercase ${estadoClass[(moto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
+        {(moto.estado || "disponible").toUpperCase()}
+      </span>
+      <div className="flex justify-end gap-3">
+        <button onClick={() => handleEdit(moto)} className="p-2 rounded-lg border border-blue-200 text-blue-600">
+          <Pencil size={18} />
+        </button>
+        <button onClick={() => handleDelete(moto.id)} className="p-2 rounded-lg border border-red-200 text-red-500">
+          <Trash2 size={18} />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <section className="space-y-6">
       <header className="flex flex-wrap justify-between items-center gap-3">
@@ -177,75 +236,60 @@ const Inventario = () => {
         })}
       </div>
 
-      {activeTab === "repuestos" ? (
-        <div className="bg-white border border-gray-100 rounded-2xl p-8 text-gray-500">
-          Módulo de repuestos en construcción.
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
-            <div className="flex flex-wrap gap-2">
-              {categorias.map((cat) => {
-                const active = filtroCategoria === cat;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setFiltroCategoria(cat)}
-                    className={`px-4 py-2 rounded-full text-xs font-bold ${
-                      active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {cat === "all" ? "Todas" : cat}
-                  </button>
-                );
-              })}
-            </div>
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
+          <div className="flex flex-wrap gap-2">
+            {categorias.map((cat) => {
+              const active = filtroCategoria === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setFiltroCategoria(cat)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold ${
+                    active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {cat === "all" ? "Todas" : cat}
+                </button>
+              );
+            })}
+          </div>
 
+          {activeTab === "motos" && (
             <button
               onClick={handleOpenCreateModal}
               className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2"
             >
               <Plus size={16} /> Nuevo
             </button>
-          </div>
-
-          {loading ? (
-            <p className="text-gray-500">Cargando inventario...</p>
-          ) : motosFiltradas.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <PackageSearch className="mx-auto mb-2" />
-              No hay modelos en esta categoría
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {motosFiltradas.map((moto) => (
-                <div key={moto.id} className="border border-gray-100 rounded-xl p-3 flex flex-wrap items-center gap-3">
-                  <img
-                    src={moto.imagen_url || "https://images.unsplash.com/photo-1511994298241-608e28f14fde?q=80&w=600&auto=format&fit=crop"}
-                    alt={moto.nombre}
-                    className="w-20 h-14 object-cover rounded-lg"
-                  />
-                  <div className="flex-1 min-w-[180px]">
-                    <p className="font-bold text-slate-800">{moto.nombre}</p>
-                    <p className="text-xs text-gray-500">{moto.categoria} · Stock: {moto.stock}</p>
-                  </div>
-                  <p className="font-black text-lg">${Number(moto.precio || 0).toLocaleString()}</p>
-                  <button onClick={() => handleEdit(moto)} className="p-2 rounded-lg border border-gray-200 text-blue-600">
-                    <Pencil size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(moto.id)} className="p-2 rounded-lg border border-gray-200 text-red-500">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
           )}
         </div>
-      )}
+
+        <TableHeader />
+
+        {activeTab === "repuestos" ? (
+          <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">
+            Módulo de repuestos en construcción.
+          </div>
+        ) : loading ? (
+          <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">Cargando inventario...</div>
+        ) : motosFiltradas.length === 0 ? (
+          <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">
+            <PackageSearch className="mx-auto mb-2" />
+            No hay modelos en esta categoría
+          </div>
+        ) : (
+          <div className="rounded-b-2xl overflow-hidden">
+            {motosFiltradas.map((moto) => (
+              <MotoRow key={moto.id} moto={moto} />
+            ))}
+          </div>
+        )}
+      </div>
 
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleSubmit} className="bg-white w-full max-w-xl rounded-2xl p-6 space-y-4 relative shadow-2xl">
+          <form onSubmit={handleSubmit} className="bg-white w-full max-w-3xl rounded-2xl p-6 space-y-4 relative shadow-2xl">
             <button
               type="button"
               onClick={resetForm}
@@ -256,11 +300,20 @@ const Inventario = () => {
 
             <h2 className="text-xl font-black text-slate-800">{editingId ? "Editar modelo" : "Nuevo modelo"}</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <input name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" className="w-full border rounded-xl px-3 py-2" />
-              <input name="categoria" value={form.categoria} onChange={handleChange} placeholder="Categoría (Ej. Deportiva, Trimóvil)" className="w-full border rounded-xl px-3 py-2" />
+              <input name="marca" value={form.marca} onChange={handleChange} placeholder="Marca" className="w-full border rounded-xl px-3 py-2" />
+              <input name="modelo_codigo" value={form.modelo_codigo} onChange={handleChange} placeholder="Código modelo" className="w-full border rounded-xl px-3 py-2" />
+              <input name="categoria" value={form.categoria} onChange={handleChange} placeholder="Categoría" className="w-full border rounded-xl px-3 py-2" />
+              <input name="anio" value={form.anio} onChange={handleChange} placeholder="Año" type="number" className="w-full border rounded-xl px-3 py-2" />
+              <input name="cilindrada_cc" value={form.cilindrada_cc} onChange={handleChange} placeholder="Cilindrada (cc)" type="number" className="w-full border rounded-xl px-3 py-2" />
               <input name="precio" value={form.precio} onChange={handleChange} placeholder="Precio" type="number" step="0.01" className="w-full border rounded-xl px-3 py-2" />
               <input name="stock" value={form.stock} onChange={handleChange} placeholder="Stock" type="number" className="w-full border rounded-xl px-3 py-2" />
+              <select name="estado" value={form.estado} onChange={handleChange} className="w-full border rounded-xl px-3 py-2 bg-white">
+                <option value="disponible">Disponible</option>
+                <option value="preventa">Preventa</option>
+                <option value="agotado">Agotado</option>
+              </select>
             </div>
 
             <input name="imagen_url" value={form.imagen_url} onChange={handleChange} placeholder="URL imagen" className="w-full border rounded-xl px-3 py-2" />
