@@ -97,6 +97,8 @@ const Inventario = () => {
   const [editingId, setEditingId] = useState(null);
   const [filtroCategoria, setFiltroCategoria] = useState("all");
   const [form, setForm] = useState(initialForm);
+  const [motoTipoId, setMotoTipoId] = useState("");
+  const [motoSubcategoriaId, setMotoSubcategoriaId] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -179,6 +181,22 @@ const Inventario = () => {
     if (children.length > 0) return children;
     return motoTipos;
   }, [categoriasMotos, motoTipos]);
+
+  const motoSubcategoriasPorTipo = useMemo(() => {
+    return motoCategoriasOpciones
+      .filter((categoria) => categoria.parent_id)
+      .reduce((acc, categoria) => {
+        const key = categoria.parent_id;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(categoria);
+        return acc;
+      }, {});
+  }, [motoCategoriasOpciones]);
+
+  const motoSubcategoriasVisibles = useMemo(() => {
+    if (!motoTipoId) return [];
+    return motoSubcategoriasPorTipo[motoTipoId] || [];
+  }, [motoTipoId, motoSubcategoriasPorTipo]);
 
   const subcategoriasPorTipo = useMemo(() => {
     return categoriasMotos
@@ -301,6 +319,8 @@ const Inventario = () => {
     setForm(initialForm);
     setEditingId(null);
     setModalOpen(false);
+    setMotoTipoId("");
+    setMotoSubcategoriaId("");
     setImageFile(null);
     setImagePreview("");
     setImageUrlError("");
@@ -320,11 +340,15 @@ const Inventario = () => {
       categoriasMotos.find((categoria) => categoria.parent_id)?.nombre ||
       categoriasMotos[0]?.nombre ||
       "";
+    const defaultSubcategoria = categoriasMotos.find((categoria) => categoria.parent_id) || null;
+    const defaultTipo = defaultSubcategoria?.parent_id || categoriasMotos.find((categoria) => !categoria.parent_id)?.id || "";
     setEditingId(null);
     setForm({
       ...initialForm,
       categoria: defaultCategory,
     });
+    setMotoTipoId(defaultTipo);
+    setMotoSubcategoriaId(defaultSubcategoria?.id || "");
     setModalOpen(true);
     setImageFile(null);
     setImagePreview("");
@@ -362,6 +386,10 @@ const Inventario = () => {
   };
 
   const handleEdit = (moto) => {
+    const categoriaMatch = categoriasMotos.find(
+      (categoria) => categoria.nombre?.toLowerCase() === (moto.categoria || "").toLowerCase()
+    );
+    const tipoId = categoriaMatch?.parent_id || (categoriaMatch ? categoriaMatch.id : "");
     setEditingId(moto.id);
     setForm({
       nombre: moto.nombre || "",
@@ -376,6 +404,8 @@ const Inventario = () => {
       estado: moto.estado || "disponible",
       imagen_url: moto.imagen_url || "",
     });
+    setMotoTipoId(tipoId || "");
+    setMotoSubcategoriaId(categoriaMatch?.parent_id ? categoriaMatch.id : "");
     setImagePreview(moto.imagen_url || "");
     setImageFile(null);
     setImageUrlError("");
@@ -436,8 +466,26 @@ const Inventario = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.nombre.trim() || !form.categoria.trim()) {
-      Swal.fire("Validación", "Nombre y categoría son obligatorios", "warning");
+    if (!form.nombre.trim()) {
+      Swal.fire("Validación", "El nombre del modelo es obligatorio", "warning");
+      return;
+    }
+
+    if (motoTipos.length > 0 && !motoTipoId) {
+      Swal.fire("Validación", "Selecciona un tipo para el modelo", "warning");
+      return;
+    }
+
+    const selectedSubcategoria = motoSubcategoriaId
+      ? categoriasMotos.find((categoria) => categoria.id === motoSubcategoriaId)
+      : null;
+    const selectedTipo = motoTipoId
+      ? categoriasMotos.find((categoria) => categoria.id === motoTipoId)
+      : null;
+    const categoriaValue = selectedSubcategoria?.nombre || selectedTipo?.nombre || form.categoria.trim();
+
+    if (!categoriaValue) {
+      Swal.fire("Validación", "Selecciona una categoría válida", "warning");
       return;
     }
 
@@ -451,7 +499,7 @@ const Inventario = () => {
       marca: form.marca.trim() || null,
       modelo_codigo: form.modelo_codigo.trim() || null,
       descripcion: form.descripcion.trim() || null,
-      categoria: form.categoria.trim(),
+      categoria: categoriaValue,
       anio: form.anio ? Number(form.anio) : null,
       cilindrada_cc: form.cilindrada_cc ? Number(form.cilindrada_cc) : null,
       precio: Number(form.precio),
@@ -1293,16 +1341,19 @@ const Inventario = () => {
                 <input name="precio" value={form.precio} onChange={handleChange} placeholder="0.00" type="number" step="0.01" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-700">Categoría</label>
-                {motoCategoriasOpciones.length > 0 ? (
+                <label className="text-sm font-semibold text-gray-700">Tipo</label>
+                {motoTipos.length > 0 ? (
                   <select
-                    name="categoria"
-                    value={form.categoria}
-                    onChange={handleChange}
+                    value={motoTipoId}
+                    onChange={(event) => {
+                      setMotoTipoId(event.target.value);
+                      setMotoSubcategoriaId("");
+                    }}
                     className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                   >
-                    {motoCategoriasOpciones.map((category) => (
-                      <option key={category.id} value={category.nombre}>
+                    <option value="">Selecciona un tipo</option>
+                    {motoTipos.map((category) => (
+                      <option key={category.id} value={category.id}>
                         {category.nombre}
                       </option>
                     ))}
@@ -1320,6 +1371,24 @@ const Inventario = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Subcategoría</label>
+                {motoTipos.length > 0 ? (
+                  <select
+                    value={motoSubcategoriaId}
+                    onChange={(event) => setMotoSubcategoriaId(event.target.value)}
+                    disabled={!motoTipoId}
+                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    <option value="">Selecciona una subcategoría</option>
+                    {motoSubcategoriasVisibles.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.nombre}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+              </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">Stock</label>
                 <input name="stock" value={form.stock} onChange={handleChange} placeholder="0" type="number" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
