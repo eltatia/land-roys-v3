@@ -103,6 +103,23 @@ const isValidUrl = (value) => {
   }
 };
 
+const normalizeStorageUrl = (value) => {
+  if (!value) return value;
+  const trimmed = value.trim();
+  if (!isValidUrl(trimmed)) return trimmed;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.pathname.includes("/storage/v1/object/sign/")) {
+      parsed.pathname = parsed.pathname.replace("/storage/v1/object/sign/", "/storage/v1/object/public/");
+      parsed.search = "";
+      return parsed.toString();
+    }
+    return trimmed;
+  } catch {
+    return trimmed;
+  }
+};
+
 const Inventario = () => {
   const [activeTab, setActiveTab] = useState("motos");
   const [motos, setMotos] = useState([]);
@@ -557,10 +574,10 @@ const Inventario = () => {
       precio: Number(form.precio),
       stock: Number(form.stock),
       estado: form.estado,
-      imagen_url: form.imagen_url.trim() || null,
+      imagen_url: normalizeStorageUrl(form.imagen_url) || null,
       video_url: form.video_activo ? form.video_url.trim() || null : null,
-      logo_url: form.logo_url.trim() || null,
-      brand_logo_url: form.brand_logo_url.trim() || null,
+      logo_url: normalizeStorageUrl(form.logo_url) || null,
+      brand_logo_url: normalizeStorageUrl(form.brand_logo_url) || null,
     };
 
     if (Number.isNaN(payload.precio) || Number.isNaN(payload.stock)) {
@@ -1406,7 +1423,11 @@ const Inventario = () => {
                 />
                 {isValidUrl(form.logo_url) && (
                   <div className="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 flex items-center justify-center">
-                    <img src={form.logo_url} alt="Preview logo del modelo" className="h-14 object-contain" />
+                    <img
+                      src={normalizeStorageUrl(form.logo_url)}
+                      alt="Preview logo del modelo"
+                      className="h-14 object-contain"
+                    />
                   </div>
                 )}
               </div>
@@ -1421,7 +1442,11 @@ const Inventario = () => {
                 />
                 {isValidUrl(form.brand_logo_url) && (
                   <div className="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 flex items-center justify-center">
-                    <img src={form.brand_logo_url} alt="Preview logo de la empresa" className="h-14 object-contain" />
+                    <img
+                      src={normalizeStorageUrl(form.brand_logo_url)}
+                      alt="Preview logo de la empresa"
+                      className="h-14 object-contain"
+                    />
                   </div>
                 )}
               </div>
