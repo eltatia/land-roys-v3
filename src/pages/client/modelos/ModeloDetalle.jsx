@@ -19,8 +19,10 @@ const ModeloDetalle = () => {
   const [moto, setMoto] = useState(null);
   const [loading, setLoading] = useState(true);
   const heroRef = useRef(null);
+  const infoRef = useRef(null);
   const diferencialRef = useRef(null);
   const [heroVisible, setHeroVisible] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
   const [diferencialVisible, setDiferencialVisible] = useState(false);
   const [contactForm, setContactForm] = useState({
     nombre: "",
@@ -60,6 +62,25 @@ const ModeloDetalle = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           setHeroVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [moto]);
+
+  useEffect(() => {
+    if (!moto) return;
+    const node = infoRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInfoVisible(true);
           observer.disconnect();
         }
       },
@@ -157,6 +178,9 @@ const ModeloDetalle = () => {
   const heroAnimation = heroVisible
     ? "opacity-100 translate-x-0 blur-0"
     : "opacity-0 -translate-x-24 blur-md";
+  const infoAnimation = infoVisible
+    ? "opacity-100 translate-x-0 blur-0"
+    : "opacity-0 -translate-x-20 blur-md";
   const diferencialAnimation = diferencialVisible
     ? "opacity-100 translate-x-0 blur-0"
     : "opacity-0 -translate-x-16 blur-sm";
@@ -235,8 +259,13 @@ const ModeloDetalle = () => {
 
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
         {hasVideo && (
-          <section className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.75fr] gap-12 items-center">
-            <div className="overflow-hidden lg:-ml-6">
+          <section
+            ref={infoRef}
+            className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.75fr] gap-12 items-center"
+          >
+            <div
+              className={`overflow-hidden lg:-ml-6 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${infoAnimation}`}
+            >
               <img
                 src={
                   moto.imagen_url ||
@@ -246,7 +275,9 @@ const ModeloDetalle = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-center lg:text-left space-y-5 lg:pl-10 lg:translate-x-20 lg:ml-auto">
+            <div
+              className={`text-center lg:text-left space-y-5 lg:pl-10 lg:translate-x-20 lg:ml-auto transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${infoAnimation}`}
+            >
               <img
                 src={modelLogo}
                 alt={`${moto.nombre} logo`}
