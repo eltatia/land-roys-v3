@@ -30,6 +30,11 @@ const initialForm = {
   categoria: "",
   anio: "",
   cilindrada_cc: "",
+  capacidad_tanque_l: "",
+  maxima_velocidad_kmh: "",
+  velocidades: "",
+  torque_max_nm: "",
+  motor_especificacion: "",
   precio: "",
   stock: "",
   estado: "disponible",
@@ -399,6 +404,11 @@ const Inventario = () => {
       categoria: moto.categoria || "",
       anio: String(moto.anio ?? ""),
       cilindrada_cc: String(moto.cilindrada_cc ?? ""),
+      capacidad_tanque_l: String(moto.capacidad_tanque_l ?? ""),
+      maxima_velocidad_kmh: String(moto.maxima_velocidad_kmh ?? ""),
+      velocidades: String(moto.velocidades ?? ""),
+      torque_max_nm: String(moto.torque_max_nm ?? ""),
+      motor_especificacion: moto.motor_especificacion || "",
       precio: String(moto.precio ?? ""),
       stock: String(moto.stock ?? ""),
       estado: moto.estado || "disponible",
@@ -502,6 +512,11 @@ const Inventario = () => {
       categoria: categoriaValue,
       anio: form.anio ? Number(form.anio) : null,
       cilindrada_cc: form.cilindrada_cc ? Number(form.cilindrada_cc) : null,
+      capacidad_tanque_l: form.capacidad_tanque_l ? Number(form.capacidad_tanque_l) : null,
+      maxima_velocidad_kmh: form.maxima_velocidad_kmh ? Number(form.maxima_velocidad_kmh) : null,
+      velocidades: form.velocidades ? Number(form.velocidades) : null,
+      torque_max_nm: form.torque_max_nm ? Number(form.torque_max_nm) : null,
+      motor_especificacion: form.motor_especificacion.trim() || null,
       precio: Number(form.precio),
       stock: Number(form.stock),
       estado: form.estado,
@@ -1337,6 +1352,22 @@ const Inventario = () => {
                 <input name="cilindrada_cc" value={form.cilindrada_cc} onChange={handleChange} placeholder="Ej. 890cc" type="number" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
               </div>
               <div>
+                <label className="text-sm font-semibold text-gray-700">Capacidad del tanque (L)</label>
+                <input name="capacidad_tanque_l" value={form.capacidad_tanque_l} onChange={handleChange} placeholder="Ej. 12" type="number" step="0.1" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Máxima velocidad (km/h)</label>
+                <input name="maxima_velocidad_kmh" value={form.maxima_velocidad_kmh} onChange={handleChange} placeholder="Ej. 180" type="number" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Velocidades</label>
+                <input name="velocidades" value={form.velocidades} onChange={handleChange} placeholder="Ej. 6" type="number" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Torque (Nm)</label>
+                <input name="torque_max_nm" value={form.torque_max_nm} onChange={handleChange} placeholder="Ej. 80" type="number" step="0.1" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
                 <label className="text-sm font-semibold text-gray-700">Precio</label>
                 <input name="precio" value={form.precio} onChange={handleChange} placeholder="0.00" type="number" step="0.01" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
               </div>
@@ -1401,6 +1432,18 @@ const Inventario = () => {
                   <option value="agotado">Agotado</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Motor</label>
+              <textarea
+                name="motor_especificacion"
+                value={form.motor_especificacion}
+                onChange={handleChange}
+                placeholder="Ej. Bicilíndrico en línea, 4 tiempos"
+                rows={2}
+                className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50 resize-none"
+              />
             </div>
 
             <div>

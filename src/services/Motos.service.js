@@ -110,6 +110,22 @@ export const getMotos = async () => {
   });
 };
 
+export const getMotoById = async (id) => {
+  const { data, error } = await supabase
+    .from("motos")
+    .select("*, motos_specs(*)")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+
+  const specs = Array.isArray(data.motos_specs) ? data.motos_specs[0] : data.motos_specs;
+  return {
+    ...normalizeMoto(data),
+    ...normalizeSpecs(specs || {}),
+  };
+};
+
 export const addMoto = async (moto) => {
   const basePayload = pickMotoPayload(moto);
 

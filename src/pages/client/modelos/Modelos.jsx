@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Filter, Gauge, Boxes, DollarSign } from "lucide-react";
+import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getMotos } from "../../../services/Motos.service";
 import { getCategoriasMotos } from "../../../services/CategoriasMotos.service";
@@ -102,25 +103,6 @@ const Modelos = () => {
   useEffect(() => {
     setSubcategoriaActiva("all");
   }, [tipoActivo]);
-
-  const handleVerDetalles = (moto) => {
-    Swal.fire({
-      title: moto.nombre,
-      html: `
-        <div style="text-align:left;display:grid;gap:6px">
-          <p><strong>Marca:</strong> ${moto.marca || "No definida"}</p>
-          <p><strong>Categoría:</strong> ${moto.categoria || "No definida"}</p>
-          <p><strong>Año / CC:</strong> ${moto.anio || "-"} / ${moto.cilindrada_cc || "-"}</p>
-          <p><strong>Precio:</strong> ${currency.format(Number(moto.precio || 0))}</p>
-          <p><strong>Stock:</strong> ${moto.stock ?? 0}</p>
-          <p><strong>Estado:</strong> ${(moto.estado || "disponible").toUpperCase()}</p>
-          <p><strong>Descripción:</strong> ${moto.descripcion || "Sin descripción"}</p>
-        </div>
-      `,
-      confirmButtonText: "Cerrar",
-      confirmButtonColor: "#facc15",
-    });
-  };
 
   return (
     <section className="bg-[#f7f8fa] pb-16">
@@ -234,12 +216,12 @@ const Modelos = () => {
                 </span>
 
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button
-                    onClick={() => handleVerDetalles(moto)}
+                  <Link
+                    to={`/modelos/${moto.id}`}
                     className="bg-black/85 text-white font-extrabold px-5 py-2.5 rounded-full border border-yellow-400"
                   >
                     Ver detalles
-                  </button>
+                  </Link>
                 </div>
               </div>
 
