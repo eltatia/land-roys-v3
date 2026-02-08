@@ -22,6 +22,8 @@ const Repuestos = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("recientes");
+  const [estadoFiltro, setEstadoFiltro] = useState("all");
+  const [soloStock, setSoloStock] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [cartVisible, setCartVisible] = useState(false);
@@ -35,6 +37,8 @@ const Repuestos = () => {
     direccion: "",
     notas: "",
   });
+  const [imageFallback, setImageFallback] = useState({});
+  const repuestoPlaceholder = "https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=1200&auto=format&fit=crop";
 
   useEffect(() => {
     const fetchRepuestos = async () => {
@@ -59,6 +63,24 @@ const Repuestos = () => {
     fetchRepuestos();
   }, []);
 
+  useEffect(() => {
+    const storedCart = localStorage.getItem("repuestos_cart");
+    if (storedCart) {
+      try {
+        const parsed = JSON.parse(storedCart);
+        if (Array.isArray(parsed)) {
+          setCartItems(parsed);
+        }
+      } catch {
+        localStorage.removeItem("repuestos_cart");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("repuestos_cart", JSON.stringify(cartItems));
+  }, [cartItems]);
+
   const categories = useMemo(() => {
     const base = [{ key: "all", label: "Todos" }, ...categorias.map((cat) => ({ key: cat.id, label: cat.nombre }))];
     if (repuestos.some((item) => !item.categoria_id)) {
@@ -75,6 +97,7 @@ const Repuestos = () => {
   }, [categorias]);
 
   const getCategoryKeyForItem = (item) => item.categoria_id || "otros";
+  const getImageSrc = (item) => (imageFallback[item.id] ? repuestoPlaceholder : item.imagen_url || repuestoPlaceholder);
 
   const countsByCategory = useMemo(() => {
     const counts = repuestos.reduce((acc, item) => {
@@ -92,6 +115,14 @@ const Repuestos = () => {
 
     if (activeCategory !== "all") {
       data = data.filter((item) => getCategoryKeyForItem(item) === activeCategory);
+    }
+
+    if (estadoFiltro !== "all") {
+      data = data.filter((item) => (item.estado || "").toLowerCase() === estadoFiltro);
+    }
+
+    if (soloStock) {
+      data = data.filter((item) => Number(item.stock || 0) > 0);
     }
 
     if (term) {
@@ -113,7 +144,7 @@ const Repuestos = () => {
     }
 
     return data;
-  }, [repuestos, activeCategory, search, sortOrder]);
+  }, [repuestos, activeCategory, estadoFiltro, soloStock, search, sortOrder, categoriasById]);
 
   const cartTotal = useMemo(
     () => cartItems.reduce((acc, item) => acc + Number(item.precio || 0) * item.cantidad, 0),
@@ -203,22 +234,23 @@ const Repuestos = () => {
     handleAddToCart(item, sourceRect);
   };
 
-  const handleSendWhatsApp = () => {
-    if (!customerForm.nombre.trim() || !customerForm.telefono.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Datos incompletos",
-        text: "Por favor ingresa el nombre y teléfono.",
-      });
-      return;
-    }
-
+  const handleSendWhatsApp = async () => {
     const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
     if (!whatsappNumber) {
       Swal.fire({
         icon: "error",
         title: "Número no configurado",
         text: "Configura VITE_WHATSAPP_NUMBER en el archivo .env.",
+      });
+      return;
+    }
+
+    const phoneDigits = customerForm.telefono.replace(/\D/g, "");
+    if (!customerForm.nombre.trim() || phoneDigits.length < 7) {
+      Swal.fire({
+        icon: "warning",
+        title: "Datos incompletos",
+        text: "Ingresa un nombre y un teléfono válido.",
       });
       return;
     }
@@ -238,7 +270,7 @@ const Repuestos = () => {
       "",
       "Cliente:",
       `Nombre: ${customerForm.nombre}`,
-      `Teléfono: ${customerForm.telefono}`,
+      `Teléfono: ${phoneDigits}`,
       customerForm.ciudad ? `Ciudad: ${customerForm.ciudad}` : null,
       customerForm.direccion ? `Dirección: ${customerForm.direccion}` : null,
       customerForm.notas ? `Observaciones: ${customerForm.notas}` : null,
@@ -246,9 +278,33 @@ const Repuestos = () => {
       .filter(Boolean)
       .join("\n");
 
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-    resetCheckout();
+    const confirm = await Swal.fire({
+      title: "Revisa tu pedido",
+      html: `<pre style="text-align:left;white-space:pre-wrap;">${message}</pre>`,
+      showCancelButton: true,
+      confirmButtonText: "Enviar por WhatsApp",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (confirm.isConfirmed) {
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+      resetCheckout();
+    }
+  };
+
+  const handleContactAdvisor = () => {
+    const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
+    if (!whatsappNumber) {
+      Swal.fire({
+        icon: "error",
+        title: "Número no configurado",
+        text: "Configura VITE_WHATSAPP_NUMBER en el archivo .env.",
+      });
+      return;
+    }
+    const message = "Hola, quisiera consultar por un repuesto.";
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -300,7 +356,10 @@ const Repuestos = () => {
             <p className="text-sm text-slate-600">
               Contáctanos directamente y te ayudaremos a conseguirlo.
             </p>
-            <button className="w-full bg-yellow-400 text-black font-bold py-2 rounded-full shadow-sm">
+            <button
+              onClick={handleContactAdvisor}
+              className="w-full bg-yellow-400 text-black font-bold py-2 rounded-full shadow-sm"
+            >
               Contactar Asesor
             </button>
           </div>
@@ -322,6 +381,27 @@ const Repuestos = () => {
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={estadoFiltro}
+              onChange={(event) => setEstadoFiltro(event.target.value)}
+              className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-semibold text-slate-600"
+            >
+              <option value="all">Todos los estados</option>
+              <option value="disponible">Disponible</option>
+              <option value="preventa">Preventa</option>
+              <option value="agotado">Agotado</option>
+            </select>
+            <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+              <input
+                type="checkbox"
+                checked={soloStock}
+                onChange={(event) => setSoloStock(event.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              Con stock
+            </label>
+          </div>
 
           {loading ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center text-gray-500">
@@ -337,9 +417,11 @@ const Repuestos = () => {
                 <article key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="relative">
                     <img
-                      src={item.imagen_url || "https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=1200&auto=format&fit=crop"}
+                      src={getImageSrc(item)}
                       alt={item.nombre}
                       className="w-full h-48 object-cover"
+                      loading="lazy"
+                      onError={() => setImageFallback((prev) => ({ ...prev, [item.id]: true }))}
                     />
                     <button
                       onClick={(event) => handleAddToCartClick(item, event)}
@@ -347,6 +429,11 @@ const Repuestos = () => {
                     >
                       <ShoppingCart size={18} className="text-slate-700" />
                     </button>
+                    {Number(item.stock || 0) > 0 && Number(item.stock || 0) <= 3 && (
+                      <span className="absolute left-4 bottom-4 bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full">
+                        Solo {item.stock} disponibles
+                      </span>
+                    )}
                   </div>
                   <div className="p-5 space-y-2">
                     <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">
@@ -406,9 +493,11 @@ const Repuestos = () => {
                 cartItems.map((item) => (
                   <div key={item.id} className="flex gap-3 border border-gray-100 rounded-xl p-3">
                     <img
-                      src={item.imagen_url || "https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=600&auto=format&fit=crop"}
+                      src={getImageSrc(item)}
                       alt={item.nombre}
                       className="w-20 h-16 object-cover rounded-lg bg-gray-100"
+                      loading="lazy"
+                      onError={() => setImageFallback((prev) => ({ ...prev, [item.id]: true }))}
                     />
                     <div className="flex-1">
                       <p className="text-sm font-bold text-slate-800">{item.nombre}</p>
