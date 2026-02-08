@@ -68,6 +68,9 @@ const buildRepuestoCategoryLabel = (categorias, categoriaId, fallback = "Otros")
 const buildMotoCategoryLabel = (categorias, parentId, fallback = "Sin tipo") =>
   categorias.find((categoria) => categoria.id === parentId)?.nombre || fallback;
 
+const findMotoCategoriaByName = (categorias, nombre) =>
+  categorias.find((categoria) => categoria.nombre?.toLowerCase() === nombre.toLowerCase()) || null;
+
 const estadoClass = {
   disponible: "bg-green-100 text-green-700",
   agotado: "bg-red-100 text-red-600",
@@ -828,23 +831,54 @@ const Inventario = () => {
           <div className="flex flex-wrap gap-2">
             {(activeTab === "motos" ? categorias : repuestoCategorias).map((cat) => {
               const active = activeTab === "motos" ? filtroCategoria === cat : repuestoFiltroCategoria === cat;
+              const motoCategoria = activeTab === "motos" && cat !== "all"
+                ? findMotoCategoriaByName(categoriasMotos, cat)
+                : null;
               return (
                 <button
                   key={cat}
                   onClick={() => (activeTab === "motos" ? setFiltroCategoria(cat) : setRepuestoFiltroCategoria(cat))}
-                    className={`px-4 py-2 rounded-full text-xs font-bold ${
-                      active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
+                  className={`group relative px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-2 ${
+                    active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  <span>
                     {cat === "all"
                       ? "Todas"
                       : activeTab === "motos"
                         ? cat
                         : buildRepuestoCategoryLabel(categoriasRepuestos, cat)}
-                  </button>
-                );
-              })}
-          </div>
+                  </span>
+                  {activeTab === "motos" && cat !== "all" && motoCategoria && (
+                    <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleCategoriaMotoEdit(motoCategoria);
+                        }}
+                        className="p-1 rounded-full bg-white/70 text-slate-700 hover:bg-white"
+                        title="Editar categoría"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDeleteCategoriaMoto(motoCategoria.id);
+                        }}
+                        className="p-1 rounded-full bg-white/70 text-red-600 hover:bg-white"
+                        title="Eliminar categoría"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+        </div>
 
           {activeTab === "motos" ? (
             <button
