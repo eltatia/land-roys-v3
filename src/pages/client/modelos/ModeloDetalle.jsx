@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { BatteryFull, Fuel, Gauge, Wrench, Zap } from "lucide-react";
 import Swal from "sweetalert2";
@@ -18,6 +18,8 @@ const ModeloDetalle = () => {
   const navigate = useNavigate();
   const [moto, setMoto] = useState(null);
   const [loading, setLoading] = useState(true);
+  const heroRef = useRef(null);
+  const [heroVisible, setHeroVisible] = useState(false);
   const [contactForm, setContactForm] = useState({
     nombre: "",
     email: "",
@@ -46,6 +48,25 @@ const ModeloDetalle = () => {
 
     fetchMoto();
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (!moto) return;
+    const node = heroRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHeroVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [moto]);
 
   const specsList = useMemo(() => {
     if (!moto) return [];
@@ -112,6 +133,9 @@ const ModeloDetalle = () => {
   const brandLogo = moto.brand_logo_url || "/vite.svg";
 
   const hasVideo = Boolean(moto.video_url);
+  const heroAnimation = heroVisible
+    ? "opacity-100 translate-x-0 blur-0"
+    : "opacity-0 -translate-x-16 blur-sm";
 
   return (
     <section className="bg-white text-slate-900">
@@ -129,7 +153,10 @@ const ModeloDetalle = () => {
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
           <div className="relative z-10 h-full w-full px-6 pb-12 text-white">
-            <div className="absolute bottom-10 left-14 flex flex-col gap-4">
+            <div
+              ref={heroRef}
+              className={`absolute bottom-10 left-14 flex flex-col gap-4 transition-all duration-[1400ms] ease-out ${heroAnimation}`}
+            >
               {moto.logo_url ? (
                 <img
                   src={modelLogo}
@@ -150,7 +177,10 @@ const ModeloDetalle = () => {
         </div>
       ) : (
         <div className="max-w-6xl mx-auto px-4 pt-16">
-          <section className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.75fr] gap-12 items-center">
+          <section
+            ref={heroRef}
+            className={`grid grid-cols-1 lg:grid-cols-[1.45fr_0.75fr] gap-12 items-center transition-all duration-[1400ms] ease-out ${heroAnimation}`}
+          >
             <div className="overflow-hidden lg:-ml-6">
               <img
                 src={
