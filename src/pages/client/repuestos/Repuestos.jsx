@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Search, ShoppingCart, ChevronDown } from "lucide-react";
 import Swal from "sweetalert2";
 import { getRepuestos } from "../../../services/Repuestos.service";
@@ -24,7 +24,10 @@ const Repuestos = () => {
   const [sortOrder, setSortOrder] = useState("recientes");
   const [cartItems, setCartItems] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartVisible, setCartVisible] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [flyItems, setFlyItems] = useState([]);
+  const cartButtonRef = useRef(null);
   const [customerForm, setCustomerForm] = useState({
     nombre: "",
     telefono: "",
@@ -133,13 +136,40 @@ const Repuestos = () => {
     setCartItems((prev) => prev.filter((entry) => entry.id !== id));
   };
 
-  const handleAddToCart = (item) => {
+  const handleAddToCart = (item, sourceRect) => {
+    const cartRect = cartButtonRef.current?.getBoundingClientRect();
+    if (cartRect) {
+      if (sourceRect) {
+        const flyId = crypto.randomUUID();
+        setFlyItems((prev) => [
+          ...prev,
+          {
+            id: flyId,
+            image: item.imagen_url,
+            startX: sourceRect.left,
+            startY: sourceRect.top,
+            endX: cartRect.left + cartRect.width / 2,
+            endY: cartRect.top + cartRect.height / 2,
+          },
+        ]);
+        setTimeout(() => {
+          setFlyItems((prev) => prev.filter((fly) => fly.id !== flyId));
+        }, 700);
+      }
+    }
     updateCartItem(item, 1);
     setCartOpen(true);
+    setCartVisible(true);
   };
 
   const handleCartToggle = () => {
-    setCartOpen((prev) => !prev);
+    if (cartOpen) {
+      setCartOpen(false);
+      setTimeout(() => setCartVisible(false), 300);
+    } else {
+      setCartVisible(true);
+      requestAnimationFrame(() => setCartOpen(true));
+    }
   };
 
   const handleCustomerChange = (event) => {
@@ -161,6 +191,16 @@ const Repuestos = () => {
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
     setCheckoutOpen(true);
+  };
+
+  const handleCartClose = () => {
+    setCartOpen(false);
+    setTimeout(() => setCartVisible(false), 300);
+  };
+
+  const handleAddToCartClick = (item, event) => {
+    const sourceRect = event.currentTarget.getBoundingClientRect();
+    handleAddToCart(item, sourceRect);
   };
 
   const handleSendWhatsApp = () => {
@@ -302,7 +342,7 @@ const Repuestos = () => {
                       className="w-full h-48 object-cover"
                     />
                     <button
-                      onClick={() => handleAddToCart(item)}
+                      onClick={(event) => handleAddToCartClick(item, event)}
                       className="absolute right-4 bottom-4 bg-white p-2 rounded-full shadow-sm hover:scale-105 transition"
                     >
                       <ShoppingCart size={18} className="text-slate-700" />
@@ -316,7 +356,10 @@ const Repuestos = () => {
                     {item.descripcion && <p className="text-sm text-gray-500">{item.descripcion}</p>}
                     <div className="flex items-center justify-between pt-2">
                       <p className="text-lg font-black text-slate-900">{currency.format(Number(item.precio || 0))}</p>
-                      <button onClick={() => handleAddToCart(item)} className="text-xs font-bold text-yellow-500">
+                      <button
+                        onClick={(event) => handleAddToCartClick(item, event)}
+                        className="text-xs font-bold text-yellow-500"
+                      >
                         Agregar
                       </button>
                     </div>
@@ -329,6 +372,7 @@ const Repuestos = () => {
       </div>
 
       <button
+        ref={cartButtonRef}
         onClick={handleCartToggle}
         className="fixed bottom-6 right-6 bg-yellow-400 text-black rounded-full shadow-lg px-4 py-3 flex items-center gap-2 font-bold"
       >
@@ -336,13 +380,22 @@ const Repuestos = () => {
         Carrito ({cartItems.reduce((acc, item) => acc + item.cantidad, 0)})
       </button>
 
-      {cartOpen && (
+      {cartVisible && (
         <div className="fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setCartOpen(false)} />
-          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+          <div
+            className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${
+              cartOpen ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={handleCartClose}
+          />
+          <aside
+            className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ${
+              cartOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
             <div className="flex items-center justify-between p-5 border-b">
               <h3 className="text-lg font-bold text-slate-800">Tu carrito</h3>
-              <button onClick={() => setCartOpen(false)} className="text-sm text-gray-500">
+              <button onClick={handleCartClose} className="text-sm text-gray-500">
                 Cerrar
               </button>
             </div>
@@ -474,6 +527,46 @@ const Repuestos = () => {
           </div>
         </div>
       )}
+
+      {flyItems.map((fly) => (
+        <span
+          key={fly.id}
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: fly.startX,
+            top: fly.startY,
+            width: 56,
+            height: 56,
+            transform: "translate(-50%, -50%)",
+            animation: "fly-to-cart 0.7s ease-in-out forwards",
+            "--fly-x": `${fly.endX - fly.startX}px`,
+            "--fly-y": `${fly.endY - fly.startY}px`,
+          }}
+        >
+          <span className="block w-full h-full bg-white rounded-xl shadow-lg overflow-hidden">
+            {fly.image ? (
+              <img src={fly.image} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="flex items-center justify-center w-full h-full text-xs text-gray-400">+1</span>
+            )}
+          </span>
+        </span>
+      ))}
+      <style>{`
+        @keyframes fly-to-cart {
+          0% {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+          }
+          60% {
+            opacity: 0.9;
+          }
+          100% {
+            transform: translate(calc(-50% + var(--fly-x)), calc(-50% + var(--fly-y))) scale(0.2);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </section>
   );
 };
