@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BatteryFull, Fuel, Gauge, Wrench, Zap } from "lucide-react";
+import { BatteryFull, ChevronLeft, ChevronRight, Fuel, Gauge, Wrench, Zap } from "lucide-react";
 import Swal from "sweetalert2";
 import { getMotoById } from "../../../services/Motos.service";
 
@@ -31,6 +31,7 @@ const ModeloDetalle = () => {
     ciudad: "",
     mensaje: "",
   });
+  const [galeriaIndex, setGaleriaIndex] = useState(0);
 
   useEffect(() => {
     const fetchMoto = async () => {
@@ -130,6 +131,33 @@ const ModeloDetalle = () => {
     ];
   }, [moto]);
 
+  const galeriaItems = useMemo(() => {
+    if (!moto) return [];
+    const raw = moto.galeria_destacada;
+    let parsed = [];
+    if (Array.isArray(raw)) {
+      parsed = raw;
+    } else if (typeof raw === "string") {
+      try {
+        const decoded = JSON.parse(raw);
+        parsed = Array.isArray(decoded) ? decoded : [];
+      } catch {
+        parsed = [];
+      }
+    }
+    return parsed
+      .map((item) => ({
+        imagen_url: item?.imagen_url ?? item?.imagenUrl ?? "",
+        titulo: item?.titulo ?? "",
+        descripcion: item?.descripcion ?? "",
+      }))
+      .filter((item) => item.imagen_url);
+  }, [moto]);
+
+  useEffect(() => {
+    setGaleriaIndex(0);
+  }, [galeriaItems.length]);
+
   const diferencialTitulo = moto?.diferencial_titulo || "Diseñado para destacar";
   const diferencialTexto =
     moto?.diferencial_texto ||
@@ -184,6 +212,14 @@ const ModeloDetalle = () => {
   const diferencialAnimation = diferencialVisible
     ? "opacity-100 translate-x-0 blur-0"
     : "opacity-0 -translate-x-16 blur-sm";
+
+  const handleGaleriaPrev = () => {
+    setGaleriaIndex((prev) => (prev === 0 ? galeriaItems.length - 1 : prev - 1));
+  };
+
+  const handleGaleriaNext = () => {
+    setGaleriaIndex((prev) => (prev + 1) % galeriaItems.length);
+  };
 
   return (
     <section className="bg-white text-slate-900">
@@ -317,6 +353,59 @@ const ModeloDetalle = () => {
             })}
           </div>
         </section>
+
+        {galeriaItems.length > 0 && (
+          <section className="bg-white border border-slate-200 rounded-3xl px-6 md:px-10 py-12">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-yellow-500 font-semibold">Galería</p>
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900">Detalles que resaltan</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleGaleriaPrev}
+                  className="h-11 w-11 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900"
+                  disabled={galeriaItems.length < 2}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGaleriaNext}
+                  className="h-11 w-11 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900"
+                  disabled={galeriaItems.length < 2}
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-10 items-center">
+              <div className="overflow-hidden rounded-3xl border border-slate-100 bg-slate-50">
+                <img
+                  src={galeriaItems[galeriaIndex]?.imagen_url}
+                  alt={galeriaItems[galeriaIndex]?.titulo || "Detalle del modelo"}
+                  className="w-full h-[420px] md:h-[520px] object-cover"
+                />
+              </div>
+              <div className="space-y-4 text-center lg:text-left">
+                <h3 className="text-3xl md:text-4xl font-black text-slate-900">
+                  {galeriaItems[galeriaIndex]?.titulo || "Diseño protagonista"}
+                </h3>
+                <p className="text-lg md:text-xl text-slate-600">
+                  {galeriaItems[galeriaIndex]?.descripcion ||
+                    "Agrega una descripción para destacar lo más importante de esta imagen."}
+                </p>
+                {galeriaItems.length > 1 && (
+                  <p className="text-sm text-slate-400">
+                    Imagen {galeriaIndex + 1} de {galeriaItems.length}
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section
           ref={diferencialRef}

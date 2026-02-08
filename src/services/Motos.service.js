@@ -1,5 +1,19 @@
 import { supabase } from "../api/Supabase.provider";
 
+const normalizeGaleria = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 const normalizeMoto = (moto = {}) => ({
   id: moto.id,
   nombre: moto.nombre ?? "",
@@ -14,6 +28,11 @@ const normalizeMoto = (moto = {}) => ({
   marca: moto.marca ?? null,
   modelo_codigo: moto.modelo_codigo ?? null,
   estado: moto.estado || "disponible",
+  galeria_destacada: normalizeGaleria(moto.galeria_destacada).map((item) => ({
+    imagen_url: item?.imagen_url ?? item?.imagenUrl ?? "",
+    titulo: item?.titulo ?? "",
+    descripcion: item?.descripcion ?? "",
+  })),
 });
 
 const normalizeSpecs = (specs = {}) => ({
@@ -46,6 +65,7 @@ const pickMotoPayload = (moto = {}) => ({
   marca: moto.marca || null,
   modelo_codigo: moto.modelo_codigo || null,
   estado: moto.estado || "disponible",
+  galeria_destacada: Array.isArray(moto.galeria_destacada) ? moto.galeria_destacada : [],
 });
 
 const pickSpecs = (moto = {}) => normalizeSpecs(moto);

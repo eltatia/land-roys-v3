@@ -51,6 +51,7 @@ const initialForm = {
   video_url: "",
   video_activo: false,
   video_file: null,
+  galeria_destacada: [],
 };
 
 const initialRepuestoForm = {
@@ -133,6 +134,21 @@ const normalizeStorageUrl = (value) => {
   }
 };
 
+const normalizeGaleria = (value) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
+const emptyGaleriaItem = { imagen_url: "", titulo: "", descripcion: "" };
+
 const Inventario = () => {
   const [activeTab, setActiveTab] = useState("motos");
   const [motos, setMotos] = useState([]);
@@ -167,6 +183,7 @@ const Inventario = () => {
   const [categoriaMotoForm, setCategoriaMotoForm] = useState(initialCategoriaMotoForm);
   const [categoriaMotoEditingId, setCategoriaMotoEditingId] = useState(null);
   const [isCreatingMotoType, setIsCreatingMotoType] = useState(false);
+  const [galeriaItem, setGaleriaItem] = useState(emptyGaleriaItem);
 
   const fetchMotos = async () => {
     setLoading(true);
@@ -414,6 +431,7 @@ const Inventario = () => {
     setImageFile(null);
     setImagePreview("");
     setImageUrlError("");
+    setGaleriaItem(emptyGaleriaItem);
   };
 
   const resetRepuestoForm = () => {
@@ -443,6 +461,7 @@ const Inventario = () => {
     setImageFile(null);
     setImagePreview("");
     setImageUrlError("");
+    setGaleriaItem(emptyGaleriaItem);
   };
 
   const handleOpenRepuestoModal = () => {
@@ -502,12 +521,14 @@ const Inventario = () => {
       brand_logo_url: moto.brand_logo_url || "",
       video_url: moto.video_url || "",
       video_activo: Boolean(moto.video_url),
+      galeria_destacada: normalizeGaleria(moto.galeria_destacada),
     });
     setMotoTipoId(tipoId || "");
     setMotoSubcategoriaId(categoriaMatch?.parent_id ? categoriaMatch.id : "");
     setImagePreview(moto.imagen_url || "");
     setImageFile(null);
     setImageUrlError("");
+    setGaleriaItem(emptyGaleriaItem);
     setModalOpen(true);
   };
 
@@ -577,6 +598,47 @@ const Inventario = () => {
     setRepuestoForm((prev) => ({ ...prev, imagen_url: "" }));
   };
 
+  const handleGaleriaItemChange = (event) => {
+    const { name, value } = event.target;
+    setGaleriaItem((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleGaleriaAdd = () => {
+    const trimmedUrl = galeriaItem.imagen_url.trim();
+    if (!trimmedUrl || !isValidUrl(trimmedUrl)) {
+      Swal.fire("Validación", "Agrega una URL válida para la imagen de la galería", "warning");
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      galeria_destacada: [
+        ...prev.galeria_destacada,
+        {
+          imagen_url: normalizeStorageUrl(trimmedUrl),
+          titulo: galeriaItem.titulo.trim(),
+          descripcion: galeriaItem.descripcion.trim(),
+        },
+      ],
+    }));
+    setGaleriaItem(emptyGaleriaItem);
+  };
+
+  const handleGaleriaUpdate = (index, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      galeria_destacada: prev.galeria_destacada.map((item, idx) =>
+        idx === index ? { ...item, [field]: value } : item
+      ),
+    }));
+  };
+
+  const handleGaleriaRemove = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      galeria_destacada: prev.galeria_destacada.filter((_, idx) => idx !== index),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -638,6 +700,13 @@ const Inventario = () => {
       video_url: form.video_activo ? form.video_url.trim() || null : null,
       logo_url: normalizeStorageUrl(form.logo_url) || null,
       brand_logo_url: normalizeStorageUrl(form.brand_logo_url) || null,
+      galeria_destacada: form.galeria_destacada
+        .filter((item) => item.imagen_url && isValidUrl(item.imagen_url))
+        .map((item) => ({
+          imagen_url: normalizeStorageUrl(item.imagen_url.trim()),
+          titulo: item.titulo?.trim() || "",
+          descripcion: item.descripcion?.trim() || "",
+        })),
     };
 
     if (Number.isNaN(payload.precio) || Number.isNaN(payload.stock)) {
@@ -1654,6 +1723,101 @@ const Inventario = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className="bg-[#f5f6f8] rounded-2xl p-4 border border-gray-100 space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-700">Galería después de especificaciones</p>
+                <p className="text-xs text-gray-500">
+                  Agrega imágenes y su descripción para el slider que aparece después de las especificaciones técnicas.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-4 items-start">
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700">URL de la imagen</label>
+                    <input
+                      name="imagen_url"
+                      value={galeriaItem.imagen_url}
+                      onChange={handleGaleriaItemChange}
+                      placeholder="https://..."
+                      className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700">Título (opcional)</label>
+                    <input
+                      name="titulo"
+                      value={galeriaItem.titulo}
+                      onChange={handleGaleriaItemChange}
+                      placeholder="Ej. Diseño premium"
+                      className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700">Descripción</label>
+                    <textarea
+                      name="descripcion"
+                      value={galeriaItem.descripcion}
+                      onChange={handleGaleriaItemChange}
+                      placeholder="Describe la imagen..."
+                      rows={3}
+                      className="mt-2 w-full border rounded-xl px-3 py-2 bg-white resize-none"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGaleriaAdd}
+                    className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold"
+                  >
+                    Agregar imagen
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Imágenes agregadas</p>
+                  {form.galeria_destacada.length === 0 ? (
+                    <p className="text-sm text-gray-500">Aún no hay imágenes para el slider.</p>
+                  ) : (
+                    <div className="space-y-4 max-h-72 overflow-auto pr-1">
+                      {form.galeria_destacada.map((item, index) => (
+                        <div key={`${item.imagen_url}-${index}`} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
+                          <input
+                            value={item.imagen_url}
+                            onChange={(event) => handleGaleriaUpdate(index, "imagen_url", event.target.value)}
+                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                            placeholder="URL de imagen"
+                          />
+                          <input
+                            value={item.titulo || ""}
+                            onChange={(event) => handleGaleriaUpdate(index, "titulo", event.target.value)}
+                            className="w-full border rounded-lg px-3 py-2 text-sm"
+                            placeholder="Título"
+                          />
+                          <textarea
+                            value={item.descripcion || ""}
+                            onChange={(event) => handleGaleriaUpdate(index, "descripcion", event.target.value)}
+                            className="w-full border rounded-lg px-3 py-2 text-sm resize-none"
+                            rows={2}
+                            placeholder="Descripción"
+                          />
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-400">Elemento {index + 1}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleGaleriaRemove(index)}
+                              className="text-xs font-semibold text-red-500"
+                            >
+                              Quitar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div>
