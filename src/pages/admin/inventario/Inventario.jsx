@@ -187,6 +187,11 @@ const Inventario = () => {
       }, {});
   }, [categoriasMotos]);
 
+  const subcategoriasOrfanas = useMemo(() => {
+    const tiposIds = new Set(motoTipos.map((tipo) => tipo.id));
+    return categoriasMotos.filter((categoria) => categoria.parent_id && !tiposIds.has(categoria.parent_id));
+  }, [categoriasMotos, motoTipos]);
+
   const categorias = useMemo(() => {
     const byDb = motoTipos.map((categoria) => categoria.nombre).filter(Boolean);
     if (byDb.length > 0) return ["all", ...byDb];
@@ -276,6 +281,14 @@ const Inventario = () => {
   const resetCategoriaMotoForm = () => {
     setCategoriaMotoForm(initialCategoriaMotoForm);
     setCategoriaMotoEditingId(null);
+  };
+
+  const handleCategoriaMotoCreateChild = (tipo) => {
+    setCategoriaMotoEditingId(null);
+    setCategoriaMotoForm({
+      ...initialCategoriaMotoForm,
+      parent_id: tipo.id,
+    });
   };
 
   const resetForm = () => {
@@ -634,9 +647,12 @@ const Inventario = () => {
   };
 
   const handleDeleteCategoriaMoto = async (id) => {
+    const childCategorias = categoriasMotos.filter((categoria) => categoria.parent_id === id);
     const result = await Swal.fire({
       title: "¿Eliminar categoría?",
-      text: "Esta acción no se puede deshacer",
+      text: childCategorias.length
+        ? `Esta categoría tiene ${childCategorias.length} subcategoría(s). Se eliminarán también.`
+        : "Esta acción no se puede deshacer",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
@@ -647,8 +663,13 @@ const Inventario = () => {
     if (!result.isConfirmed) return;
 
     try {
+      if (childCategorias.length > 0) {
+        await Promise.all(childCategorias.map((child) => deleteCategoriaMoto(child.id)));
+      }
       await deleteCategoriaMoto(id);
-      setCategoriasMotos((prev) => prev.filter((cat) => cat.id !== id));
+      setCategoriasMotos((prev) =>
+        prev.filter((cat) => cat.id !== id && cat.parent_id !== id)
+      );
       if (categoriaMotoEditingId === id) resetCategoriaMotoForm();
       Swal.fire("Eliminado", "Categoría eliminada", "success");
     } catch (error) {
@@ -896,38 +917,106 @@ const Inventario = () => {
                   {categoriasMotos.length === 0 ? (
                     <p className="text-sm text-gray-500">No hay categorías registradas.</p>
                   ) : (
-                    categoriasMotos.map((categoria) => (
-                      <div key={categoria.id} className="flex items-center justify-between gap-3 bg-gray-50 rounded-xl px-4 py-3">
-                        <div>
-                          <p className="text-sm font-bold text-slate-800">{categoria.nombre}</p>
-                          <p className="text-xs text-gray-400">ID: {categoria.id}</p>
-                          {categoria.parent_id && (
-                            <p className="text-xs text-gray-400">
-                              Tipo: {buildMotoCategoryLabel(categoriasMotos, categoria.parent_id)}
-                            </p>
-                          )}
+                    <>
+                      {motoTipos.map((tipo) => (
+                        <div key={tipo.id} className="rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-bold text-slate-800">{tipo.nombre}</p>
+                              <p className="text-xs text-gray-400">ID: {tipo.id}</p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`text-xs font-bold px-2 py-1 rounded-full ${tipo.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+                                {tipo.estado ? "Activa" : "Inactiva"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCategoriaMotoCreateChild(tipo)}
+                                className="px-3 py-1.5 text-xs font-bold rounded-full bg-yellow-400 text-black"
+                              >
+                                + Subcategoría
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCategoriaMotoEdit(tipo)}
+                                className="p-2 rounded-lg border border-blue-200 text-blue-600"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCategoriaMoto(tipo.id)}
+                                className="p-2 rounded-lg border border-red-200 text-red-500"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="space-y-2 pl-2 border-l-2 border-yellow-200">
+                            {(subcategoriasPorTipo[tipo.id] || []).length === 0 ? (
+                              <p className="text-xs text-gray-400">Sin subcategorías.</p>
+                            ) : (
+                              (subcategoriasPorTipo[tipo.id] || []).map((categoria) => (
+                                <div key={categoria.id} className="flex items-center justify-between gap-3 bg-white rounded-lg px-3 py-2">
+                                  <div>
+                                    <p className="text-xs font-semibold text-slate-700">{categoria.nombre}</p>
+                                    <p className="text-[11px] text-gray-400">ID: {categoria.id}</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${categoria.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+                                      {categoria.estado ? "Activa" : "Inactiva"}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCategoriaMotoEdit(categoria)}
+                                      className="p-1.5 rounded-lg border border-blue-200 text-blue-600"
+                                    >
+                                      <Pencil size={12} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteCategoriaMoto(categoria.id)}
+                                      className="p-1.5 rounded-lg border border-red-200 text-red-500"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs font-bold px-2 py-1 rounded-full ${categoria.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
-                            {categoria.estado ? "Activa" : "Inactiva"}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCategoriaMotoEdit(categoria)}
-                            className="p-2 rounded-lg border border-blue-200 text-blue-600"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCategoriaMoto(categoria.id)}
-                            className="p-2 rounded-lg border border-red-200 text-red-500"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                      ))}
+                      {subcategoriasOrfanas.length > 0 && (
+                        <div className="rounded-xl border border-dashed border-gray-200 bg-white p-4 space-y-2">
+                          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Subcategorías sin tipo</p>
+                          {subcategoriasOrfanas.map((categoria) => (
+                            <div key={categoria.id} className="flex items-center justify-between gap-3 bg-gray-50 rounded-lg px-3 py-2">
+                              <div>
+                                <p className="text-xs font-semibold text-slate-700">{categoria.nombre}</p>
+                                <p className="text-[11px] text-gray-400">ID: {categoria.id}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCategoriaMotoEdit(categoria)}
+                                  className="p-1.5 rounded-lg border border-blue-200 text-blue-600"
+                                >
+                                  <Pencil size={12} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCategoriaMoto(categoria.id)}
+                                  className="p-1.5 rounded-lg border border-red-200 text-red-500"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    ))
+                      )}
+                    </>
                   )}
                 </div>
               </div>
