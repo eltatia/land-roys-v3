@@ -161,7 +161,7 @@ const ModeloDetalle = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-center lg:text-left space-y-6 lg:pl-6">
+            <div className="text-center lg:text-left space-y-6 lg:pl-6 lg:translate-x-6">
               <img
                 src={modelLogo}
                 alt={`${moto.nombre} logo`}
@@ -192,7 +192,7 @@ const ModeloDetalle = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-center lg:text-left space-y-5 lg:pl-6">
+            <div className="text-center lg:text-left space-y-5 lg:pl-6 lg:translate-x-6">
               <img
                 src={modelLogo}
                 alt={`${moto.nombre} logo`}
