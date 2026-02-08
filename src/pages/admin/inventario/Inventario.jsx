@@ -54,6 +54,7 @@ const initialCategoriaForm = {
 const initialCategoriaMotoForm = {
   nombre: "",
   estado: true,
+  parent_id: "",
 };
 
 const tabs = [
@@ -63,6 +64,9 @@ const tabs = [
 
 const buildRepuestoCategoryLabel = (categorias, categoriaId, fallback = "Otros") =>
   categorias.find((categoria) => categoria.id === categoriaId)?.nombre || fallback;
+
+const buildMotoCategoryLabel = (categorias, parentId, fallback = "Sin tipo") =>
+  categorias.find((categoria) => categoria.id === parentId)?.nombre || fallback;
 
 const estadoClass = {
   disponible: "bg-green-100 text-green-700",
@@ -161,17 +165,47 @@ const Inventario = () => {
     fetchCategoriasMotos();
   }, []);
 
+  const motoTipos = useMemo(
+    () => categoriasMotos.filter((categoria) => !categoria.parent_id),
+    [categoriasMotos]
+  );
+
+  const motoCategoriasOpciones = useMemo(() => {
+    const children = categoriasMotos.filter((categoria) => categoria.parent_id);
+    if (children.length > 0) return children;
+    return motoTipos;
+  }, [categoriasMotos, motoTipos]);
+
+  const subcategoriasPorTipo = useMemo(() => {
+    return categoriasMotos
+      .filter((categoria) => categoria.parent_id)
+      .reduce((acc, categoria) => {
+        const key = categoria.parent_id;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(categoria);
+        return acc;
+      }, {});
+  }, [categoriasMotos]);
+
   const categorias = useMemo(() => {
-    const byDb = categoriasMotos.map((categoria) => categoria.nombre).filter(Boolean);
+    const byDb = motoTipos.map((categoria) => categoria.nombre).filter(Boolean);
     if (byDb.length > 0) return ["all", ...byDb];
     const unique = [...new Set(motos.map((m) => m.categoria).filter(Boolean))];
     return ["all", ...unique];
-  }, [categoriasMotos, motos]);
+  }, [motoTipos, motos]);
 
   const motosFiltradas = useMemo(() => {
     if (filtroCategoria === "all") return motos;
+    const tipoId = motoTipos.find((tipo) => tipo.nombre === filtroCategoria)?.id;
+    if (tipoId) {
+      const children = subcategoriasPorTipo[tipoId] || [];
+      if (children.length > 0) {
+        const childNames = children.map((child) => child.nombre.toLowerCase());
+        return motos.filter((m) => childNames.includes((m.categoria || "").toLowerCase()));
+      }
+    }
     return motos.filter((m) => (m.categoria || "").toLowerCase() === filtroCategoria.toLowerCase());
-  }, [motos, filtroCategoria]);
+  }, [motos, filtroCategoria, motoTipos, subcategoriasPorTipo]);
 
   const repuestoCategorias = useMemo(() => ["all", ...categoriasRepuestos.map((cat) => cat.id)], [categoriasRepuestos]);
 
@@ -263,10 +297,14 @@ const Inventario = () => {
   };
 
   const handleOpenCreateModal = () => {
+    const defaultCategory =
+      categoriasMotos.find((categoria) => categoria.parent_id)?.nombre ||
+      categoriasMotos[0]?.nombre ||
+      "";
     setEditingId(null);
     setForm({
       ...initialForm,
-      categoria: categoriasMotos[0]?.nombre || "",
+      categoria: defaultCategory,
     });
     setModalOpen(true);
     setImageFile(null);
@@ -299,6 +337,7 @@ const Inventario = () => {
     setCategoriaMotoForm({
       nombre: categoria.nombre || "",
       estado: categoria.estado ?? true,
+      parent_id: categoria.parent_id || "",
     });
   };
 
@@ -763,7 +802,11 @@ const Inventario = () => {
                       active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {cat === "all" ? "Todas" : buildRepuestoCategoryLabel(categoriasRepuestos, cat)}
+                    {cat === "all"
+                      ? "Todas"
+                      : activeTab === "motos"
+                        ? cat
+                        : buildRepuestoCategoryLabel(categoriasRepuestos, cat)}
                   </button>
                 );
               })}
@@ -800,6 +843,22 @@ const Inventario = () => {
                     placeholder="Ej. Deportiva"
                     className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
                   />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Tipo (opcional)</label>
+                  <select
+                    name="parent_id"
+                    value={categoriaMotoForm.parent_id}
+                    onChange={handleCategoriaMotoChange}
+                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
+                  >
+                    <option value="">Sin tipo (categoría principal)</option>
+                    {motoTipos.map((tipo) => (
+                      <option key={tipo.id} value={tipo.id}>
+                        {tipo.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <input
@@ -842,6 +901,11 @@ const Inventario = () => {
                         <div>
                           <p className="text-sm font-bold text-slate-800">{categoria.nombre}</p>
                           <p className="text-xs text-gray-400">ID: {categoria.id}</p>
+                          {categoria.parent_id && (
+                            <p className="text-xs text-gray-400">
+                              Tipo: {buildMotoCategoryLabel(categoriasMotos, categoria.parent_id)}
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={`text-xs font-bold px-2 py-1 rounded-full ${categoria.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
@@ -1063,14 +1127,14 @@ const Inventario = () => {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">Categoría</label>
-                {categoriasMotos.length > 0 ? (
+                {motoCategoriasOpciones.length > 0 ? (
                   <select
                     name="categoria"
                     value={form.categoria}
                     onChange={handleChange}
                     className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                   >
-                    {categoriasMotos.map((category) => (
+                    {motoCategoriasOpciones.map((category) => (
                       <option key={category.id} value={category.nombre}>
                         {category.nombre}
                       </option>

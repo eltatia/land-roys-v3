@@ -20,7 +20,8 @@ const Modelos = () => {
   const [motos, setMotos] = useState([]);
   const [categoriasMotos, setCategoriasMotos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categoriaActiva, setCategoriaActiva] = useState("all");
+  const [tipoActivo, setTipoActivo] = useState("all");
+  const [subcategoriaActiva, setSubcategoriaActiva] = useState("all");
 
   useEffect(() => {
     const fetchMotos = async () => {
@@ -44,19 +45,63 @@ const Modelos = () => {
     fetchMotos();
   }, []);
 
-  const categorias = useMemo(() => {
-    const activeCategorias = categoriasMotos.filter((categoria) => categoria.estado !== false);
-    if (activeCategorias.length > 0) {
-      return ["all", ...activeCategorias.map((categoria) => categoria.nombre)];
-    }
+  const tipos = useMemo(
+    () => categoriasMotos.filter((categoria) => categoria.estado !== false && !categoria.parent_id),
+    [categoriasMotos]
+  );
+
+  const subcategorias = useMemo(
+    () => categoriasMotos.filter((categoria) => categoria.estado !== false && categoria.parent_id),
+    [categoriasMotos]
+  );
+
+  const tiposDisponibles = useMemo(() => {
+    if (tipos.length > 0) return ["all", ...tipos.map((tipo) => tipo.nombre)];
     const unique = [...new Set(motos.map((m) => m.categoria).filter(Boolean))];
     return ["all", ...unique];
-  }, [categoriasMotos, motos]);
+  }, [tipos, motos]);
+
+  const subcategoriasPorTipo = useMemo(() => {
+    return subcategorias.reduce((acc, categoria) => {
+      const key = categoria.parent_id;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(categoria);
+      return acc;
+    }, {});
+  }, [subcategorias]);
+
+  const subcategoriasVisibles = useMemo(() => {
+    if (tipoActivo === "all") return [];
+    const tipoId = tipos.find((tipo) => tipo.nombre === tipoActivo)?.id;
+    if (!tipoId) return [];
+    return subcategoriasPorTipo[tipoId] || [];
+  }, [tipoActivo, tipos, subcategoriasPorTipo]);
 
   const motosFiltradas = useMemo(() => {
-    if (categoriaActiva === "all") return motos;
-    return motos.filter((m) => (m.categoria || "").toLowerCase() === categoriaActiva.toLowerCase());
-  }, [motos, categoriaActiva]);
+    if (tipoActivo === "all" && subcategoriaActiva === "all") return motos;
+
+    if (subcategoriaActiva !== "all") {
+      return motos.filter(
+        (m) => (m.categoria || "").toLowerCase() === subcategoriaActiva.toLowerCase()
+      );
+    }
+
+    if (tipoActivo !== "all") {
+      const tipoId = tipos.find((tipo) => tipo.nombre === tipoActivo)?.id;
+      const children = tipoId ? subcategoriasPorTipo[tipoId] || [] : [];
+      if (children.length > 0) {
+        const childNames = children.map((child) => child.nombre.toLowerCase());
+        return motos.filter((m) => childNames.includes((m.categoria || "").toLowerCase()));
+      }
+      return motos.filter((m) => (m.categoria || "").toLowerCase() === tipoActivo.toLowerCase());
+    }
+
+    return motos;
+  }, [motos, tipoActivo, subcategoriaActiva, tipos, subcategoriasPorTipo]);
+
+  useEffect(() => {
+    setSubcategoriaActiva("all");
+  }, [tipoActivo]);
 
   const handleVerDetalles = (moto) => {
     Swal.fire({
@@ -92,32 +137,83 @@ const Modelos = () => {
             <p className="text-white text-2xl mt-2">Innovación y potencia en cada viaje</p>
           </div>
         </div>
+      </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 -bottom-8 w-[98%] max-w-[1500px] z-20 px-2">
-          <div className="bg-white shadow-[0_12px_30px_rgba(15,23,42,0.10)] rounded-2xl px-6 py-5 flex flex-wrap items-center gap-3 md:gap-4 border border-gray-100">
-            <div className="flex items-center gap-2 text-[#5b6b88] font-extrabold text-sm md:text-[15px] uppercase tracking-wider mr-2">
-              <Filter size={20} /> Filtrar por:
+      <div className="max-w-7xl mx-auto px-4 -mt-10 relative z-20">
+        <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_24px_60px_rgba(15,23,42,0.12)] overflow-hidden">
+          <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-6 py-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-yellow-300">Explora por tipo</p>
+                <h2 className="text-2xl md:text-3xl font-black">Encuentra tu moto ideal en segundos</h2>
+                <p className="text-sm text-slate-300 mt-1">Selecciona un tipo y navega por sus subcategorías.</p>
+              </div>
+              <div className="flex items-center gap-2 text-yellow-300 text-sm font-semibold">
+                <Filter size={18} /> Filtros activos
+              </div>
             </div>
-
-            {categorias.map((cat) => {
-              const active = categoriaActiva === cat;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setCategoriaActiva(cat)}
-                  className={`px-8 py-2.5 rounded-full text-base font-extrabold transition ${
-                    active ? "bg-yellow-400 text-black" : "bg-[#f4f6f9] text-[#51617d] hover:bg-gray-200"
-                  }`}
-                >
-                  {cat === "all" ? "Todas" : cat}
-                </button>
-              );
-            })}
+          </div>
+          <div className="px-6 py-5 space-y-4 bg-white">
+            <div className="flex flex-wrap gap-3">
+              {tiposDisponibles.map((tipo) => {
+                const active = tipoActivo === tipo;
+                return (
+                  <button
+                    key={tipo}
+                    onClick={() => setTipoActivo(tipo)}
+                    className={`px-6 py-2.5 rounded-full text-sm font-extrabold tracking-wide transition ${
+                      active
+                        ? "bg-yellow-400 text-black shadow-[0_10px_20px_rgba(250,204,21,0.35)]"
+                        : "bg-[#f4f6f9] text-[#51617d] hover:bg-gray-200"
+                    }`}
+                  >
+                    {tipo === "all" ? "Todas" : tipo}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {tipoActivo === "all" ? (
+                <span className="text-sm text-gray-500">
+                  Selecciona un tipo para ver subcategorías disponibles.
+                </span>
+              ) : subcategoriasVisibles.length === 0 ? (
+                <span className="text-sm text-gray-500">
+                  Este tipo no tiene subcategorías registradas.
+                </span>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setSubcategoriaActiva("all")}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      subcategoriaActiva === "all"
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    Todas
+                  </button>
+                  {subcategoriasVisibles.map((categoria) => (
+                    <button
+                      key={categoria.id}
+                      onClick={() => setSubcategoriaActiva(categoria.nombre)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        subcategoriaActiva === categoria.nombre
+                          ? "bg-yellow-400 text-black"
+                          : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                      }`}
+                    >
+                      {categoria.nombre}
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 mt-16">
+      <div className="max-w-7xl mx-auto px-4 mt-10">
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {!loading && motosFiltradas.length === 0 && (
             <div className="col-span-full bg-white rounded-xl p-8 text-center text-gray-500 font-medium">
