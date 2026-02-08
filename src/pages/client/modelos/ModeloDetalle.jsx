@@ -128,13 +128,13 @@ const ModeloDetalle = () => {
             <source src={moto.video_url || defaultVideo} type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
-          <div className="relative z-10 h-full max-w-6xl mx-auto px-6 pb-12 text-white">
-            <div className="absolute bottom-10 left-2 md:left-0 flex flex-col gap-4">
+          <div className="relative z-10 h-full max-w-6xl mx-auto px-2 md:px-4 pb-12 text-white">
+            <div className="absolute bottom-10 left-0 flex flex-col gap-4">
               {moto.logo_url ? (
                 <img
                   src={modelLogo}
                   alt={`${moto.nombre} logo`}
-                  className="h-20 md:h-28 w-auto max-w-[320px] object-contain"
+                  className="h-24 md:h-32 w-auto max-w-[380px] object-contain"
                 />
               ) : (
                 <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
@@ -149,9 +149,9 @@ const ModeloDetalle = () => {
           </div>
         </div>
       ) : (
-        <div className="max-w-6xl mx-auto px-6 pt-16">
-          <section className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-10 items-center">
-            <div className="overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 pt-16">
+          <section className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.75fr] gap-12 items-center">
+            <div className="overflow-hidden lg:-ml-6">
               <img
                 src={
                   moto.imagen_url ||
@@ -161,7 +161,7 @@ const ModeloDetalle = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-center lg:text-left space-y-6">
+            <div className="text-center lg:text-left space-y-6 lg:pl-6">
               <img
                 src={modelLogo}
                 alt={`${moto.nombre} logo`}
@@ -181,8 +181,8 @@ const ModeloDetalle = () => {
 
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
         {hasVideo && (
-          <section className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
-            <div className="overflow-hidden">
+          <section className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.75fr] gap-12 items-center">
+            <div className="overflow-hidden lg:-ml-6">
               <img
                 src={
                   moto.imagen_url ||
@@ -192,7 +192,7 @@ const ModeloDetalle = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-center lg:text-left space-y-5">
+            <div className="text-center lg:text-left space-y-5 lg:pl-6">
               <img
                 src={modelLogo}
                 alt={`${moto.nombre} logo`}
