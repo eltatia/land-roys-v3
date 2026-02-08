@@ -103,6 +103,16 @@ const isValidUrl = (value) => {
   }
 };
 
+const isSignedUrlWithoutToken = (value) => {
+  if (!value || !isValidUrl(value)) return false;
+  try {
+    const parsed = new URL(value);
+    return parsed.pathname.includes("/storage/v1/object/sign/") && !parsed.searchParams.has("token");
+  } catch {
+    return false;
+  }
+};
+
 const normalizeStorageUrl = (value) => {
   if (!value) return value;
   const trimmed = value.trim();
@@ -110,6 +120,9 @@ const normalizeStorageUrl = (value) => {
   try {
     const parsed = new URL(trimmed);
     if (parsed.pathname.includes("/storage/v1/object/sign/")) {
+      if (parsed.searchParams.has("token")) {
+        return trimmed;
+      }
       parsed.pathname = parsed.pathname.replace("/storage/v1/object/sign/", "/storage/v1/object/public/");
       parsed.search = "";
       return parsed.toString();
@@ -138,6 +151,8 @@ const Inventario = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [imageUrlError, setImageUrlError] = useState("");
+  const [logoUrlError, setLogoUrlError] = useState("");
+  const [brandLogoUrlError, setBrandLogoUrlError] = useState("");
   const [repuestoEditingId, setRepuestoEditingId] = useState(null);
   const [repuestoFiltroCategoria, setRepuestoFiltroCategoria] = useState("all");
   const [repuestoForm, setRepuestoForm] = useState(initialRepuestoForm);
@@ -295,6 +310,46 @@ const Inventario = () => {
         setImageUrlError("La URL debe empezar con http:// o https://");
         if (!imageFile) setImagePreview("");
       }
+    }
+
+    if (name === "logo_url") {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        setLogoUrlError("");
+        return;
+      }
+
+      if (!isValidUrl(trimmed)) {
+        setLogoUrlError("La URL debe empezar con http:// o https://");
+        return;
+      }
+
+      if (isSignedUrlWithoutToken(trimmed)) {
+        setLogoUrlError("La URL firmada no tiene token. Usa un enlace público o la URL firmada completa.");
+        return;
+      }
+
+      setLogoUrlError("");
+    }
+
+    if (name === "brand_logo_url") {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        setBrandLogoUrlError("");
+        return;
+      }
+
+      if (!isValidUrl(trimmed)) {
+        setBrandLogoUrlError("La URL debe empezar con http:// o https://");
+        return;
+      }
+
+      if (isSignedUrlWithoutToken(trimmed)) {
+        setBrandLogoUrlError("La URL firmada no tiene token. Usa un enlace público o la URL firmada completa.");
+        return;
+      }
+
+      setBrandLogoUrlError("");
     }
   };
 
@@ -550,6 +605,11 @@ const Inventario = () => {
 
     if (!imageFile && imageUrlError) {
       Swal.fire("Validación", "Ingresa una URL válida o sube una imagen local", "warning");
+      return;
+    }
+
+    if (logoUrlError || brandLogoUrlError) {
+      Swal.fire("Validación", "Revisa las URLs de logos antes de guardar", "warning");
       return;
     }
 
@@ -1421,6 +1481,7 @@ const Inventario = () => {
                   placeholder="https://..."
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 />
+                {logoUrlError && <p className="text-xs text-red-500 mt-1">{logoUrlError}</p>}
                 {isValidUrl(form.logo_url) && (
                   <div className="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 flex items-center justify-center">
                     <img
@@ -1440,6 +1501,7 @@ const Inventario = () => {
                   placeholder="https://..."
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 />
+                {brandLogoUrlError && <p className="text-xs text-red-500 mt-1">{brandLogoUrlError}</p>}
                 {isValidUrl(form.brand_logo_url) && (
                   <div className="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 flex items-center justify-center">
                     <img
