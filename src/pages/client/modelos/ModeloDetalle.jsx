@@ -135,7 +135,7 @@ const ModeloDetalle = () => {
   const hasVideo = Boolean(moto.video_url);
   const heroAnimation = heroVisible
     ? "opacity-100 translate-x-0 blur-0"
-    : "opacity-0 -translate-x-16 blur-sm";
+    : "opacity-0 -translate-x-24 blur-md";
 
   return (
     <section className="bg-white text-slate-900">
@@ -155,7 +155,7 @@ const ModeloDetalle = () => {
           <div className="relative z-10 h-full w-full px-6 pb-12 text-white">
             <div
               ref={heroRef}
-              className={`absolute bottom-10 left-14 flex flex-col gap-4 transition-all duration-[1400ms] ease-out ${heroAnimation}`}
+              className={`absolute bottom-10 left-14 flex flex-col gap-4 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${heroAnimation}`}
             >
               {moto.logo_url ? (
                 <img
@@ -179,7 +179,7 @@ const ModeloDetalle = () => {
         <div className="max-w-6xl mx-auto px-4 pt-16">
           <section
             ref={heroRef}
-            className={`grid grid-cols-1 lg:grid-cols-[1.45fr_0.75fr] gap-12 items-center transition-all duration-[1400ms] ease-out ${heroAnimation}`}
+            className={`grid grid-cols-1 lg:grid-cols-[1.45fr_0.75fr] gap-12 items-center transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${heroAnimation}`}
           >
             <div className="overflow-hidden lg:-ml-6">
               <img
