@@ -19,7 +19,9 @@ const ModeloDetalle = () => {
   const [moto, setMoto] = useState(null);
   const [loading, setLoading] = useState(true);
   const heroRef = useRef(null);
+  const diferencialRef = useRef(null);
   const [heroVisible, setHeroVisible] = useState(false);
+  const [diferencialVisible, setDiferencialVisible] = useState(false);
   const [contactForm, setContactForm] = useState({
     nombre: "",
     email: "",
@@ -62,6 +64,25 @@ const ModeloDetalle = () => {
         }
       },
       { threshold: 0.35 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [moto]);
+
+  useEffect(() => {
+    if (!moto) return;
+    const node = diferencialRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setDiferencialVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
     );
 
     observer.observe(node);
@@ -136,6 +157,9 @@ const ModeloDetalle = () => {
   const heroAnimation = heroVisible
     ? "opacity-100 translate-x-0 blur-0"
     : "opacity-0 -translate-x-24 blur-md";
+  const diferencialAnimation = diferencialVisible
+    ? "opacity-100 translate-x-0 blur-0"
+    : "opacity-0 -translate-x-16 blur-sm";
 
   return (
     <section className="bg-white text-slate-900">
@@ -263,15 +287,22 @@ const ModeloDetalle = () => {
           </div>
         </section>
 
-        <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-12 items-center">
-          <div className="overflow-hidden lg:-ml-8">
+        <section
+          ref={diferencialRef}
+          className="relative left-1/2 right-1/2 -mx-[50vw] w-screen px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-12 items-center"
+        >
+          <div
+            className={`overflow-hidden lg:-ml-8 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}
+          >
             <img
               src={diferencialImagen}
               alt="Detalle destacado"
               className="w-full h-[520px] md:h-[640px] object-cover"
             />
           </div>
-          <div className="space-y-4 text-center lg:text-left">
+          <div
+            className={`space-y-4 text-center lg:text-left transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}
+          >
             <h3 className="text-4xl md:text-5xl font-black text-slate-800">{diferencialTitulo}</h3>
             <p className="text-xl text-slate-600">{diferencialTexto}</p>
           </div>
