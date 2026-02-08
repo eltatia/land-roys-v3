@@ -128,16 +128,24 @@ const ModeloDetalle = () => {
             <source src={moto.video_url || defaultVideo} type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
-          <div className="relative z-10 h-full flex flex-col justify-end max-w-6xl mx-auto px-6 pb-12 text-white">
-            {moto.logo_url ? (
-              <img src={modelLogo} alt={`${moto.nombre} logo`} className="h-16 md:h-20 mb-4" />
-            ) : (
-              <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
-            )}
-            <h1 className="text-4xl md:text-6xl font-black">{moto.nombre}</h1>
-            <p className="text-sm md:text-base mt-2 text-slate-200 max-w-2xl">
-              {moto.descripcion || "Descubre cada detalle de esta moto diseñada para tu estilo de vida."}
-            </p>
+          <div className="relative z-10 h-full max-w-6xl mx-auto px-6 pb-12 text-white">
+            <div className="absolute bottom-10 left-6 flex flex-col gap-3">
+              {moto.logo_url ? (
+                <img
+                  src={modelLogo}
+                  alt={`${moto.nombre} logo`}
+                  className="h-16 md:h-20 w-auto max-w-[220px] object-contain"
+                />
+              ) : (
+                <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
+              )}
+              <div>
+                <h1 className="text-4xl md:text-6xl font-black">{moto.nombre}</h1>
+                <p className="text-sm md:text-base mt-2 text-slate-200 max-w-2xl">
+                  {moto.descripcion || "Descubre cada detalle de esta moto diseñada para tu estilo de vida."}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
@@ -154,12 +162,16 @@ const ModeloDetalle = () => {
               />
             </div>
             <div className="text-center lg:text-left space-y-6">
-              <img src={modelLogo} alt={`${moto.nombre} logo`} className="h-20 mx-auto lg:mx-0" />
+              <img
+                src={modelLogo}
+                alt={`${moto.nombre} logo`}
+                className="h-28 md:h-32 w-auto max-w-[260px] object-contain mx-auto lg:mx-0"
+              />
               <p className="text-xl text-slate-600 text-center lg:text-left">
                 {moto.descripcion || "Potencia, estilo y tecnología pensados para el conductor exigente."}
               </p>
               <div className="flex flex-col items-center lg:items-start gap-2">
-                <img src={brandLogo} alt="Logo empresa" className="h-12" />
+                <img src={brandLogo} alt="Logo empresa" className="h-16 w-auto object-contain" />
                 <p className="text-4xl font-black text-yellow-500">{currency.format(Number(moto.precio || 0))}</p>
               </div>
             </div>
@@ -181,12 +193,16 @@ const ModeloDetalle = () => {
               />
             </div>
             <div className="text-center lg:text-left space-y-5">
-              <img src={modelLogo} alt={`${moto.nombre} logo`} className="h-16 mx-auto lg:mx-0" />
+              <img
+                src={modelLogo}
+                alt={`${moto.nombre} logo`}
+                className="h-24 md:h-28 w-auto max-w-[240px] object-contain mx-auto lg:mx-0"
+              />
               <p className="text-lg text-slate-600">
                 {moto.descripcion || "Potencia, estilo y tecnología pensados para el conductor exigente."}
               </p>
               <div className="flex flex-col items-center lg:items-start gap-2">
-                <img src={brandLogo} alt="Logo empresa" className="h-10" />
+                <img src={brandLogo} alt="Logo empresa" className="h-14 w-auto object-contain" />
                 <p className="text-3xl font-black text-yellow-500">{currency.format(Number(moto.precio || 0))}</p>
               </div>
             </div>
