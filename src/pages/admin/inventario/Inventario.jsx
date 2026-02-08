@@ -111,6 +111,7 @@ const Inventario = () => {
   const [categoriasMotos, setCategoriasMotos] = useState([]);
   const [categoriaMotoForm, setCategoriaMotoForm] = useState(initialCategoriaMotoForm);
   const [categoriaMotoEditingId, setCategoriaMotoEditingId] = useState(null);
+  const [isCreatingMotoType, setIsCreatingMotoType] = useState(false);
 
   const fetchMotos = async () => {
     setLoading(true);
@@ -281,6 +282,7 @@ const Inventario = () => {
   const resetCategoriaMotoForm = () => {
     setCategoriaMotoForm(initialCategoriaMotoForm);
     setCategoriaMotoEditingId(null);
+    setIsCreatingMotoType(false);
   };
 
   const handleCategoriaMotoCreateChild = (tipo) => {
@@ -289,6 +291,7 @@ const Inventario = () => {
       ...initialCategoriaMotoForm,
       parent_id: tipo.id,
     });
+    setIsCreatingMotoType(false);
   };
 
   const resetForm = () => {
@@ -352,6 +355,7 @@ const Inventario = () => {
       estado: categoria.estado ?? true,
       parent_id: categoria.parent_id || "",
     });
+    setIsCreatingMotoType(!categoria.parent_id);
   };
 
   const handleEdit = (moto) => {
@@ -626,14 +630,23 @@ const Inventario = () => {
       return;
     }
 
+    if (!isCreatingMotoType && motoTipos.length > 0 && !categoriaMotoForm.parent_id) {
+      Swal.fire("Validación", "Selecciona un tipo para la subcategoría", "warning");
+      return;
+    }
+
     setSaving(true);
     try {
+      const payload = {
+        ...categoriaMotoForm,
+        parent_id: isCreatingMotoType ? null : categoriaMotoForm.parent_id || null,
+      };
       if (categoriaMotoEditingId) {
-        const updated = await updateCategoriaMoto(categoriaMotoEditingId, categoriaMotoForm);
+        const updated = await updateCategoriaMoto(categoriaMotoEditingId, payload);
         setCategoriasMotos((prev) => prev.map((cat) => (cat.id === categoriaMotoEditingId ? updated : cat)));
         Swal.fire("Actualizado", "Categoría actualizada correctamente", "success");
       } else {
-        const created = await addCategoriaMoto(categoriaMotoForm);
+        const created = await addCategoriaMoto(payload);
         setCategoriasMotos((prev) => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
         Swal.fire("Creado", "Categoría creada correctamente", "success");
       }
@@ -861,25 +874,56 @@ const Inventario = () => {
                     name="nombre"
                     value={categoriaMotoForm.nombre}
                     onChange={handleCategoriaMotoChange}
-                    placeholder="Ej. Deportiva"
+                    placeholder={isCreatingMotoType ? "Ej. Cargueros" : "Ej. Carguero liviano"}
                     className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-gray-700">Tipo (opcional)</label>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    <span>Modo de creación</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingMotoType(false)}
+                      className={`px-3 py-1.5 rounded-full ${
+                        !isCreatingMotoType ? "bg-slate-900 text-white" : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      Subcategoría
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingMotoType(true)}
+                      className={`px-3 py-1.5 rounded-full ${
+                        isCreatingMotoType ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      Tipo principal
+                    </button>
+                  </div>
+                  <label className="text-sm font-semibold text-gray-700 block mt-3">
+                    {isCreatingMotoType ? "Tipo" : "Asignar tipo"}
+                  </label>
                   <select
                     name="parent_id"
                     value={categoriaMotoForm.parent_id}
                     onChange={handleCategoriaMotoChange}
-                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
+                    disabled={isCreatingMotoType}
+                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-white disabled:bg-gray-100 disabled:text-gray-400"
                   >
-                    <option value="">Sin tipo (categoría principal)</option>
+                    <option value="">
+                      {isCreatingMotoType ? "Se creará como tipo principal" : "Selecciona un tipo"}
+                    </option>
                     {motoTipos.map((tipo) => (
                       <option key={tipo.id} value={tipo.id}>
                         {tipo.nombre}
                       </option>
                     ))}
                   </select>
+                  {!isCreatingMotoType && motoTipos.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Crea un tipo principal primero para asignar subcategorías.
+                    </p>
+                  )}
                 </div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <input
