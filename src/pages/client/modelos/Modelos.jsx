@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Filter, Gauge, Boxes, DollarSign } from "lucide-react";
 import Swal from "sweetalert2";
 import { getMotos } from "../../../services/Motos.service";
+import { getCategoriasMotos } from "../../../services/CategoriasMotos.service";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -17,6 +18,7 @@ const stateColors = {
 
 const Modelos = () => {
   const [motos, setMotos] = useState([]);
+  const [categoriasMotos, setCategoriasMotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoriaActiva, setCategoriaActiva] = useState("all");
 
@@ -24,8 +26,9 @@ const Modelos = () => {
     const fetchMotos = async () => {
       setLoading(true);
       try {
-        const data = await getMotos();
-        setMotos(data);
+        const [motosData, categoriasData] = await Promise.all([getMotos(), getCategoriasMotos()]);
+        setMotos(motosData);
+        setCategoriasMotos(categoriasData);
       } catch (error) {
         console.error("Error cargando modelos:", error);
         Swal.fire({
@@ -42,9 +45,13 @@ const Modelos = () => {
   }, []);
 
   const categorias = useMemo(() => {
+    const activeCategorias = categoriasMotos.filter((categoria) => categoria.estado !== false);
+    if (activeCategorias.length > 0) {
+      return ["all", ...activeCategorias.map((categoria) => categoria.nombre)];
+    }
     const unique = [...new Set(motos.map((m) => m.categoria).filter(Boolean))];
     return ["all", ...unique];
-  }, [motos]);
+  }, [categoriasMotos, motos]);
 
   const motosFiltradas = useMemo(() => {
     if (categoriaActiva === "all") return motos;
@@ -102,7 +109,7 @@ const Modelos = () => {
                     active ? "bg-yellow-400 text-black" : "bg-[#f4f6f9] text-[#51617d] hover:bg-gray-200"
                   }`}
                 >
-                  {cat === "all" ? "All" : cat}
+                  {cat === "all" ? "Todas" : cat}
                 </button>
               );
             })}

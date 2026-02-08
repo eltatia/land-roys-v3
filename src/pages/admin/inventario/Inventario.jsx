@@ -3,6 +3,12 @@ import Swal from "sweetalert2";
 import { Pencil, Trash2, Plus, PackageSearch, Bike, Wrench, X, UploadCloud, Link2 } from "lucide-react";
 import { addMoto, deleteMoto, getMotos, updateMoto, uploadMotoImage } from "../../../services/Motos.service";
 import {
+  addCategoriaMoto,
+  deleteCategoriaMoto,
+  getCategoriasMotos,
+  updateCategoriaMoto,
+} from "../../../services/CategoriasMotos.service";
+import {
   addRepuesto,
   deleteRepuesto,
   getRepuestos,
@@ -41,6 +47,11 @@ const initialRepuestoForm = {
 };
 
 const initialCategoriaForm = {
+  nombre: "",
+  estado: true,
+};
+
+const initialCategoriaMotoForm = {
   nombre: "",
   estado: true,
 };
@@ -93,6 +104,9 @@ const Inventario = () => {
   const [categoriasRepuestos, setCategoriasRepuestos] = useState([]);
   const [categoriaForm, setCategoriaForm] = useState(initialCategoriaForm);
   const [categoriaEditingId, setCategoriaEditingId] = useState(null);
+  const [categoriasMotos, setCategoriasMotos] = useState([]);
+  const [categoriaMotoForm, setCategoriaMotoForm] = useState(initialCategoriaMotoForm);
+  const [categoriaMotoEditingId, setCategoriaMotoEditingId] = useState(null);
 
   const fetchMotos = async () => {
     setLoading(true);
@@ -130,16 +144,29 @@ const Inventario = () => {
     }
   };
 
+  const fetchCategoriasMotos = async () => {
+    try {
+      const data = await getCategoriasMotos();
+      setCategoriasMotos(data);
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo cargar las categorías de motos", "error");
+    }
+  };
+
   useEffect(() => {
     fetchMotos();
     fetchRepuestos();
     fetchCategoriasRepuestos();
+    fetchCategoriasMotos();
   }, []);
 
   const categorias = useMemo(() => {
+    const byDb = categoriasMotos.map((categoria) => categoria.nombre).filter(Boolean);
+    if (byDb.length > 0) return ["all", ...byDb];
     const unique = [...new Set(motos.map((m) => m.categoria).filter(Boolean))];
     return ["all", ...unique];
-  }, [motos]);
+  }, [categoriasMotos, motos]);
 
   const motosFiltradas = useMemo(() => {
     if (filtroCategoria === "all") return motos;
@@ -202,9 +229,19 @@ const Inventario = () => {
     setCategoriaForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
+  const handleCategoriaMotoChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setCategoriaMotoForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
   const resetCategoriaForm = () => {
     setCategoriaForm(initialCategoriaForm);
     setCategoriaEditingId(null);
+  };
+
+  const resetCategoriaMotoForm = () => {
+    setCategoriaMotoForm(initialCategoriaMotoForm);
+    setCategoriaMotoEditingId(null);
   };
 
   const resetForm = () => {
@@ -227,7 +264,10 @@ const Inventario = () => {
 
   const handleOpenCreateModal = () => {
     setEditingId(null);
-    setForm(initialForm);
+    setForm({
+      ...initialForm,
+      categoria: categoriasMotos[0]?.nombre || "",
+    });
     setModalOpen(true);
     setImageFile(null);
     setImagePreview("");
@@ -249,6 +289,14 @@ const Inventario = () => {
   const handleCategoriaEdit = (categoria) => {
     setCategoriaEditingId(categoria.id);
     setCategoriaForm({
+      nombre: categoria.nombre || "",
+      estado: categoria.estado ?? true,
+    });
+  };
+
+  const handleCategoriaMotoEdit = (categoria) => {
+    setCategoriaMotoEditingId(categoria.id);
+    setCategoriaMotoForm({
       nombre: categoria.nombre || "",
       estado: categoria.estado ?? true,
     });
@@ -518,6 +566,58 @@ const Inventario = () => {
     }
   };
 
+  const handleCategoriaMotoSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!categoriaMotoForm.nombre.trim()) {
+      Swal.fire("Validación", "El nombre de la categoría es obligatorio", "warning");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (categoriaMotoEditingId) {
+        const updated = await updateCategoriaMoto(categoriaMotoEditingId, categoriaMotoForm);
+        setCategoriasMotos((prev) => prev.map((cat) => (cat.id === categoriaMotoEditingId ? updated : cat)));
+        Swal.fire("Actualizado", "Categoría actualizada correctamente", "success");
+      } else {
+        const created = await addCategoriaMoto(categoriaMotoForm);
+        setCategoriasMotos((prev) => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        Swal.fire("Creado", "Categoría creada correctamente", "success");
+      }
+      resetCategoriaMotoForm();
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo guardar la categoría", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCategoriaMoto = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Eliminar categoría?",
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteCategoriaMoto(id);
+      setCategoriasMotos((prev) => prev.filter((cat) => cat.id !== id));
+      if (categoriaMotoEditingId === id) resetCategoriaMotoForm();
+      Swal.fire("Eliminado", "Categoría eliminada", "success");
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo eliminar la categoría", "error");
+    }
+  };
+
   const handleDeleteCategoria = async (id) => {
     const result = await Swal.fire({
       title: "¿Eliminar categoría?",
@@ -688,6 +788,86 @@ const Inventario = () => {
 
         {activeTab === "motos" ? (
           <>
+            <div className="mb-6 grid grid-cols-1 lg:grid-cols-[1.1fr_1.4fr] gap-5">
+              <form onSubmit={handleCategoriaMotoSubmit} className="bg-[#f5f6f8] rounded-2xl p-5 space-y-4 border border-gray-100">
+                <h3 className="text-lg font-bold text-slate-800">Categorías de motos</h3>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Nombre</label>
+                  <input
+                    name="nombre"
+                    value={categoriaMotoForm.nombre}
+                    onChange={handleCategoriaMotoChange}
+                    placeholder="Ej. Deportiva"
+                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="estado"
+                    checked={categoriaMotoForm.estado}
+                    onChange={handleCategoriaMotoChange}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Activa
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-yellow-400 hover:bg-yellow-500 rounded-xl px-4 py-2 text-sm font-bold text-black"
+                  >
+                    {categoriaMotoEditingId ? "Actualizar" : "Agregar"}
+                  </button>
+                  {categoriaMotoEditingId && (
+                    <button
+                      type="button"
+                      onClick={resetCategoriaMotoForm}
+                      className="text-sm font-semibold text-gray-500 hover:text-gray-700"
+                    >
+                      Cancelar edición
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Listado</h4>
+                <div className="mt-4 space-y-3 max-h-72 overflow-auto pr-1">
+                  {categoriasMotos.length === 0 ? (
+                    <p className="text-sm text-gray-500">No hay categorías registradas.</p>
+                  ) : (
+                    categoriasMotos.map((categoria) => (
+                      <div key={categoria.id} className="flex items-center justify-between gap-3 bg-gray-50 rounded-xl px-4 py-3">
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{categoria.nombre}</p>
+                          <p className="text-xs text-gray-400">ID: {categoria.id}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-bold px-2 py-1 rounded-full ${categoria.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+                            {categoria.estado ? "Activa" : "Inactiva"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCategoriaMotoEdit(categoria)}
+                            className="p-2 rounded-lg border border-blue-200 text-blue-600"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategoriaMoto(categoria.id)}
+                            className="p-2 rounded-lg border border-red-200 text-red-500"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
             <TableHeader />
             {loading ? (
               <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">Cargando inventario...</div>
@@ -883,7 +1063,28 @@ const Inventario = () => {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">Categoría</label>
-                <input name="categoria" value={form.categoria} onChange={handleChange} placeholder="Ej. Deportiva" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+                {categoriasMotos.length > 0 ? (
+                  <select
+                    name="categoria"
+                    value={form.categoria}
+                    onChange={handleChange}
+                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
+                  >
+                    {categoriasMotos.map((category) => (
+                      <option key={category.id} value={category.nombre}>
+                        {category.nombre}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    name="categoria"
+                    value={form.categoria}
+                    onChange={handleChange}
+                    placeholder="Ej. Deportiva"
+                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
+                  />
+                )}
               </div>
             </div>
 
