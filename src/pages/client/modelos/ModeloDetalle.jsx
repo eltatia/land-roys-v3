@@ -161,7 +161,7 @@ const ModeloDetalle = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-center lg:text-left space-y-6 lg:pl-6 lg:translate-x-10">
+            <div className="text-center lg:text-left space-y-6 lg:pl-10 lg:translate-x-20 lg:ml-auto">
               <img
                 src={modelLogo}
                 alt={`${moto.nombre} logo`}
@@ -192,7 +192,7 @@ const ModeloDetalle = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-center lg:text-left space-y-5 lg:pl-6 lg:translate-x-10">
+            <div className="text-center lg:text-left space-y-5 lg:pl-10 lg:translate-x-20 lg:ml-auto">
               <img
                 src={modelLogo}
                 alt={`${moto.nombre} logo`}
@@ -233,8 +233,8 @@ const ModeloDetalle = () => {
           </div>
         </section>
 
-        <section className="mx-auto w-full lg:w-[80%] grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-10 items-center">
-          <div className="overflow-hidden">
+        <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-12 items-center">
+          <div className="overflow-hidden lg:-ml-8">
             <img
               src={diferencialImagen}
               alt="Detalle destacado"
