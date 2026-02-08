@@ -129,7 +129,7 @@ const ModeloDetalle = () => {
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
           <div className="relative z-10 h-full w-full px-6 pb-12 text-white">
-            <div className="absolute bottom-10 right-14 flex flex-col gap-4 text-right items-end">
+            <div className="absolute bottom-10 left-14 flex flex-col gap-4">
               {moto.logo_url ? (
                 <img
                   src={modelLogo}
