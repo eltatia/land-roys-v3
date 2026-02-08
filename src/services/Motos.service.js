@@ -8,6 +8,7 @@ const normalizeMoto = (moto = {}) => ({
   precio: moto.precio ?? 0,
   stock: moto.stock ?? 0,
   imagen_url: moto.imagen_url ?? null,
+  video_url: moto.video_url ?? null,
   marca: moto.marca ?? null,
   modelo_codigo: moto.modelo_codigo ?? null,
   estado: moto.estado || "disponible",
@@ -37,6 +38,7 @@ const pickMotoPayload = (moto = {}) => ({
   precio: moto.precio ?? 0,
   stock: moto.stock ?? 0,
   imagen_url: moto.imagen_url ?? null,
+  video_url: moto.video_url ?? null,
   marca: moto.marca || null,
   modelo_codigo: moto.modelo_codigo || null,
   estado: moto.estado || "disponible",
@@ -45,6 +47,22 @@ const pickMotoPayload = (moto = {}) => ({
 const pickSpecs = (moto = {}) => normalizeSpecs(moto);
 
 const getMotoBucket = () => import.meta.env.VITE_SUPABASE_MOTOS_BUCKET || "motos";
+
+export const uploadMotoVideo = async (file) => {
+  const bucket = getMotoBucket();
+  const ext = file.name.split(".").pop();
+  const fileName = `${crypto.randomUUID()}.${ext}`;
+  const filePath = `motos/videos/${fileName}`;
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+  return data.publicUrl;
+};
 
 const missingColumnMatch = (error) => {
   const message = error?.message || "";

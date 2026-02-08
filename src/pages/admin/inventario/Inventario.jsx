@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import { Pencil, Trash2, Plus, PackageSearch, Bike, Wrench, X, UploadCloud, Link2 } from "lucide-react";
-import { addMoto, deleteMoto, getMotos, updateMoto, uploadMotoImage } from "../../../services/Motos.service";
+import {
+  addMoto,
+  deleteMoto,
+  getMotos,
+  updateMoto,
+  uploadMotoImage,
+  uploadMotoVideo,
+} from "../../../services/Motos.service";
 import {
   addCategoriaMoto,
   deleteCategoriaMoto,
@@ -39,6 +46,9 @@ const initialForm = {
   stock: "",
   estado: "disponible",
   imagen_url: "",
+  video_url: "",
+  video_activo: false,
+  video_file: null,
 };
 
 const initialRepuestoForm = {
@@ -99,6 +109,7 @@ const Inventario = () => {
   const [loadingRepuestos, setLoadingRepuestos] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [filtroCategoria, setFiltroCategoria] = useState("all");
   const [form, setForm] = useState(initialForm);
@@ -413,6 +424,8 @@ const Inventario = () => {
       stock: String(moto.stock ?? ""),
       estado: moto.estado || "disponible",
       imagen_url: moto.imagen_url || "",
+      video_url: moto.video_url || "",
+      video_activo: Boolean(moto.video_url),
     });
     setMotoTipoId(tipoId || "");
     setMotoSubcategoriaId(categoriaMatch?.parent_id ? categoriaMatch.id : "");
@@ -466,6 +479,21 @@ const Inventario = () => {
     setForm((prev) => ({ ...prev, imagen_url: "" }));
   };
 
+  const handleVideoToggle = () => {
+    setForm((prev) => ({
+      ...prev,
+      video_activo: !prev.video_activo,
+      video_url: prev.video_activo ? "" : prev.video_url,
+      video_file: prev.video_activo ? null : prev.video_file,
+    }));
+  };
+
+  const handleVideoFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setForm((prev) => ({ ...prev, video_file: file }));
+  };
+
   const handleClearRepuestoImage = () => {
     setRepuestoImageFile(null);
     setRepuestoImagePreview("");
@@ -504,6 +532,11 @@ const Inventario = () => {
       return;
     }
 
+    if (form.video_activo && !form.video_url.trim() && !form.video_file) {
+      Swal.fire("Validación", "Agrega una URL de video o sube un archivo", "warning");
+      return;
+    }
+
     const payload = {
       nombre: form.nombre.trim(),
       marca: form.marca.trim() || null,
@@ -521,6 +554,7 @@ const Inventario = () => {
       stock: Number(form.stock),
       estado: form.estado,
       imagen_url: form.imagen_url.trim() || null,
+      video_url: form.video_activo ? form.video_url.trim() || null : null,
     };
 
     if (Number.isNaN(payload.precio) || Number.isNaN(payload.stock)) {
@@ -534,6 +568,13 @@ const Inventario = () => {
         setUploading(true);
         const publicUrl = await uploadMotoImage(imageFile);
         payload.imagen_url = publicUrl;
+      }
+
+      if (form.video_activo && form.video_file) {
+        setUploadingVideo(true);
+        const publicUrl = await uploadMotoVideo(form.video_file);
+        payload.video_url = publicUrl;
+        setForm((prev) => ({ ...prev, video_file: null, video_url: publicUrl }));
       }
 
       if (editingId) {
@@ -552,6 +593,7 @@ const Inventario = () => {
     } finally {
       setSaving(false);
       setUploading(false);
+      setUploadingVideo(false);
     }
   };
 
@@ -1432,6 +1474,48 @@ const Inventario = () => {
                   <option value="agotado">Agotado</option>
                 </select>
               </div>
+            </div>
+
+            <div className="bg-[#f5f6f8] rounded-2xl p-4 border border-gray-100 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">Video destacado</p>
+                  <p className="text-xs text-gray-500">Activa para mostrar un video en la vista de detalle.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleVideoToggle}
+                  className={`px-4 py-2 rounded-full text-xs font-bold ${
+                    form.video_activo ? "bg-yellow-400 text-black" : "bg-gray-200 text-gray-500"
+                  }`}
+                >
+                  {form.video_activo ? "Video activo" : "Sin video"}
+                </button>
+              </div>
+              {form.video_activo && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700">URL del video</label>
+                    <input
+                      name="video_url"
+                      value={form.video_url}
+                      onChange={handleChange}
+                      placeholder="https://..."
+                      className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700">Subir video</label>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleVideoFileChange}
+                      className="mt-2 w-full text-sm text-gray-600"
+                    />
+                    {uploadingVideo && <p className="text-xs text-gray-400 mt-1">Subiendo video...</p>}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>

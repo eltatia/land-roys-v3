@@ -102,31 +102,61 @@ const ModeloDetalle = () => {
   const modelLogo = moto.logo_url || "/vite.svg";
   const brandLogo = "/vite.svg";
 
+  const hasVideo = Boolean(moto.video_url);
+
   return (
     <section className="bg-white text-slate-900">
-      <div className="relative h-[60vh] min-h-[420px] w-full overflow-hidden">
-        <video
-          className="absolute inset-0 h-full w-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster={moto.imagen_url || "/vite.svg"}
-        >
-          <source src={moto.video_url || defaultVideo} type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
-        <div className="relative z-10 h-full flex flex-col justify-end max-w-6xl mx-auto px-6 pb-10 text-white">
-          <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
-          <h1 className="text-4xl md:text-6xl font-black">{moto.nombre}</h1>
-          <p className="text-sm md:text-base mt-2 text-slate-200 max-w-2xl">
-            {moto.descripcion || "Descubre cada detalle de esta moto diseñada para tu estilo de vida."}
-          </p>
+      {hasVideo ? (
+        <div className="relative h-[60vh] min-h-[420px] w-full overflow-hidden">
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster={moto.imagen_url || "/vite.svg"}
+          >
+            <source src={moto.video_url || defaultVideo} type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
+          <div className="relative z-10 h-full flex flex-col justify-end max-w-6xl mx-auto px-6 pb-10 text-white">
+            <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
+            <h1 className="text-4xl md:text-6xl font-black">{moto.nombre}</h1>
+            <p className="text-sm md:text-base mt-2 text-slate-200 max-w-2xl">
+              {moto.descripcion || "Descubre cada detalle de esta moto diseñada para tu estilo de vida."}
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="max-w-6xl mx-auto px-6 pt-12">
+          <section className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
+            <div className="rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white">
+              <img
+                src={
+                  moto.imagen_url ||
+                  "https://images.unsplash.com/photo-1511994298241-608e28f14fde?q=80&w=1200&auto=format&fit=crop"
+                }
+                alt={moto.nombre}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="text-center lg:text-left space-y-5">
+              <img src={modelLogo} alt={`${moto.nombre} logo`} className="h-16 mx-auto lg:mx-0" />
+              <p className="text-lg text-slate-600">
+                {moto.descripcion || "Potencia, estilo y tecnología pensados para el conductor exigente."}
+              </p>
+              <div className="flex flex-col items-center lg:items-start gap-2">
+                <img src={brandLogo} alt="Logo empresa" className="h-10" />
+                <p className="text-3xl font-black text-yellow-500">{currency.format(Number(moto.precio || 0))}</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
-        <section className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
+        {hasVideo && (
+          <section className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
           <div className="rounded-3xl overflow-hidden shadow-xl border border-gray-100">
             <img
               src={
@@ -147,7 +177,8 @@ const ModeloDetalle = () => {
               <p className="text-3xl font-black text-yellow-500">{currency.format(Number(moto.precio || 0))}</p>
             </div>
           </div>
-        </section>
+          </section>
+        )}
 
         <section className="bg-slate-900 text-white rounded-3xl px-8 py-10">
           <h2 className="text-center text-2xl md:text-3xl font-black text-yellow-300 mb-8">
