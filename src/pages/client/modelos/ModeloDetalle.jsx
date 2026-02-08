@@ -129,7 +129,7 @@ const ModeloDetalle = () => {
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
           <div className="relative z-10 h-full w-full px-6 pb-12 text-white">
-            <div className="absolute bottom-10 left-14 flex flex-col gap-4">
+            <div className="absolute bottom-10 right-14 flex flex-col gap-4 text-right items-end">
               {moto.logo_url ? (
                 <img
                   src={modelLogo}
@@ -209,22 +209,22 @@ const ModeloDetalle = () => {
           </section>
         )}
 
-        <section className="bg-slate-900 text-white rounded-3xl px-8 py-12">
-          <h2 className="text-center text-2xl md:text-3xl font-black text-yellow-300 mb-10">
-            Especificaciones clave
+        <section className="rounded-3xl px-4 md:px-8 py-12">
+          <h2 className="text-center text-2xl md:text-3xl font-black text-slate-900 mb-10">
+            Especificaciones técnicas
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {specsList.map((spec) => {
               const Icon = spec.icon;
               return (
-                <div key={spec.label} className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <div className="flex items-center gap-3">
-                    <span className="h-12 w-12 rounded-2xl bg-yellow-400/20 text-yellow-300 flex items-center justify-center">
+                <div key={spec.label} className="border border-slate-200 rounded-2xl p-6 bg-white">
+                  <div className="flex flex-col items-center text-center gap-3">
+                    <span className="h-14 w-14 rounded-2xl bg-yellow-400/20 text-yellow-500 flex items-center justify-center">
                       <Icon size={24} />
                     </span>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-yellow-200">{spec.label}</p>
-                      <p className="text-lg font-bold mt-1">{spec.value}</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{spec.label}</p>
+                      <p className="text-lg font-bold mt-1 text-slate-900">{spec.value}</p>
                     </div>
                   </div>
                 </div>
@@ -233,17 +233,17 @@ const ModeloDetalle = () => {
           </div>
         </section>
 
-        <section className="mx-auto w-full lg:w-[80%] grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
-          <div className="rounded-3xl overflow-hidden shadow-lg">
+        <section className="mx-auto w-full lg:w-[80%] grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-10 items-center">
+          <div className="overflow-hidden">
             <img
               src={diferencialImagen}
               alt="Detalle destacado"
-              className="w-full h-full object-cover"
+              className="w-full h-[520px] md:h-[640px] object-cover"
             />
           </div>
           <div className="space-y-4 text-center lg:text-left">
-            <h3 className="text-3xl md:text-4xl font-black text-slate-800">{diferencialTitulo}</h3>
-            <p className="text-lg text-slate-600">{diferencialTexto}</p>
+            <h3 className="text-4xl md:text-5xl font-black text-slate-800">{diferencialTitulo}</h3>
+            <p className="text-xl text-slate-600">{diferencialTexto}</p>
           </div>
         </section>
 
