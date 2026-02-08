@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BatteryFull, Fuel, Gauge, Wrench, Zap } from "lucide-react";
 import Swal from "sweetalert2";
 import { getMotoById } from "../../../services/Motos.service";
 
@@ -49,12 +50,20 @@ const ModeloDetalle = () => {
   const specsList = useMemo(() => {
     if (!moto) return [];
     return [
-      { label: "Motor", value: moto.motor_especificacion || "Sin especificar" },
-      { label: "Capacidad del tanque", value: moto.capacidad_tanque_l ? `${moto.capacidad_tanque_l} L` : "Sin dato" },
-      { label: "Cilindrada", value: moto.cilindrada_cc ? `${moto.cilindrada_cc} cc` : "Sin dato" },
-      { label: "Torque", value: moto.torque_max_nm ? `${moto.torque_max_nm} Nm` : "Sin dato" },
-      { label: "Velocidades", value: moto.velocidades ? `${moto.velocidades}` : "Sin dato" },
-      { label: "Máxima velocidad", value: moto.maxima_velocidad_kmh ? `${moto.maxima_velocidad_kmh} km/h` : "Sin dato" },
+      { label: "Motor", value: moto.motor_especificacion || "Sin especificar", icon: Wrench },
+      {
+        label: "Capacidad del tanque",
+        value: moto.capacidad_tanque_l ? `${moto.capacidad_tanque_l} L` : "Sin dato",
+        icon: Fuel,
+      },
+      { label: "Cilindrada", value: moto.cilindrada_cc ? `${moto.cilindrada_cc} cc` : "Sin dato", icon: Zap },
+      { label: "Torque", value: moto.torque_max_nm ? `${moto.torque_max_nm} Nm` : "Sin dato", icon: BatteryFull },
+      { label: "Velocidades", value: moto.velocidades ? `${moto.velocidades}` : "Sin dato", icon: Gauge },
+      {
+        label: "Máxima velocidad",
+        value: moto.maxima_velocidad_kmh ? `${moto.maxima_velocidad_kmh} km/h` : "Sin dato",
+        icon: Gauge,
+      },
     ];
   }, [moto]);
 
@@ -107,7 +116,7 @@ const ModeloDetalle = () => {
   return (
     <section className="bg-white text-slate-900">
       {hasVideo ? (
-        <div className="relative h-[60vh] min-h-[420px] w-full overflow-hidden">
+        <div className="relative h-screen w-full overflow-hidden">
           <video
             className="absolute inset-0 h-full w-full object-cover"
             autoPlay
@@ -119,7 +128,7 @@ const ModeloDetalle = () => {
             <source src={moto.video_url || defaultVideo} type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
-          <div className="relative z-10 h-full flex flex-col justify-end max-w-6xl mx-auto px-6 pb-10 text-white">
+          <div className="relative z-10 h-full flex flex-col justify-end max-w-6xl mx-auto px-6 pb-12 text-white">
             <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
             <h1 className="text-4xl md:text-6xl font-black">{moto.nombre}</h1>
             <p className="text-sm md:text-base mt-2 text-slate-200 max-w-2xl">
@@ -128,9 +137,9 @@ const ModeloDetalle = () => {
           </div>
         </div>
       ) : (
-        <div className="max-w-6xl mx-auto px-6 pt-12">
-          <section className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
-            <div className="rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white">
+        <div className="max-w-6xl mx-auto px-6 pt-16">
+          <section className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-10 items-center">
+            <div className="rounded-3xl overflow-hidden shadow-2xl border border-gray-100 bg-white">
               <img
                 src={
                   moto.imagen_url ||
@@ -140,14 +149,14 @@ const ModeloDetalle = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-center lg:text-left space-y-5">
-              <img src={modelLogo} alt={`${moto.nombre} logo`} className="h-16 mx-auto lg:mx-0" />
-              <p className="text-lg text-slate-600">
+            <div className="text-center lg:text-left space-y-6">
+              <img src={modelLogo} alt={`${moto.nombre} logo`} className="h-20 mx-auto lg:mx-0" />
+              <p className="text-xl text-slate-600 text-center lg:text-left">
                 {moto.descripcion || "Potencia, estilo y tecnología pensados para el conductor exigente."}
               </p>
               <div className="flex flex-col items-center lg:items-start gap-2">
-                <img src={brandLogo} alt="Logo empresa" className="h-10" />
-                <p className="text-3xl font-black text-yellow-500">{currency.format(Number(moto.precio || 0))}</p>
+                <img src={brandLogo} alt="Logo empresa" className="h-12" />
+                <p className="text-4xl font-black text-yellow-500">{currency.format(Number(moto.precio || 0))}</p>
               </div>
             </div>
           </section>
@@ -180,21 +189,31 @@ const ModeloDetalle = () => {
           </section>
         )}
 
-        <section className="bg-slate-900 text-white rounded-3xl px-8 py-10">
-          <h2 className="text-center text-2xl md:text-3xl font-black text-yellow-300 mb-8">
+        <section className="bg-slate-900 text-white rounded-3xl px-8 py-12">
+          <h2 className="text-center text-2xl md:text-3xl font-black text-yellow-300 mb-10">
             Especificaciones clave
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {specsList.map((spec) => (
-              <div key={spec.label} className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <p className="text-xs uppercase tracking-[0.2em] text-yellow-200">{spec.label}</p>
-                <p className="text-lg font-bold mt-2">{spec.value}</p>
-              </div>
-            ))}
+            {specsList.map((spec) => {
+              const Icon = spec.icon;
+              return (
+                <div key={spec.label} className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                  <div className="flex items-center gap-3">
+                    <span className="h-12 w-12 rounded-2xl bg-yellow-400/20 text-yellow-300 flex items-center justify-center">
+                      <Icon size={24} />
+                    </span>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.2em] text-yellow-200">{spec.label}</p>
+                      <p className="text-lg font-bold mt-1">{spec.value}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
+        <section className="mx-auto w-full lg:w-[80%] grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
           <div className="rounded-3xl overflow-hidden shadow-lg">
             <img
               src={diferencialImagen}
@@ -203,8 +222,8 @@ const ModeloDetalle = () => {
             />
           </div>
           <div className="space-y-4 text-center lg:text-left">
-            <h3 className="text-2xl md:text-3xl font-black text-slate-800">{diferencialTitulo}</h3>
-            <p className="text-slate-600">{diferencialTexto}</p>
+            <h3 className="text-3xl md:text-4xl font-black text-slate-800">{diferencialTitulo}</h3>
+            <p className="text-lg text-slate-600">{diferencialTexto}</p>
           </div>
         </section>
 
