@@ -940,10 +940,22 @@ const Inventario = () => {
                 ? findMotoCategoriaByName(categoriasMotos, cat)
                 : null;
               return (
-                <button
+                <div
                   key={cat}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => (activeTab === "motos" ? setFiltroCategoria(cat) : setRepuestoFiltroCategoria(cat))}
-                  className={`group relative px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-2 ${
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      if (activeTab === "motos") {
+                        setFiltroCategoria(cat);
+                      } else {
+                        setRepuestoFiltroCategoria(cat);
+                      }
+                    }
+                  }}
+                  className={`group relative px-4 py-2 rounded-full text-xs font-bold inline-flex items-center gap-2 cursor-pointer ${
                     active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
                   }`}
                 >
@@ -980,7 +992,7 @@ const Inventario = () => {
                       </button>
                     </span>
                   )}
-                </button>
+                </div>
               );
             })}
         </div>
