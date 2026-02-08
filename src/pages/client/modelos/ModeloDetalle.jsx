@@ -129,12 +129,12 @@ const ModeloDetalle = () => {
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80" />
           <div className="relative z-10 h-full max-w-6xl mx-auto px-6 pb-12 text-white">
-            <div className="absolute bottom-10 left-6 flex flex-col gap-3">
+            <div className="absolute bottom-10 left-2 md:left-0 flex flex-col gap-4">
               {moto.logo_url ? (
                 <img
                   src={modelLogo}
                   alt={`${moto.nombre} logo`}
-                  className="h-16 md:h-20 w-auto max-w-[220px] object-contain"
+                  className="h-20 md:h-28 w-auto max-w-[320px] object-contain"
                 />
               ) : (
                 <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
