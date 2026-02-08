@@ -46,6 +46,8 @@ const initialForm = {
   stock: "",
   estado: "disponible",
   imagen_url: "",
+  logo_url: "",
+  brand_logo_url: "",
   video_url: "",
   video_activo: false,
   video_file: null,
@@ -424,6 +426,8 @@ const Inventario = () => {
       stock: String(moto.stock ?? ""),
       estado: moto.estado || "disponible",
       imagen_url: moto.imagen_url || "",
+      logo_url: moto.logo_url || "",
+      brand_logo_url: moto.brand_logo_url || "",
       video_url: moto.video_url || "",
       video_activo: Boolean(moto.video_url),
     });
@@ -555,6 +559,8 @@ const Inventario = () => {
       estado: form.estado,
       imagen_url: form.imagen_url.trim() || null,
       video_url: form.video_activo ? form.video_url.trim() || null : null,
+      logo_url: form.logo_url.trim() || null,
+      brand_logo_url: form.brand_logo_url.trim() || null,
     };
 
     if (Number.isNaN(payload.precio) || Number.isNaN(payload.stock)) {
@@ -1386,6 +1392,29 @@ const Inventario = () => {
                   Limpiar imagen
                 </button>
               )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Logo del modelo (URL)</label>
+                <input
+                  name="logo_url"
+                  value={form.logo_url}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                  className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Logo de la empresa (URL)</label>
+                <input
+                  name="brand_logo_url"
+                  value={form.brand_logo_url}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                  className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
