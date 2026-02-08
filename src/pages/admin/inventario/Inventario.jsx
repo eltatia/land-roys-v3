@@ -1268,7 +1268,7 @@ const Inventario = () => {
 
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleSubmit} className="bg-white w-full max-w-3xl rounded-2xl p-6 space-y-6 relative shadow-2xl">
+          <form onSubmit={handleSubmit} className="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 space-y-6 relative shadow-2xl">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h2 className="text-2xl font-black text-yellow-400">{editingId ? "Editar Motocicleta" : "Nueva Motocicleta"}</h2>
               <button
@@ -1422,7 +1422,7 @@ const Inventario = () => {
 
       {repuestoModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <form onSubmit={handleRepuestoSubmit} className="bg-white w-full max-w-2xl rounded-2xl p-6 space-y-6 relative shadow-2xl">
+          <form onSubmit={handleRepuestoSubmit} className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 space-y-6 relative shadow-2xl">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h2 className="text-2xl font-black text-yellow-400">{repuestoEditingId ? "Editar Repuesto" : "Nuevo Repuesto"}</h2>
               <button
