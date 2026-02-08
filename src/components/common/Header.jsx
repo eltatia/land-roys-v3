@@ -38,8 +38,7 @@ const Header = () => {
                                 {link.name}
                                 <span
                                     className={`absolute -bottom-1 left-0 h-0.5 bg-yellow-400 transition-all duration-300 ${
-                                        // Si está activo, ancho completo
-                                        window.location.pathname === link.path ? 'w-full' : 'w-0 group-hover:w-full'
+                                        isActive ? 'w-full' : 'w-0 group-hover:w-full'
                                         }`}
                                 ></span>
                             </NavLink>
