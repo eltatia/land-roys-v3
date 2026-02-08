@@ -22,6 +22,16 @@ const Repuestos = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("recientes");
+  const [cartItems, setCartItems] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [customerForm, setCustomerForm] = useState({
+    nombre: "",
+    telefono: "",
+    ciudad: "",
+    direccion: "",
+    notas: "",
+  });
 
   useEffect(() => {
     const fetchRepuestos = async () => {
@@ -101,6 +111,105 @@ const Repuestos = () => {
 
     return data;
   }, [repuestos, activeCategory, search, sortOrder]);
+
+  const cartTotal = useMemo(
+    () => cartItems.reduce((acc, item) => acc + Number(item.precio || 0) * item.cantidad, 0),
+    [cartItems]
+  );
+
+  const updateCartItem = (item, change = 1) => {
+    setCartItems((prev) => {
+      const existing = prev.find((entry) => entry.id === item.id);
+      if (!existing) {
+        return [...prev, { ...item, cantidad: 1 }];
+      }
+      return prev.map((entry) =>
+        entry.id === item.id ? { ...entry, cantidad: Math.max(1, entry.cantidad + change) } : entry
+      );
+    });
+  };
+
+  const removeCartItem = (id) => {
+    setCartItems((prev) => prev.filter((entry) => entry.id !== id));
+  };
+
+  const handleAddToCart = (item) => {
+    updateCartItem(item, 1);
+    setCartOpen(true);
+  };
+
+  const handleCartToggle = () => {
+    setCartOpen((prev) => !prev);
+  };
+
+  const handleCustomerChange = (event) => {
+    const { name, value } = event.target;
+    setCustomerForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetCheckout = () => {
+    setCustomerForm({
+      nombre: "",
+      telefono: "",
+      ciudad: "",
+      direccion: "",
+      notas: "",
+    });
+    setCheckoutOpen(false);
+  };
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) return;
+    setCheckoutOpen(true);
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!customerForm.nombre.trim() || !customerForm.telefono.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Datos incompletos",
+        text: "Por favor ingresa el nombre y teléfono.",
+      });
+      return;
+    }
+
+    const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
+    if (!whatsappNumber) {
+      Swal.fire({
+        icon: "error",
+        title: "Número no configurado",
+        text: "Configura VITE_WHATSAPP_NUMBER en el archivo .env.",
+      });
+      return;
+    }
+
+    const itemsText = cartItems
+      .map((item) => {
+        const subtotal = Number(item.precio || 0) * item.cantidad;
+        return `- ${item.nombre} x${item.cantidad} = ${currency.format(subtotal)}`;
+      })
+      .join("\n");
+
+    const message = [
+      "Hola, quiero comprar estos repuestos:",
+      itemsText,
+      "",
+      `Total: ${currency.format(cartTotal)}`,
+      "",
+      "Cliente:",
+      `Nombre: ${customerForm.nombre}`,
+      `Teléfono: ${customerForm.telefono}`,
+      customerForm.ciudad ? `Ciudad: ${customerForm.ciudad}` : null,
+      customerForm.direccion ? `Dirección: ${customerForm.direccion}` : null,
+      customerForm.notas ? `Observaciones: ${customerForm.notas}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+    resetCheckout();
+  };
 
   return (
     <section className="bg-[#f5f6f9] min-h-screen">
@@ -192,7 +301,10 @@ const Repuestos = () => {
                       alt={item.nombre}
                       className="w-full h-48 object-cover"
                     />
-                    <button className="absolute right-4 bottom-4 bg-white p-2 rounded-full shadow-sm">
+                    <button
+                      onClick={() => handleAddToCart(item)}
+                      className="absolute right-4 bottom-4 bg-white p-2 rounded-full shadow-sm hover:scale-105 transition"
+                    >
                       <ShoppingCart size={18} className="text-slate-700" />
                     </button>
                   </div>
@@ -204,7 +316,9 @@ const Repuestos = () => {
                     {item.descripcion && <p className="text-sm text-gray-500">{item.descripcion}</p>}
                     <div className="flex items-center justify-between pt-2">
                       <p className="text-lg font-black text-slate-900">{currency.format(Number(item.precio || 0))}</p>
-                      <button className="text-xs font-bold text-yellow-500">Ver ficha</button>
+                      <button onClick={() => handleAddToCart(item)} className="text-xs font-bold text-yellow-500">
+                        Agregar
+                      </button>
                     </div>
                   </div>
                 </article>
@@ -213,6 +327,153 @@ const Repuestos = () => {
           )}
         </main>
       </div>
+
+      <button
+        onClick={handleCartToggle}
+        className="fixed bottom-6 right-6 bg-yellow-400 text-black rounded-full shadow-lg px-4 py-3 flex items-center gap-2 font-bold"
+      >
+        <ShoppingCart size={18} />
+        Carrito ({cartItems.reduce((acc, item) => acc + item.cantidad, 0)})
+      </button>
+
+      {cartOpen && (
+        <div className="fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setCartOpen(false)} />
+          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b">
+              <h3 className="text-lg font-bold text-slate-800">Tu carrito</h3>
+              <button onClick={() => setCartOpen(false)} className="text-sm text-gray-500">
+                Cerrar
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-5 space-y-4">
+              {cartItems.length === 0 ? (
+                <p className="text-sm text-gray-500">Aún no agregas repuestos.</p>
+              ) : (
+                cartItems.map((item) => (
+                  <div key={item.id} className="flex gap-3 border border-gray-100 rounded-xl p-3">
+                    <img
+                      src={item.imagen_url || "https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=600&auto=format&fit=crop"}
+                      alt={item.nombre}
+                      className="w-20 h-16 object-cover rounded-lg bg-gray-100"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-slate-800">{item.nombre}</p>
+                      <p className="text-xs text-gray-400">{currency.format(Number(item.precio || 0))}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => updateCartItem(item, -1)}
+                          className="w-8 h-8 rounded-full border border-gray-200 text-gray-600"
+                        >
+                          -
+                        </button>
+                        <span className="text-sm font-semibold">{item.cantidad}</span>
+                        <button
+                          onClick={() => updateCartItem(item, 1)}
+                          className="w-8 h-8 rounded-full border border-gray-200 text-gray-600"
+                        >
+                          +
+                        </button>
+                        <button
+                          onClick={() => removeCartItem(item.id)}
+                          className="ml-auto text-xs text-red-500 font-semibold"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="p-5 border-t space-y-3">
+              <div className="flex items-center justify-between text-sm font-semibold">
+                <span>Total</span>
+                <span>{currency.format(cartTotal)}</span>
+              </div>
+              <button
+                onClick={handleCheckout}
+                disabled={cartItems.length === 0}
+                className="w-full bg-yellow-400 text-black font-bold py-3 rounded-xl disabled:opacity-60"
+              >
+                Finalizar compra
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {checkoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={resetCheckout} />
+          <div className="relative bg-white w-full max-w-lg rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-slate-800">Datos para tu pedido</h3>
+              <button onClick={resetCheckout} className="text-sm text-gray-500">
+                Cerrar
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-500">Nombre</label>
+                <input
+                  name="nombre"
+                  value={customerForm.nombre}
+                  onChange={handleCustomerChange}
+                  className="mt-1 w-full border rounded-xl px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500">Teléfono</label>
+                <input
+                  name="telefono"
+                  value={customerForm.telefono}
+                  onChange={handleCustomerChange}
+                  className="mt-1 w-full border rounded-xl px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500">Ciudad</label>
+                <input
+                  name="ciudad"
+                  value={customerForm.ciudad}
+                  onChange={handleCustomerChange}
+                  className="mt-1 w-full border rounded-xl px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500">Dirección</label>
+                <input
+                  name="direccion"
+                  value={customerForm.direccion}
+                  onChange={handleCustomerChange}
+                  className="mt-1 w-full border rounded-xl px-3 py-2"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500">Observaciones</label>
+              <textarea
+                name="notas"
+                value={customerForm.notas}
+                onChange={handleCustomerChange}
+                rows={3}
+                className="mt-1 w-full border rounded-xl px-3 py-2"
+              />
+            </div>
+            <div className="flex items-center justify-between text-sm font-semibold">
+              <span>Total</span>
+              <span>{currency.format(cartTotal)}</span>
+            </div>
+            <button
+              onClick={handleSendWhatsApp}
+              className="w-full bg-green-500 text-white font-bold py-3 rounded-xl"
+            >
+              Enviar pedido por WhatsApp
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
