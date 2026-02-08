@@ -1404,6 +1404,11 @@ const Inventario = () => {
                   placeholder="https://..."
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 />
+                {isValidUrl(form.logo_url) && (
+                  <div className="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 flex items-center justify-center">
+                    <img src={form.logo_url} alt="Preview logo del modelo" className="h-14 object-contain" />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">Logo de la empresa (URL)</label>
@@ -1414,6 +1419,11 @@ const Inventario = () => {
                   placeholder="https://..."
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 />
+                {isValidUrl(form.brand_logo_url) && (
+                  <div className="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 flex items-center justify-center">
+                    <img src={form.brand_logo_url} alt="Preview logo de la empresa" className="h-14 object-contain" />
+                  </div>
+                )}
               </div>
             </div>
 
