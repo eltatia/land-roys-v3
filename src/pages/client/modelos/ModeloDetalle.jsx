@@ -364,22 +364,26 @@ const ModeloDetalle = () => {
                 <p className="text-xs uppercase tracking-[0.3em] text-yellow-500 font-semibold">Galería</p>
                 <h2 className="text-3xl md:text-5xl font-black text-slate-900">Detalles que resaltan</h2>
               </div>
-              <div className={`flex items-center gap-2 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}>
+              <div className={`flex items-center gap-3 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}>
                 <button
                   type="button"
                   onClick={handleGaleriaPrev}
-                  className="h-12 w-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900"
+                  className="group h-14 w-20 rounded-full border border-slate-200/70 bg-white/80 backdrop-blur flex items-center justify-center gap-2 text-slate-700 hover:text-slate-900 hover:border-yellow-400 hover:shadow-lg"
                   disabled={galeriaItems.length < 2}
                 >
-                  <ChevronLeft size={22} />
+                  <ChevronLeft size={20} />
+                  <span className="h-2.5 w-2.5 rounded-full border-2 border-slate-600 group-hover:border-yellow-500" />
+                  <span className="h-[2px] w-6 bg-slate-600 group-hover:bg-yellow-500" />
                 </button>
                 <button
                   type="button"
                   onClick={handleGaleriaNext}
-                  className="h-12 w-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900"
+                  className="group h-14 w-20 rounded-full border border-slate-200/70 bg-white/80 backdrop-blur flex items-center justify-center gap-2 text-slate-700 hover:text-slate-900 hover:border-yellow-400 hover:shadow-lg"
                   disabled={galeriaItems.length < 2}
                 >
-                  <ChevronRight size={22} />
+                  <span className="h-[2px] w-6 bg-slate-600 group-hover:bg-yellow-500" />
+                  <span className="h-2.5 w-2.5 rounded-full border-2 border-slate-600 group-hover:border-yellow-500" />
+                  <ChevronRight size={20} />
                 </button>
               </div>
             </div>
