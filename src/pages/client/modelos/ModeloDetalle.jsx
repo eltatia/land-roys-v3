@@ -354,46 +354,53 @@ const ModeloDetalle = () => {
           </div>
         </section>
 
-        {galeriaItems.length > 0 && (
-          <section className="bg-white border border-slate-200 rounded-3xl px-6 md:px-10 py-12">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-              <div>
+        {galeriaItems.length > 0 ? (
+          <section
+            ref={diferencialRef}
+            className="relative left-1/2 right-1/2 -mx-[50vw] w-screen px-6 lg:px-16 py-4 space-y-10"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className={`transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}>
                 <p className="text-xs uppercase tracking-[0.3em] text-yellow-500 font-semibold">Galería</p>
-                <h2 className="text-2xl md:text-3xl font-black text-slate-900">Detalles que resaltan</h2>
+                <h2 className="text-3xl md:text-5xl font-black text-slate-900">Detalles que resaltan</h2>
               </div>
-              <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}>
                 <button
                   type="button"
                   onClick={handleGaleriaPrev}
-                  className="h-11 w-11 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900"
+                  className="h-12 w-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900"
                   disabled={galeriaItems.length < 2}
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={22} />
                 </button>
                 <button
                   type="button"
                   onClick={handleGaleriaNext}
-                  className="h-11 w-11 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900"
+                  className="h-12 w-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900"
                   disabled={galeriaItems.length < 2}
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={22} />
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-10 items-center">
-              <div className="overflow-hidden rounded-3xl border border-slate-100 bg-slate-50">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_0.6fr] gap-12 items-center">
+              <div
+                className={`transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}
+              >
                 <img
                   src={galeriaItems[galeriaIndex]?.imagen_url}
                   alt={galeriaItems[galeriaIndex]?.titulo || "Detalle del modelo"}
-                  className="w-full h-[420px] md:h-[520px] object-cover"
+                  className="w-full h-[560px] md:h-[700px] object-cover"
                 />
               </div>
-              <div className="space-y-4 text-center lg:text-left">
-                <h3 className="text-3xl md:text-4xl font-black text-slate-900">
+              <div
+                className={`space-y-4 text-center lg:text-left transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}
+              >
+                <h3 className="text-4xl md:text-6xl font-black text-slate-900">
                   {galeriaItems[galeriaIndex]?.titulo || "Diseño protagonista"}
                 </h3>
-                <p className="text-lg md:text-xl text-slate-600">
+                <p className="text-xl md:text-2xl text-slate-600">
                   {galeriaItems[galeriaIndex]?.descripcion ||
                     "Agrega una descripción para destacar lo más importante de esta imagen."}
                 </p>
@@ -405,28 +412,28 @@ const ModeloDetalle = () => {
               </div>
             </div>
           </section>
+        ) : (
+          <section
+            ref={diferencialRef}
+            className="relative left-1/2 right-1/2 -mx-[50vw] w-screen px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-12 items-center"
+          >
+            <div
+              className={`overflow-hidden lg:-ml-8 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}
+            >
+              <img
+                src={diferencialImagen}
+                alt="Detalle destacado"
+                className="w-full h-[520px] md:h-[640px] object-cover"
+              />
+            </div>
+            <div
+              className={`space-y-4 text-center lg:text-left transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}
+            >
+              <h3 className="text-4xl md:text-5xl font-black text-slate-800">{diferencialTitulo}</h3>
+              <p className="text-xl text-slate-600">{diferencialTexto}</p>
+            </div>
+          </section>
         )}
-
-        <section
-          ref={diferencialRef}
-          className="relative left-1/2 right-1/2 -mx-[50vw] w-screen px-6 lg:px-16 grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-12 items-center"
-        >
-          <div
-            className={`overflow-hidden lg:-ml-8 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}
-          >
-            <img
-              src={diferencialImagen}
-              alt="Detalle destacado"
-              className="w-full h-[520px] md:h-[640px] object-cover"
-            />
-          </div>
-          <div
-            className={`space-y-4 text-center lg:text-left transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${diferencialAnimation}`}
-          >
-            <h3 className="text-4xl md:text-5xl font-black text-slate-800">{diferencialTitulo}</h3>
-            <p className="text-xl text-slate-600">{diferencialTexto}</p>
-          </div>
-        </section>
 
         <section className="bg-[#f7f8fa] rounded-3xl p-8">
           <h2 className="text-2xl md:text-3xl font-black text-slate-800 text-center mb-6">
