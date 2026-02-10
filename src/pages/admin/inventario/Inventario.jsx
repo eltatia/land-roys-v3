@@ -9,6 +9,12 @@ import {
   updateRepuesto,
   uploadRepuestoImage,
 } from "../../../services/Repuestos.service";
+import {
+  addCategoriaRepuesto,
+  deleteCategoriaRepuesto,
+  getCategoriasRepuestos,
+  updateCategoriaRepuesto,
+} from "../../../services/CategoriasRepuestos.service";
 
 const initialForm = {
   nombre: "",
@@ -26,7 +32,7 @@ const initialForm = {
 
 const initialRepuestoForm = {
   nombre: "",
-  categoria: "",
+  categoria_id: "",
   descripcion: "",
   precio: "",
   stock: "",
@@ -34,45 +40,18 @@ const initialRepuestoForm = {
   imagen_url: "",
 };
 
+const initialCategoriaForm = {
+  nombre: "",
+  estado: true,
+};
+
 const tabs = [
   { key: "motos", label: "Motos", icon: Bike },
   { key: "repuestos", label: "Repuestos", icon: Wrench },
 ];
 
-const repuestoCategories = [
-  { value: "Motores", label: "Motores" },
-  { value: "Carenados", label: "Carenados" },
-  { value: "Sistema eléctrico", label: "Sistema eléctrico" },
-  { value: "Transmisión", label: "Transmisión" },
-];
-
-const normalizeCategoryKey = (value = "") => value.trim().toLowerCase();
-
-const repuestoCategoryAliases = {
-  motor: "motores",
-  motores: "motores",
-  carenado: "carenados",
-  carenados: "carenados",
-  "sistema electrico": "sistema electrico",
-  "sistema eléctrico": "sistema electrico",
-  electrico: "sistema electrico",
-  eléctrico: "sistema electrico",
-  transmision: "transmision",
-  transmisión: "transmision",
-};
-
-const mapRepuestoCategoryKey = (value = "") =>
-  repuestoCategoryAliases[normalizeCategoryKey(value)] || normalizeCategoryKey(value);
-
-const repuestoCategoryLabelByKey = {
-  motores: "Motores",
-  carenados: "Carenados",
-  "sistema electrico": "Sistema eléctrico",
-  transmision: "Transmisión",
-};
-
-const toRepuestoCategoryLabel = (value = "") =>
-  repuestoCategoryLabelByKey[mapRepuestoCategoryKey(value)] || "Otros";
+const buildRepuestoCategoryLabel = (categorias, categoriaId, fallback = "Otros") =>
+  categorias.find((categoria) => categoria.id === categoriaId)?.nombre || fallback;
 
 const estadoClass = {
   disponible: "bg-green-100 text-green-700",
@@ -111,6 +90,9 @@ const Inventario = () => {
   const [repuestoImageFile, setRepuestoImageFile] = useState(null);
   const [repuestoImagePreview, setRepuestoImagePreview] = useState("");
   const [repuestoImageUrlError, setRepuestoImageUrlError] = useState("");
+  const [categoriasRepuestos, setCategoriasRepuestos] = useState([]);
+  const [categoriaForm, setCategoriaForm] = useState(initialCategoriaForm);
+  const [categoriaEditingId, setCategoriaEditingId] = useState(null);
 
   const fetchMotos = async () => {
     setLoading(true);
@@ -138,9 +120,20 @@ const Inventario = () => {
     }
   };
 
+  const fetchCategoriasRepuestos = async () => {
+    try {
+      const data = await getCategoriasRepuestos();
+      setCategoriasRepuestos(data);
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo cargar las categorías de repuestos", "error");
+    }
+  };
+
   useEffect(() => {
     fetchMotos();
     fetchRepuestos();
+    fetchCategoriasRepuestos();
   }, []);
 
   const categorias = useMemo(() => {
@@ -153,14 +146,11 @@ const Inventario = () => {
     return motos.filter((m) => (m.categoria || "").toLowerCase() === filtroCategoria.toLowerCase());
   }, [motos, filtroCategoria]);
 
-  const repuestoCategorias = useMemo(() => {
-    const allowedKeys = ["motores", "carenados", "sistema electrico", "transmision"];
-    return ["all", ...allowedKeys];
-  }, []);
+  const repuestoCategorias = useMemo(() => ["all", ...categoriasRepuestos.map((cat) => cat.id)], [categoriasRepuestos]);
 
   const repuestosFiltrados = useMemo(() => {
     if (repuestoFiltroCategoria === "all") return repuestos;
-    return repuestos.filter((r) => mapRepuestoCategoryKey(r.categoria) === repuestoFiltroCategoria);
+    return repuestos.filter((r) => r.categoria_id === repuestoFiltroCategoria);
   }, [repuestos, repuestoFiltroCategoria]);
 
   const handleChange = (e) => {
@@ -207,6 +197,16 @@ const Inventario = () => {
     }
   };
 
+  const handleCategoriaChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setCategoriaForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const resetCategoriaForm = () => {
+    setCategoriaForm(initialCategoriaForm);
+    setCategoriaEditingId(null);
+  };
+
   const resetForm = () => {
     setForm(initialForm);
     setEditingId(null);
@@ -238,12 +238,20 @@ const Inventario = () => {
     setRepuestoEditingId(null);
     setRepuestoForm({
       ...initialRepuestoForm,
-      categoria: repuestoCategories[0]?.value || "",
+      categoria_id: categoriasRepuestos[0]?.id || "",
     });
     setRepuestoModalOpen(true);
     setRepuestoImageFile(null);
     setRepuestoImagePreview("");
     setRepuestoImageUrlError("");
+  };
+
+  const handleCategoriaEdit = (categoria) => {
+    setCategoriaEditingId(categoria.id);
+    setCategoriaForm({
+      nombre: categoria.nombre || "",
+      estado: categoria.estado ?? true,
+    });
   };
 
   const handleEdit = (moto) => {
@@ -268,10 +276,14 @@ const Inventario = () => {
   };
 
   const handleRepuestoEdit = (repuesto) => {
+    const categoriaId =
+      repuesto.categoria_id ||
+      categoriasRepuestos.find((categoria) => categoria.nombre === repuesto.categoria)?.id ||
+      "";
     setRepuestoEditingId(repuesto.id);
     setRepuestoForm({
       nombre: repuesto.nombre || "",
-      categoria: toRepuestoCategoryLabel(repuesto.categoria || ""),
+      categoria_id: categoriaId,
       descripcion: repuesto.descripcion || "",
       precio: String(repuesto.precio ?? ""),
       stock: String(repuesto.stock ?? ""),
@@ -376,7 +388,7 @@ const Inventario = () => {
   const handleRepuestoSubmit = async (e) => {
     e.preventDefault();
 
-    if (!repuestoForm.nombre.trim() || !repuestoForm.categoria.trim()) {
+    if (!repuestoForm.nombre.trim() || !repuestoForm.categoria_id) {
       Swal.fire("Validación", "Nombre y categoría son obligatorios", "warning");
       return;
     }
@@ -386,9 +398,11 @@ const Inventario = () => {
       return;
     }
 
+    const selectedCategoria = categoriasRepuestos.find((categoria) => categoria.id === repuestoForm.categoria_id);
     const payload = {
       nombre: repuestoForm.nombre.trim(),
-      categoria: repuestoForm.categoria.trim(),
+      categoria: selectedCategoria?.nombre || "",
+      categoria_id: repuestoForm.categoria_id,
       descripcion: repuestoForm.descripcion.trim() || null,
       precio: Number(repuestoForm.precio),
       stock: Number(repuestoForm.stock),
@@ -476,6 +490,61 @@ const Inventario = () => {
     }
   };
 
+  const handleCategoriaSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!categoriaForm.nombre.trim()) {
+      Swal.fire("Validación", "El nombre de la categoría es obligatorio", "warning");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (categoriaEditingId) {
+        const updated = await updateCategoriaRepuesto(categoriaEditingId, categoriaForm);
+        setCategoriasRepuestos((prev) => prev.map((cat) => (cat.id === categoriaEditingId ? updated : cat)));
+        Swal.fire("Actualizado", "Categoría actualizada correctamente", "success");
+      } else {
+        const created = await addCategoriaRepuesto(categoriaForm);
+        setCategoriasRepuestos((prev) => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        Swal.fire("Creado", "Categoría creada correctamente", "success");
+      }
+      resetCategoriaForm();
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo guardar la categoría", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCategoria = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Eliminar categoría?",
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteCategoriaRepuesto(id);
+      setCategoriasRepuestos((prev) => prev.filter((cat) => cat.id !== id));
+      if (repuestoForm.categoria_id === id) {
+        setRepuestoForm((prev) => ({ ...prev, categoria_id: categoriasRepuestos[0]?.id || "" }));
+      }
+      if (categoriaEditingId === id) resetCategoriaForm();
+      Swal.fire("Eliminado", "Categoría eliminada", "success");
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo eliminar la categoría", "error");
+    }
+  };
+
   const TableHeader = () => (
     <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.9fr_0.9fr_120px] items-center bg-[#f5f6f8] text-[#556786] font-semibold text-[15px] rounded-t-2xl px-5 py-3 border border-gray-100">
       <span>Imagen</span>
@@ -536,7 +605,9 @@ const Inventario = () => {
         <p className="font-bold text-lg leading-tight text-[#1d2b44]">{repuesto.nombre}</p>
         <p className="text-xs text-gray-400">ID: {repuesto.id}</p>
       </div>
-      <p className="text-[#334b68] text-sm">{toRepuestoCategoryLabel(repuesto.categoria || "-")}</p>
+      <p className="text-[#334b68] text-sm">
+        {buildRepuestoCategoryLabel(categoriasRepuestos, repuesto.categoria_id, repuesto.categoria || "-")}
+      </p>
       <p className="text-green-600 text-lg font-bold">${Number(repuesto.precio || 0).toLocaleString()}</p>
       <span className={`inline-flex w-fit px-3 py-1 rounded-full font-bold text-[11px] uppercase ${estadoClass[(repuesto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
         {(repuesto.estado || "disponible").toUpperCase()}
@@ -588,14 +659,14 @@ const Inventario = () => {
                 <button
                   key={cat}
                   onClick={() => (activeTab === "motos" ? setFiltroCategoria(cat) : setRepuestoFiltroCategoria(cat))}
-                  className={`px-4 py-2 rounded-full text-xs font-bold ${
-                    active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {cat === "all" ? "Todas" : toRepuestoCategoryLabel(cat)}
-                </button>
-              );
-            })}
+                    className={`px-4 py-2 rounded-full text-xs font-bold ${
+                      active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {cat === "all" ? "Todas" : buildRepuestoCategoryLabel(categoriasRepuestos, cat)}
+                  </button>
+                );
+              })}
           </div>
 
           {activeTab === "motos" ? (
@@ -635,6 +706,86 @@ const Inventario = () => {
           </>
         ) : (
           <>
+            <div className="mb-6 grid grid-cols-1 lg:grid-cols-[1.1fr_1.4fr] gap-5">
+              <form onSubmit={handleCategoriaSubmit} className="bg-[#f5f6f8] rounded-2xl p-5 space-y-4 border border-gray-100">
+                <h3 className="text-lg font-bold text-slate-800">Categorías de repuestos</h3>
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">Nombre</label>
+                  <input
+                    name="nombre"
+                    value={categoriaForm.nombre}
+                    onChange={handleCategoriaChange}
+                    placeholder="Ej. Frenos"
+                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <input
+                    type="checkbox"
+                    name="estado"
+                    checked={categoriaForm.estado}
+                    onChange={handleCategoriaChange}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Activa
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="bg-yellow-400 hover:bg-yellow-500 rounded-xl px-4 py-2 text-sm font-bold text-black"
+                  >
+                    {categoriaEditingId ? "Actualizar" : "Agregar"}
+                  </button>
+                  {categoriaEditingId && (
+                    <button
+                      type="button"
+                      onClick={resetCategoriaForm}
+                      className="text-sm font-semibold text-gray-500 hover:text-gray-700"
+                    >
+                      Cancelar edición
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Listado</h4>
+                <div className="mt-4 space-y-3 max-h-72 overflow-auto pr-1">
+                  {categoriasRepuestos.length === 0 ? (
+                    <p className="text-sm text-gray-500">No hay categorías registradas.</p>
+                  ) : (
+                    categoriasRepuestos.map((categoria) => (
+                      <div key={categoria.id} className="flex items-center justify-between gap-3 bg-gray-50 rounded-xl px-4 py-3">
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{categoria.nombre}</p>
+                          <p className="text-xs text-gray-400">ID: {categoria.id}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-bold px-2 py-1 rounded-full ${categoria.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+                            {categoria.estado ? "Activa" : "Inactiva"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCategoriaEdit(categoria)}
+                            className="p-2 rounded-lg border border-blue-200 text-blue-600"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategoria(categoria.id)}
+                            className="p-2 rounded-lg border border-red-200 text-red-500"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
             <RepuestoHeader />
             {loadingRepuestos ? (
               <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">
@@ -829,14 +980,14 @@ const Inventario = () => {
               <div>
                 <label className="text-sm font-semibold text-gray-700">Categoría</label>
                 <select
-                  name="categoria"
-                  value={repuestoForm.categoria}
+                  name="categoria_id"
+                  value={repuestoForm.categoria_id}
                   onChange={handleRepuestoChange}
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 >
-                  {repuestoCategories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
+                  {categoriasRepuestos.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.nombre}
                     </option>
                   ))}
                 </select>

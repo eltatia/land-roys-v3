@@ -4,7 +4,9 @@ const normalizeRepuesto = (repuesto = {}) => ({
   id: repuesto.id,
   nombre: repuesto.nombre ?? "",
   descripcion: repuesto.descripcion ?? null,
-  categoria: repuesto.categoria ?? null,
+  categoria: repuesto.categoria ?? repuesto.categorias_repuestos?.nombre ?? null,
+  categoria_id: repuesto.categoria_id ?? repuesto.categorias_repuestos?.id ?? null,
+  categoria_nombre: repuesto.categorias_repuestos?.nombre ?? repuesto.categoria ?? null,
   precio: repuesto.precio ?? 0,
   estado: repuesto.estado || "disponible",
   imagen_url: repuesto.imagen_url ?? null,
@@ -14,7 +16,8 @@ const normalizeRepuesto = (repuesto = {}) => ({
 const pickRepuestoPayload = (repuesto = {}) => ({
   nombre: repuesto.nombre?.trim() || "",
   descripcion: repuesto.descripcion?.trim() || null,
-  categoria: repuesto.categoria?.trim() || "",
+  categoria: repuesto.categoria?.trim() || repuesto.categoria_nombre?.trim() || "",
+  categoria_id: repuesto.categoria_id || null,
   precio: repuesto.precio ?? 0,
   estado: repuesto.estado || "disponible",
   imagen_url: repuesto.imagen_url ?? null,
@@ -42,7 +45,7 @@ export const uploadRepuestoImage = async (file) => {
 export const getRepuestos = async () => {
   const { data, error } = await supabase
     .from("repuestos")
-    .select("*")
+    .select("*, categorias_repuestos ( id, nombre )")
     .order("creado_en", { ascending: false });
 
   if (error) throw error;
@@ -54,7 +57,7 @@ export const addRepuesto = async (repuesto) => {
   const { data, error } = await supabase
     .from("repuestos")
     .insert([payload])
-    .select()
+    .select("*, categorias_repuestos ( id, nombre )")
     .single();
 
   if (error) throw error;
@@ -70,7 +73,7 @@ export const updateRepuesto = async (id, repuesto) => {
     .from("repuestos")
     .update(payload)
     .eq("id", id)
-    .select()
+    .select("*, categorias_repuestos ( id, nombre )")
     .single();
 
   if (error) throw error;
