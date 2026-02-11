@@ -2,6 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import { Pencil, Trash2, Plus, PackageSearch, Bike, Wrench, X, UploadCloud, Link2 } from "lucide-react";
 import { addMoto, deleteMoto, getMotos, updateMoto, uploadMotoImage } from "../../../services/Motos.service";
+import {
+  addRepuesto,
+  deleteRepuesto,
+  getRepuestos,
+  updateRepuesto,
+  uploadRepuestoImage,
+} from "../../../services/Repuestos.service";
 
 const initialForm = {
   nombre: "",
@@ -17,10 +24,55 @@ const initialForm = {
   imagen_url: "",
 };
 
+const initialRepuestoForm = {
+  nombre: "",
+  categoria: "",
+  descripcion: "",
+  precio: "",
+  stock: "",
+  estado: "disponible",
+  imagen_url: "",
+};
+
 const tabs = [
   { key: "motos", label: "Motos", icon: Bike },
   { key: "repuestos", label: "Repuestos", icon: Wrench },
 ];
+
+const repuestoCategories = [
+  { value: "Motores", label: "Motores" },
+  { value: "Carenados", label: "Carenados" },
+  { value: "Sistema eléctrico", label: "Sistema eléctrico" },
+  { value: "Transmisión", label: "Transmisión" },
+];
+
+const normalizeCategoryKey = (value = "") => value.trim().toLowerCase();
+
+const repuestoCategoryAliases = {
+  motor: "motores",
+  motores: "motores",
+  carenado: "carenados",
+  carenados: "carenados",
+  "sistema electrico": "sistema electrico",
+  "sistema eléctrico": "sistema electrico",
+  electrico: "sistema electrico",
+  eléctrico: "sistema electrico",
+  transmision: "transmision",
+  transmisión: "transmision",
+};
+
+const mapRepuestoCategoryKey = (value = "") =>
+  repuestoCategoryAliases[normalizeCategoryKey(value)] || normalizeCategoryKey(value);
+
+const repuestoCategoryLabelByKey = {
+  motores: "Motores",
+  carenados: "Carenados",
+  "sistema electrico": "Sistema eléctrico",
+  transmision: "Transmisión",
+};
+
+const toRepuestoCategoryLabel = (value = "") =>
+  repuestoCategoryLabelByKey[mapRepuestoCategoryKey(value)] || "Otros";
 
 const estadoClass = {
   disponible: "bg-green-100 text-green-700",
@@ -40,7 +92,9 @@ const isValidUrl = (value) => {
 const Inventario = () => {
   const [activeTab, setActiveTab] = useState("motos");
   const [motos, setMotos] = useState([]);
+  const [repuestos, setRepuestos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRepuestos, setLoadingRepuestos] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -50,6 +104,13 @@ const Inventario = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [imageUrlError, setImageUrlError] = useState("");
+  const [repuestoEditingId, setRepuestoEditingId] = useState(null);
+  const [repuestoFiltroCategoria, setRepuestoFiltroCategoria] = useState("all");
+  const [repuestoForm, setRepuestoForm] = useState(initialRepuestoForm);
+  const [repuestoModalOpen, setRepuestoModalOpen] = useState(false);
+  const [repuestoImageFile, setRepuestoImageFile] = useState(null);
+  const [repuestoImagePreview, setRepuestoImagePreview] = useState("");
+  const [repuestoImageUrlError, setRepuestoImageUrlError] = useState("");
 
   const fetchMotos = async () => {
     setLoading(true);
@@ -64,8 +125,22 @@ const Inventario = () => {
     }
   };
 
+  const fetchRepuestos = async () => {
+    setLoadingRepuestos(true);
+    try {
+      const data = await getRepuestos();
+      setRepuestos(data);
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo cargar los repuestos", "error");
+    } finally {
+      setLoadingRepuestos(false);
+    }
+  };
+
   useEffect(() => {
     fetchMotos();
+    fetchRepuestos();
   }, []);
 
   const categorias = useMemo(() => {
@@ -77,6 +152,16 @@ const Inventario = () => {
     if (filtroCategoria === "all") return motos;
     return motos.filter((m) => (m.categoria || "").toLowerCase() === filtroCategoria.toLowerCase());
   }, [motos, filtroCategoria]);
+
+  const repuestoCategorias = useMemo(() => {
+    const allowedKeys = ["motores", "carenados", "sistema electrico", "transmision"];
+    return ["all", ...allowedKeys];
+  }, []);
+
+  const repuestosFiltrados = useMemo(() => {
+    if (repuestoFiltroCategoria === "all") return repuestos;
+    return repuestos.filter((r) => mapRepuestoCategoryKey(r.categoria) === repuestoFiltroCategoria);
+  }, [repuestos, repuestoFiltroCategoria]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -100,6 +185,28 @@ const Inventario = () => {
     }
   };
 
+  const handleRepuestoChange = (e) => {
+    const { name, value } = e.target;
+    setRepuestoForm((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "imagen_url") {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        setRepuestoImageUrlError("");
+        if (!repuestoImageFile) setRepuestoImagePreview("");
+        return;
+      }
+
+      if (isValidUrl(trimmed)) {
+        setRepuestoImageUrlError("");
+        if (!repuestoImageFile) setRepuestoImagePreview(trimmed);
+      } else {
+        setRepuestoImageUrlError("La URL debe empezar con http:// o https://");
+        if (!repuestoImageFile) setRepuestoImagePreview("");
+      }
+    }
+  };
+
   const resetForm = () => {
     setForm(initialForm);
     setEditingId(null);
@@ -109,6 +216,15 @@ const Inventario = () => {
     setImageUrlError("");
   };
 
+  const resetRepuestoForm = () => {
+    setRepuestoForm(initialRepuestoForm);
+    setRepuestoEditingId(null);
+    setRepuestoModalOpen(false);
+    setRepuestoImageFile(null);
+    setRepuestoImagePreview("");
+    setRepuestoImageUrlError("");
+  };
+
   const handleOpenCreateModal = () => {
     setEditingId(null);
     setForm(initialForm);
@@ -116,6 +232,18 @@ const Inventario = () => {
     setImageFile(null);
     setImagePreview("");
     setImageUrlError("");
+  };
+
+  const handleOpenRepuestoModal = () => {
+    setRepuestoEditingId(null);
+    setRepuestoForm({
+      ...initialRepuestoForm,
+      categoria: repuestoCategories[0]?.value || "",
+    });
+    setRepuestoModalOpen(true);
+    setRepuestoImageFile(null);
+    setRepuestoImagePreview("");
+    setRepuestoImageUrlError("");
   };
 
   const handleEdit = (moto) => {
@@ -139,6 +267,23 @@ const Inventario = () => {
     setModalOpen(true);
   };
 
+  const handleRepuestoEdit = (repuesto) => {
+    setRepuestoEditingId(repuesto.id);
+    setRepuestoForm({
+      nombre: repuesto.nombre || "",
+      categoria: toRepuestoCategoryLabel(repuesto.categoria || ""),
+      descripcion: repuesto.descripcion || "",
+      precio: String(repuesto.precio ?? ""),
+      stock: String(repuesto.stock ?? ""),
+      estado: repuesto.estado || "disponible",
+      imagen_url: repuesto.imagen_url || "",
+    });
+    setRepuestoImagePreview(repuesto.imagen_url || "");
+    setRepuestoImageFile(null);
+    setRepuestoImageUrlError("");
+    setRepuestoModalOpen(true);
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -147,11 +292,26 @@ const Inventario = () => {
     setImageUrlError("");
   };
 
+  const handleRepuestoImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setRepuestoImageFile(file);
+    setRepuestoImagePreview(URL.createObjectURL(file));
+    setRepuestoImageUrlError("");
+  };
+
   const handleClearImage = () => {
     setImageFile(null);
     setImagePreview("");
     setImageUrlError("");
     setForm((prev) => ({ ...prev, imagen_url: "" }));
+  };
+
+  const handleClearRepuestoImage = () => {
+    setRepuestoImageFile(null);
+    setRepuestoImagePreview("");
+    setRepuestoImageUrlError("");
+    setRepuestoForm((prev) => ({ ...prev, imagen_url: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -213,6 +373,61 @@ const Inventario = () => {
     }
   };
 
+  const handleRepuestoSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!repuestoForm.nombre.trim() || !repuestoForm.categoria.trim()) {
+      Swal.fire("Validación", "Nombre y categoría son obligatorios", "warning");
+      return;
+    }
+
+    if (!repuestoImageFile && repuestoImageUrlError) {
+      Swal.fire("Validación", "Ingresa una URL válida o sube una imagen local", "warning");
+      return;
+    }
+
+    const payload = {
+      nombre: repuestoForm.nombre.trim(),
+      categoria: repuestoForm.categoria.trim(),
+      descripcion: repuestoForm.descripcion.trim() || null,
+      precio: Number(repuestoForm.precio),
+      stock: Number(repuestoForm.stock),
+      estado: repuestoForm.estado,
+      imagen_url: repuestoForm.imagen_url.trim() || null,
+    };
+
+    if (Number.isNaN(payload.precio) || Number.isNaN(payload.stock)) {
+      Swal.fire("Validación", "Precio y stock deben ser números válidos", "warning");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (repuestoImageFile) {
+        setUploading(true);
+        const publicUrl = await uploadRepuestoImage(repuestoImageFile);
+        payload.imagen_url = publicUrl;
+      }
+
+      if (repuestoEditingId) {
+        const updated = await updateRepuesto(repuestoEditingId, payload);
+        setRepuestos((prev) => prev.map((r) => (r.id === repuestoEditingId ? updated : r)));
+        Swal.fire("Actualizado", "Repuesto actualizado correctamente", "success");
+      } else {
+        const created = await addRepuesto(payload);
+        setRepuestos((prev) => [created, ...prev]);
+        Swal.fire("Creado", "Repuesto agregado al inventario", "success");
+      }
+      resetRepuestoForm();
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo guardar el repuesto", "error");
+    } finally {
+      setSaving(false);
+      setUploading(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     const result = await Swal.fire({
       title: "¿Eliminar modelo?",
@@ -234,6 +449,30 @@ const Inventario = () => {
     } catch (error) {
       console.error(error);
       Swal.fire("Error", "No se pudo eliminar el modelo", "error");
+    }
+  };
+
+  const handleDeleteRepuesto = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Eliminar repuesto?",
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteRepuesto(id);
+      setRepuestos((prev) => prev.filter((r) => r.id !== id));
+      Swal.fire("Eliminado", "Repuesto eliminado", "success");
+      if (repuestoEditingId === id) resetRepuestoForm();
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo eliminar el repuesto", "error");
     }
   };
 
@@ -275,6 +514,44 @@ const Inventario = () => {
     </div>
   );
 
+  const RepuestoHeader = () => (
+    <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.7fr_0.7fr_120px] items-center bg-[#f5f6f8] text-[#556786] font-semibold text-[15px] rounded-t-2xl px-5 py-3 border border-gray-100">
+      <span>Imagen</span>
+      <span>Repuesto</span>
+      <span>Categoría</span>
+      <span>Precio</span>
+      <span>Estado</span>
+      <span className="text-right">Acciones</span>
+    </div>
+  );
+
+  const RepuestoRow = ({ repuesto }) => (
+    <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.7fr_0.7fr_120px] items-center bg-white px-5 py-3 border-x border-b border-gray-100">
+      <img
+        src={repuesto.imagen_url || "https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=600&auto=format&fit=crop"}
+        alt={repuesto.nombre}
+        className="w-[70px] h-[48px] object-cover rounded-xl bg-gray-100"
+      />
+      <div>
+        <p className="font-bold text-lg leading-tight text-[#1d2b44]">{repuesto.nombre}</p>
+        <p className="text-xs text-gray-400">ID: {repuesto.id}</p>
+      </div>
+      <p className="text-[#334b68] text-sm">{toRepuestoCategoryLabel(repuesto.categoria || "-")}</p>
+      <p className="text-green-600 text-lg font-bold">${Number(repuesto.precio || 0).toLocaleString()}</p>
+      <span className={`inline-flex w-fit px-3 py-1 rounded-full font-bold text-[11px] uppercase ${estadoClass[(repuesto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
+        {(repuesto.estado || "disponible").toUpperCase()}
+      </span>
+      <div className="flex justify-end gap-3">
+        <button onClick={() => handleRepuestoEdit(repuesto)} className="p-2 rounded-lg border border-blue-200 text-blue-600">
+          <Pencil size={16} />
+        </button>
+        <button onClick={() => handleDeleteRepuesto(repuesto.id)} className="p-2 rounded-lg border border-red-200 text-red-500">
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <section className="space-y-6">
       <header className="flex flex-wrap justify-between items-center gap-3">
@@ -305,25 +582,32 @@ const Inventario = () => {
       <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
         <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
           <div className="flex flex-wrap gap-2">
-            {categorias.map((cat) => {
-              const active = filtroCategoria === cat;
+            {(activeTab === "motos" ? categorias : repuestoCategorias).map((cat) => {
+              const active = activeTab === "motos" ? filtroCategoria === cat : repuestoFiltroCategoria === cat;
               return (
                 <button
                   key={cat}
-                  onClick={() => setFiltroCategoria(cat)}
+                  onClick={() => (activeTab === "motos" ? setFiltroCategoria(cat) : setRepuestoFiltroCategoria(cat))}
                   className={`px-4 py-2 rounded-full text-xs font-bold ${
                     active ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  {cat === "all" ? "Todas" : cat}
+                  {cat === "all" ? "Todas" : toRepuestoCategoryLabel(cat)}
                 </button>
               );
             })}
           </div>
 
-          {activeTab === "motos" && (
+          {activeTab === "motos" ? (
             <button
               onClick={handleOpenCreateModal}
+              className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2"
+            >
+              <Plus size={16} /> Nuevo
+            </button>
+          ) : (
+            <button
+              onClick={handleOpenRepuestoModal}
               className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2"
             >
               <Plus size={16} /> Nuevo
@@ -331,25 +615,44 @@ const Inventario = () => {
           )}
         </div>
 
-        <TableHeader />
-
-        {activeTab === "repuestos" ? (
-          <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">
-            Módulo de repuestos en construcción.
-          </div>
-        ) : loading ? (
-          <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">Cargando inventario...</div>
-        ) : motosFiltradas.length === 0 ? (
-          <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">
-            <PackageSearch className="mx-auto mb-2" />
-            No hay modelos en esta categoría
-          </div>
+        {activeTab === "motos" ? (
+          <>
+            <TableHeader />
+            {loading ? (
+              <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">Cargando inventario...</div>
+            ) : motosFiltradas.length === 0 ? (
+              <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">
+                <PackageSearch className="mx-auto mb-2" />
+                No hay modelos en esta categoría
+              </div>
+            ) : (
+              <div className="rounded-b-2xl overflow-hidden">
+                {motosFiltradas.map((moto) => (
+                  <MotoRow key={moto.id} moto={moto} />
+                ))}
+              </div>
+            )}
+          </>
         ) : (
-          <div className="rounded-b-2xl overflow-hidden">
-            {motosFiltradas.map((moto) => (
-              <MotoRow key={moto.id} moto={moto} />
-            ))}
-          </div>
+          <>
+            <RepuestoHeader />
+            {loadingRepuestos ? (
+              <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">
+                Cargando repuestos...
+              </div>
+            ) : repuestosFiltrados.length === 0 ? (
+              <div className="border-x border-b border-gray-100 rounded-b-2xl bg-white text-gray-500 text-center py-16">
+                <PackageSearch className="mx-auto mb-2" />
+                No hay repuestos en esta categoría
+              </div>
+            ) : (
+              <div className="rounded-b-2xl overflow-hidden">
+                {repuestosFiltrados.map((repuesto) => (
+                  <RepuestoRow key={repuesto.id} repuesto={repuesto} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -459,6 +762,117 @@ const Inventario = () => {
               </button>
               <button disabled={saving} className="bg-yellow-400 hover:bg-yellow-500 rounded-xl px-6 py-2.5 font-bold text-black flex items-center gap-2">
                 <Plus size={16} /> Guardar Moto
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {repuestoModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleRepuestoSubmit} className="bg-white w-full max-w-2xl rounded-2xl p-6 space-y-6 relative shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h2 className="text-2xl font-black text-yellow-400">{repuestoEditingId ? "Editar Repuesto" : "Nuevo Repuesto"}</h2>
+              <button
+                type="button"
+                onClick={resetRepuestoForm}
+                className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <label className="relative border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex flex-col items-center justify-center text-center gap-2 py-6 cursor-pointer">
+              <input type="file" accept="image/*" className="hidden" onChange={handleRepuestoImageChange} />
+              {repuestoImagePreview ? (
+                <img src={repuestoImagePreview} alt="Preview" className="h-36 object-contain" />
+              ) : (
+                <>
+                  <UploadCloud className="text-gray-400" size={28} />
+                  <p className="text-gray-500 font-medium">Click para subir imagen</p>
+                </>
+              )}
+              {uploading && <span className="text-xs text-gray-400">Subiendo imagen...</span>}
+            </label>
+
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="flex-1">
+                <label className="text-sm font-semibold text-gray-700">URL de imagen (opcional)</label>
+                <div className={`mt-2 flex items-center gap-2 bg-gray-50 border rounded-xl px-3 py-2 ${repuestoImageUrlError ? "border-red-300" : "border-gray-200"}`}>
+                  <Link2 size={16} className="text-gray-400" />
+                  <input
+                    name="imagen_url"
+                    value={repuestoForm.imagen_url}
+                    onChange={handleRepuestoChange}
+                    placeholder="https://..."
+                    className="w-full bg-transparent outline-none"
+                  />
+                </div>
+                {repuestoImageUrlError && <p className="text-xs text-red-500 mt-1">{repuestoImageUrlError}</p>}
+              </div>
+              {(repuestoImageFile || repuestoForm.imagen_url) && (
+                <button
+                  type="button"
+                  onClick={handleClearRepuestoImage}
+                  className="text-sm font-semibold text-gray-500 hover:text-gray-700"
+                >
+                  Limpiar imagen
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Nombre</label>
+                <input name="nombre" value={repuestoForm.nombre} onChange={handleRepuestoChange} placeholder="Ej. Filtro de Aceite" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Categoría</label>
+                <select
+                  name="categoria"
+                  value={repuestoForm.categoria}
+                  onChange={handleRepuestoChange}
+                  className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
+                >
+                  {repuestoCategories.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Precio</label>
+                <input name="precio" value={repuestoForm.precio} onChange={handleRepuestoChange} placeholder="0.00" type="number" step="0.01" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Estado</label>
+                <select name="estado" value={repuestoForm.estado} onChange={handleRepuestoChange} className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50">
+                  <option value="disponible">Disponible</option>
+                  <option value="preventa">Preventa</option>
+                  <option value="agotado">Agotado</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Stock</label>
+                <input name="stock" value={repuestoForm.stock} onChange={handleRepuestoChange} placeholder="0" type="number" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Descripción</label>
+              <textarea name="descripcion" value={repuestoForm.descripcion} onChange={handleRepuestoChange} placeholder="Detalles del repuesto..." rows={4} className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50 resize-none" />
+            </div>
+
+            <div className="flex items-center justify-end gap-4 pt-2">
+              <button type="button" onClick={resetRepuestoForm} className="text-gray-500 font-semibold">
+                Cancelar
+              </button>
+              <button disabled={saving} className="bg-yellow-400 hover:bg-yellow-500 rounded-xl px-6 py-2.5 font-bold text-black flex items-center gap-2">
+                <Plus size={16} /> Guardar Repuesto
               </button>
             </div>
           </form>
