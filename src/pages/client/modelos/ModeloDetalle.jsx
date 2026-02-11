@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { BatteryFull, ChevronLeft, ChevronRight, Fuel, Gauge, Wrench, Zap } from "lucide-react";
 import Swal from "sweetalert2";
 import { getMotoById } from "../../../services/Motos.service";
+import { createSolicitud } from "../../../services/Solicitudes.service";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -171,20 +172,37 @@ const ModeloDetalle = () => {
     setContactForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleContactSubmit = (event) => {
+  const handleContactSubmit = async (event) => {
     event.preventDefault();
     if (!contactForm.nombre.trim() || !contactForm.email.trim()) {
       Swal.fire("Validación", "Nombre y correo son obligatorios.", "warning");
       return;
     }
-    Swal.fire("Enviado", "Un asesor se pondrá en contacto contigo.", "success");
-    setContactForm({
-      nombre: "",
-      email: "",
-      telefono: "",
-      ciudad: "",
-      mensaje: "",
-    });
+
+    try {
+      Swal.fire({
+        title: 'Enviando...',
+        text: 'Por favor espere',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        }
+      });
+
+      await createSolicitud(contactForm);
+
+      Swal.fire("Enviado", "Un asesor se pondrá en contacto contigo.", "success");
+      setContactForm({
+        nombre: "",
+        email: "",
+        telefono: "",
+        ciudad: "",
+        mensaje: "",
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "Hubo un problema al enviar la solicitud. Intenta nuevamente.", "error");
+    }
   };
 
   if (loading) {

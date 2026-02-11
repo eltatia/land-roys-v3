@@ -19,6 +19,9 @@ import Login from "./pages/admin/auth/Login";
 import Dashboard from "./pages/admin/dashboard/Dashboard";
 import Slider from "./pages/admin/slider/Slider";
 import Inventario from "./pages/admin/inventario/Inventario";
+import Ventas from "./pages/admin/ventas/Ventas";
+import Clientes from "./pages/admin/clientes/Clientes";
+import Reportes from "./pages/admin/reportes/Reportes";
 
 function App() {
   return (
@@ -49,6 +52,9 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="slider_gestion" element={<Slider />} />
             <Route path="inventario" element={<Inventario />} />
+            <Route path="ventas" element={<Ventas />} />
+            <Route path="clientes" element={<Clientes />} />
+            <Route path="reportes" element={<Reportes />} />
           </Route>
         </Routes>
       </Router>

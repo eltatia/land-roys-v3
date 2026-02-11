@@ -233,3 +233,16 @@ export const deleteMoto = async (id) => {
   const { error } = await supabase.from("motos").delete().eq("id", id);
   if (error) throw error;
 };
+
+export const updateMotoStock = async (id, newStock) => {
+  const { error } = await supabase
+    .from("motos")
+    .update({ stock: newStock })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating stock:", error);
+    throw error;
+  }
+  return true;
+};
