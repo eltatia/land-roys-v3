@@ -4,6 +4,7 @@ const normalizeCategoria = (categoria = {}) => ({
   id: categoria.id,
   nombre: categoria.nombre ?? "",
   estado: categoria.estado ?? true,
+  parent_id: categoria.parent_id ?? null,
 });
 
 export const getCategoriasRepuestos = async () => {
@@ -20,6 +21,7 @@ export const addCategoriaRepuesto = async (categoria) => {
   const payload = {
     nombre: categoria.nombre?.trim() || "",
     estado: categoria.estado ?? true,
+    parent_id: categoria.parent_id || null,
   };
   const { data, error } = await supabase
     .from("categorias_repuestos")
@@ -35,6 +37,7 @@ export const updateCategoriaRepuesto = async (id, categoria) => {
   const payload = {
     nombre: categoria.nombre?.trim() || "",
     estado: categoria.estado ?? true,
+    parent_id: categoria.parent_id || null,
   };
   const { data, error } = await supabase
     .from("categorias_repuestos")

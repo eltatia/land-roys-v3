@@ -70,13 +70,16 @@ const pickMotoPayload = (moto = {}) => ({
 
 const pickSpecs = (moto = {}) => normalizeSpecs(moto);
 
-const getMotoBucket = () => import.meta.env.VITE_SUPABASE_MOTOS_BUCKET || "motos";
+const getMotoBucket = () => import.meta.env.VITE_SUPABASE_INVENTARIO_BUCKET || "Inventario";
+
+const buildMotoMediaPath = ({ ext }) => `Modelos/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
 export const uploadMotoVideo = async (file) => {
   const bucket = getMotoBucket();
   const ext = file.name.split(".").pop();
-  const fileName = `${crypto.randomUUID()}.${ext}`;
-  const filePath = `motos/videos/${fileName}`;
+  const filePath = buildMotoMediaPath({
+    ext,
+  });
 
   const { error } = await supabase.storage
     .from(bucket)
@@ -122,8 +125,9 @@ const executeWithFallback = async (requestFactory) => {
 export const uploadMotoImage = async (file) => {
   const bucket = getMotoBucket();
   const ext = file.name.split(".").pop();
-  const fileName = `${crypto.randomUUID()}.${ext}`;
-  const filePath = `motos/${fileName}`;
+  const filePath = buildMotoMediaPath({
+    ext,
+  });
 
   const { error } = await supabase.storage
     .from(bucket)

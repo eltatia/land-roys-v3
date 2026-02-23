@@ -12,7 +12,10 @@ const currency = new Intl.NumberFormat("es-CO", {
 
 const getCategoryLabel = (categories, key) => {
   if (key === "otros") return "Otros";
-  return categories.find((cat) => cat.id === key)?.nombre || "Otros";
+  const current = categories.find((cat) => cat.id === key);
+  if (!current) return "Otros";
+  const parent = current.parent_id ? categories.find((cat) => cat.id === current.parent_id) : null;
+  return parent ? `${parent.nombre} / ${current.nombre}` : current.nombre;
 };
 
 const Repuestos = () => {
@@ -81,13 +84,26 @@ const Repuestos = () => {
     localStorage.setItem("repuestos_cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
+  const categoriasPadre = useMemo(() => categorias.filter((cat) => !cat.parent_id), [categorias]);
+
+  const subcategoriasPorPadre = useMemo(() => {
+    return categorias
+      .filter((cat) => cat.parent_id)
+      .reduce((acc, categoria) => {
+        const key = categoria.parent_id;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(categoria);
+        return acc;
+      }, {});
+  }, [categorias]);
+
   const categories = useMemo(() => {
-    const base = [{ key: "all", label: "Todos" }, ...categorias.map((cat) => ({ key: cat.id, label: cat.nombre }))];
+    const base = [{ key: "all", label: "Todos" }, ...categoriasPadre.map((cat) => ({ key: cat.id, label: cat.nombre }))];
     if (repuestos.some((item) => !item.categoria_id)) {
       base.push({ key: "otros", label: "Otros" });
     }
     return base;
-  }, [categorias, repuestos]);
+  }, [categoriasPadre, repuestos]);
 
   const categoriasById = useMemo(() => {
     return categorias.reduce((acc, categoria) => {
@@ -96,7 +112,7 @@ const Repuestos = () => {
     }, {});
   }, [categorias]);
 
-  const getCategoryKeyForItem = (item) => item.categoria_id || "otros";
+  const getCategoryKeyForItem = (item) => item.categoria_parent_id || item.categoria_id || "otros";
   const getImageSrc = (item) => (imageFallback[item.id] ? repuestoPlaceholder : item.imagen_url || repuestoPlaceholder);
 
   const countsByCategory = useMemo(() => {
@@ -114,7 +130,13 @@ const Repuestos = () => {
     let data = [...repuestos];
 
     if (activeCategory !== "all") {
-      data = data.filter((item) => getCategoryKeyForItem(item) === activeCategory);
+      const childrenIds = new Set((subcategoriasPorPadre[activeCategory] || []).map((item) => item.id));
+      data = data.filter((item) => {
+        const categoriaId = item.categoria_id || "otros";
+        const parentKey = getCategoryKeyForItem(item);
+        if (childrenIds.size === 0) return parentKey === activeCategory;
+        return childrenIds.has(categoriaId);
+      });
     }
 
     if (estadoFiltro !== "all") {
@@ -144,7 +166,7 @@ const Repuestos = () => {
     }
 
     return data;
-  }, [repuestos, activeCategory, estadoFiltro, soloStock, search, sortOrder, categoriasById]);
+  }, [repuestos, activeCategory, estadoFiltro, soloStock, search, sortOrder, categoriasById, subcategoriasPorPadre]);
 
   const cartTotal = useMemo(
     () => cartItems.reduce((acc, item) => acc + Number(item.precio || 0) * item.cantidad, 0),
@@ -437,7 +459,7 @@ const Repuestos = () => {
                   </div>
                   <div className="p-5 space-y-2">
                     <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">
-                      {getCategoryLabel(categorias, getCategoryKeyForItem(item))}
+                      {getCategoryLabel(categorias, item.categoria_id || getCategoryKeyForItem(item))}
                     </span>
                     <h3 className="text-lg font-bold text-slate-800">{item.nombre}</h3>
                     {item.descripcion && <p className="text-sm text-gray-500">{item.descripcion}</p>}

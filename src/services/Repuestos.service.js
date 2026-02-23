@@ -7,6 +7,7 @@ const normalizeRepuesto = (repuesto = {}) => ({
   categoria: repuesto.categoria ?? repuesto.categorias_repuestos?.nombre ?? null,
   categoria_id: repuesto.categoria_id ?? repuesto.categorias_repuestos?.id ?? null,
   categoria_nombre: repuesto.categorias_repuestos?.nombre ?? repuesto.categoria ?? null,
+  categoria_parent_id: repuesto.categorias_repuestos?.parent_id ?? null,
   precio: repuesto.precio ?? 0,
   estado: repuesto.estado || "disponible",
   imagen_url: repuesto.imagen_url ?? null,
@@ -24,13 +25,16 @@ const pickRepuestoPayload = (repuesto = {}) => ({
   stock: repuesto.stock ?? 0,
 });
 
-const getRepuestosBucket = () => import.meta.env.VITE_SUPABASE_REPUESTOS_BUCKET || "repuestos";
+const getRepuestosBucket = () => import.meta.env.VITE_SUPABASE_INVENTARIO_BUCKET || "Inventario";
+
+const buildRepuestoMediaPath = ({ ext }) => `Repuestos/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
 export const uploadRepuestoImage = async (file) => {
   const bucket = getRepuestosBucket();
   const ext = file.name.split(".").pop();
-  const fileName = `${crypto.randomUUID()}.${ext}`;
-  const filePath = `repuestos/${fileName}`;
+  const filePath = buildRepuestoMediaPath({
+    ext,
+  });
 
   const { error } = await supabase.storage
     .from(bucket)
@@ -45,7 +49,7 @@ export const uploadRepuestoImage = async (file) => {
 export const getRepuestos = async () => {
   const { data, error } = await supabase
     .from("repuestos")
-    .select("*, categorias_repuestos ( id, nombre )")
+    .select("*, categorias_repuestos ( id, nombre, parent_id )")
     .order("creado_en", { ascending: false });
 
   if (error) throw error;
@@ -57,7 +61,7 @@ export const addRepuesto = async (repuesto) => {
   const { data, error } = await supabase
     .from("repuestos")
     .insert([payload])
-    .select("*, categorias_repuestos ( id, nombre )")
+    .select("*, categorias_repuestos ( id, nombre, parent_id )")
     .single();
 
   if (error) throw error;
@@ -73,7 +77,7 @@ export const updateRepuesto = async (id, repuesto) => {
     .from("repuestos")
     .update(payload)
     .eq("id", id)
-    .select("*, categorias_repuestos ( id, nombre )")
+    .select("*, categorias_repuestos ( id, nombre, parent_id )")
     .single();
 
   if (error) throw error;

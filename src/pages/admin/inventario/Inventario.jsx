@@ -28,6 +28,16 @@ import {
   getCategoriasRepuestos,
   updateCategoriaRepuesto,
 } from "../../../services/CategoriasRepuestos.service";
+import {
+  deleteFolder,
+  ensureMotoCategoryFolder,
+  ensureRepuestoCategoryFolder,
+  getMotoCategoryFolderPrefixes,
+  getRepuestoCategoryFolderPrefixes,
+  getConfiguredBucketName,
+  isRealFile,
+  listFolderFiles,
+} from "../../../services/storageFolders.service";
 
 const initialForm = {
   nombre: "",
@@ -51,6 +61,7 @@ const initialForm = {
   video_url: "",
   video_activo: false,
   video_file: null,
+  galeria_activa: false,
   galeria_destacada: [],
 };
 
@@ -67,6 +78,7 @@ const initialRepuestoForm = {
 const initialCategoriaForm = {
   nombre: "",
   estado: true,
+  parent_id: "",
 };
 
 const initialCategoriaMotoForm = {
@@ -80,11 +92,14 @@ const tabs = [
   { key: "repuestos", label: "Repuestos", icon: Wrench },
 ];
 
-const buildRepuestoCategoryLabel = (categorias, categoriaId, fallback = "Otros") =>
-  categorias.find((categoria) => categoria.id === categoriaId)?.nombre || fallback;
-
-const buildMotoCategoryLabel = (categorias, parentId, fallback = "Sin tipo") =>
-  categorias.find((categoria) => categoria.id === parentId)?.nombre || fallback;
+const buildRepuestoCategoryLabel = (categorias, categoriaId, fallback = "Otros") => {
+  const categoria = categorias.find((item) => item.id === categoriaId);
+  if (!categoria) return fallback;
+  const parent = categoria.parent_id
+    ? categorias.find((item) => item.id === categoria.parent_id)
+    : null;
+  return parent ? `${parent.nombre} / ${categoria.nombre}` : categoria.nombre;
+};
 
 const findMotoCategoriaByName = (categorias, nombre) =>
   categorias.find((categoria) => categoria.nombre?.toLowerCase() === nombre.toLowerCase()) || null;
@@ -147,6 +162,33 @@ const normalizeGaleria = (value) => {
   return [];
 };
 
+const slugifySegment = (value, fallback = "sin-valor") => {
+  if (!value) return fallback;
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-_]/g, "") || fallback;
+};
+
+const isDuplicateNameError = (error) =>
+  error?.code === "23505" || (error?.message || "").toLowerCase().includes("duplicate key value");
+
+const isBucketMissingError = (error) => {
+  const message = (error?.message || "").toLowerCase();
+  return message.includes("bucket not found") || error?.statusCode === "404";
+};
+
+const isStoragePermissionError = (error) => {
+  const message = (error?.message || "").toLowerCase();
+  return message.includes("row-level security") || error?.statusCode === "403";
+};
+
+const isMotoStockConstraintError = (error) => {
+  const message = (error?.message || "").toLowerCase();
+  return error?.code === "23514" && message.includes("motos_stock_check");
+};
+
 const emptyGaleriaItem = { imagen_url: "", titulo: "", descripcion: "" };
 
 const Inventario = () => {
@@ -169,6 +211,10 @@ const Inventario = () => {
   const [imageUrlError, setImageUrlError] = useState("");
   const [logoUrlError, setLogoUrlError] = useState("");
   const [brandLogoUrlError, setBrandLogoUrlError] = useState("");
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState("");
+  const [brandLogoFile, setBrandLogoFile] = useState(null);
+  const [brandLogoPreview, setBrandLogoPreview] = useState("");
   const [repuestoEditingId, setRepuestoEditingId] = useState(null);
   const [repuestoFiltroCategoria, setRepuestoFiltroCategoria] = useState("all");
   const [repuestoForm, setRepuestoForm] = useState(initialRepuestoForm);
@@ -179,6 +225,9 @@ const Inventario = () => {
   const [categoriasRepuestos, setCategoriasRepuestos] = useState([]);
   const [categoriaForm, setCategoriaForm] = useState(initialCategoriaForm);
   const [categoriaEditingId, setCategoriaEditingId] = useState(null);
+  const [isCreatingRepuestoType, setIsCreatingRepuestoType] = useState(false);
+  const [repuestoTipoId, setRepuestoTipoId] = useState("");
+  const [repuestoSubcategoriaId, setRepuestoSubcategoriaId] = useState("");
   const [categoriasMotos, setCategoriasMotos] = useState([]);
   const [categoriaMotoForm, setCategoriaMotoForm] = useState(initialCategoriaMotoForm);
   const [categoriaMotoEditingId, setCategoriaMotoEditingId] = useState(null);
@@ -301,12 +350,37 @@ const Inventario = () => {
     return motos.filter((m) => (m.categoria || "").toLowerCase() === filtroCategoria.toLowerCase());
   }, [motos, filtroCategoria, motoTipos, subcategoriasPorTipo]);
 
-  const repuestoCategorias = useMemo(() => ["all", ...categoriasRepuestos.map((cat) => cat.id)], [categoriasRepuestos]);
+  const repuestoTipos = useMemo(() => categoriasRepuestos.filter((categoria) => !categoria.parent_id), [categoriasRepuestos]);
+
+  const repuestoSubcategoriasPorTipo = useMemo(() => {
+    return categoriasRepuestos
+      .filter((categoria) => categoria.parent_id)
+      .reduce((acc, categoria) => {
+        const key = categoria.parent_id;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(categoria);
+        return acc;
+      }, {});
+  }, [categoriasRepuestos]);
+
+  const repuestoSubcategoriasVisibles = useMemo(() => {
+    if (!repuestoTipoId) return [];
+    return repuestoSubcategoriasPorTipo[repuestoTipoId] || [];
+  }, [repuestoTipoId, repuestoSubcategoriasPorTipo]);
+
+  const repuestoCategorias = useMemo(() => ["all", ...repuestoTipos.map((cat) => cat.id)], [repuestoTipos]);
 
   const repuestosFiltrados = useMemo(() => {
     if (repuestoFiltroCategoria === "all") return repuestos;
-    return repuestos.filter((r) => r.categoria_id === repuestoFiltroCategoria);
-  }, [repuestos, repuestoFiltroCategoria]);
+
+    const children = repuestoSubcategoriasPorTipo[repuestoFiltroCategoria] || [];
+    if (children.length === 0) {
+      return repuestos.filter((r) => (r.categoria_parent_id || r.categoria_id) === repuestoFiltroCategoria);
+    }
+
+    const childrenIds = new Set(children.map((child) => child.id));
+    return repuestos.filter((r) => childrenIds.has(r.categoria_id));
+  }, [repuestos, repuestoFiltroCategoria, repuestoSubcategoriasPorTipo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -397,6 +471,27 @@ const Inventario = () => {
     setCategoriaForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
+  const handleRepuestoTipoChange = (tipoId) => {
+    setRepuestoTipoId(tipoId);
+    setRepuestoSubcategoriaId("");
+    setRepuestoForm((prev) => ({ ...prev, categoria_id: tipoId || "" }));
+  };
+
+  const handleRepuestoSubcategoriaChange = (subcategoriaId) => {
+    setRepuestoSubcategoriaId(subcategoriaId);
+    const selected = subcategoriaId || repuestoTipoId || "";
+    setRepuestoForm((prev) => ({ ...prev, categoria_id: selected }));
+  };
+
+  const handleCategoriaCreateChild = (tipo) => {
+    setCategoriaEditingId(null);
+    setCategoriaForm({
+      ...initialCategoriaForm,
+      parent_id: tipo.id,
+    });
+    setIsCreatingRepuestoType(false);
+  };
+
   const handleCategoriaMotoChange = (e) => {
     const { name, value, type, checked } = e.target;
     setCategoriaMotoForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
@@ -405,6 +500,7 @@ const Inventario = () => {
   const resetCategoriaForm = () => {
     setCategoriaForm(initialCategoriaForm);
     setCategoriaEditingId(null);
+    setIsCreatingRepuestoType(false);
   };
 
   const resetCategoriaMotoForm = () => {
@@ -431,6 +527,10 @@ const Inventario = () => {
     setImageFile(null);
     setImagePreview("");
     setImageUrlError("");
+    setLogoFile(null);
+    setLogoPreview("");
+    setBrandLogoFile(null);
+    setBrandLogoPreview("");
     setGaleriaItem(emptyGaleriaItem);
   };
 
@@ -438,6 +538,8 @@ const Inventario = () => {
     setRepuestoForm(initialRepuestoForm);
     setRepuestoEditingId(null);
     setRepuestoModalOpen(false);
+    setRepuestoTipoId("");
+    setRepuestoSubcategoriaId("");
     setRepuestoImageFile(null);
     setRepuestoImagePreview("");
     setRepuestoImageUrlError("");
@@ -461,15 +563,23 @@ const Inventario = () => {
     setImageFile(null);
     setImagePreview("");
     setImageUrlError("");
+    setLogoFile(null);
+    setLogoPreview("");
+    setBrandLogoFile(null);
+    setBrandLogoPreview("");
     setGaleriaItem(emptyGaleriaItem);
   };
 
   const handleOpenRepuestoModal = () => {
+    const defaultSubcategoria = categoriasRepuestos.find((categoria) => categoria.parent_id) || null;
+    const defaultTipo = defaultSubcategoria?.parent_id || repuestoTipos[0]?.id || "";
     setRepuestoEditingId(null);
     setRepuestoForm({
       ...initialRepuestoForm,
-      categoria_id: categoriasRepuestos[0]?.id || "",
+      categoria_id: defaultSubcategoria?.id || defaultTipo || "",
     });
+    setRepuestoTipoId(defaultTipo);
+    setRepuestoSubcategoriaId(defaultSubcategoria?.id || "");
     setRepuestoModalOpen(true);
     setRepuestoImageFile(null);
     setRepuestoImagePreview("");
@@ -481,7 +591,9 @@ const Inventario = () => {
     setCategoriaForm({
       nombre: categoria.nombre || "",
       estado: categoria.estado ?? true,
+      parent_id: categoria.parent_id || "",
     });
+    setIsCreatingRepuestoType(!categoria.parent_id);
   };
 
   const handleCategoriaMotoEdit = (categoria) => {
@@ -521,6 +633,7 @@ const Inventario = () => {
       brand_logo_url: moto.brand_logo_url || "",
       video_url: moto.video_url || "",
       video_activo: Boolean(moto.video_url),
+      galeria_activa: normalizeGaleria(moto.galeria_destacada).length > 0,
       galeria_destacada: normalizeGaleria(moto.galeria_destacada),
     });
     setMotoTipoId(tipoId || "");
@@ -528,6 +641,10 @@ const Inventario = () => {
     setImagePreview(moto.imagen_url || "");
     setImageFile(null);
     setImageUrlError("");
+    setLogoFile(null);
+    setLogoPreview("");
+    setBrandLogoFile(null);
+    setBrandLogoPreview("");
     setGaleriaItem(emptyGaleriaItem);
     setModalOpen(true);
   };
@@ -537,6 +654,8 @@ const Inventario = () => {
       repuesto.categoria_id ||
       categoriasRepuestos.find((categoria) => categoria.nombre === repuesto.categoria)?.id ||
       "";
+    const categoriaMatch = categoriasRepuestos.find((categoria) => categoria.id === categoriaId);
+    const tipoId = categoriaMatch?.parent_id || (categoriaMatch ? categoriaMatch.id : "");
     setRepuestoEditingId(repuesto.id);
     setRepuestoForm({
       nombre: repuesto.nombre || "",
@@ -547,6 +666,8 @@ const Inventario = () => {
       estado: repuesto.estado || "disponible",
       imagen_url: repuesto.imagen_url || "",
     });
+    setRepuestoTipoId(tipoId || "");
+    setRepuestoSubcategoriaId(categoriaMatch?.parent_id ? categoriaMatch.id : "");
     setRepuestoImagePreview(repuesto.imagen_url || "");
     setRepuestoImageFile(null);
     setRepuestoImageUrlError("");
@@ -589,6 +710,45 @@ const Inventario = () => {
     const file = event.target.files?.[0];
     if (!file) return;
     setForm((prev) => ({ ...prev, video_file: file }));
+  };
+
+  const handleLogoFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+    setLogoUrlError("");
+  };
+
+  const handleBrandLogoFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setBrandLogoFile(file);
+    setBrandLogoPreview(URL.createObjectURL(file));
+    setBrandLogoUrlError("");
+  };
+
+  const handleClearLogoImage = () => {
+    setLogoFile(null);
+    setLogoPreview("");
+    setLogoUrlError("");
+    setForm((prev) => ({ ...prev, logo_url: "" }));
+  };
+
+  const handleClearBrandLogoImage = () => {
+    setBrandLogoFile(null);
+    setBrandLogoPreview("");
+    setBrandLogoUrlError("");
+    setForm((prev) => ({ ...prev, brand_logo_url: "" }));
+  };
+
+  const handleGaleriaToggle = () => {
+    setForm((prev) => ({
+      ...prev,
+      galeria_activa: !prev.galeria_activa,
+      galeria_destacada: prev.galeria_activa ? [] : prev.galeria_destacada,
+    }));
+    setGaleriaItem(emptyGaleriaItem);
   };
 
   const handleClearRepuestoImage = () => {
@@ -680,6 +840,14 @@ const Inventario = () => {
       return;
     }
 
+    const selectedCategoriaId = selectedSubcategoria?.id || selectedTipo?.id || null;
+    const tipoNombre = selectedTipo?.nombre || form.categoria || "sin-tipo";
+    const subcategoriaNombre = selectedSubcategoria?.nombre || selectedTipo?.nombre || "sin-subcategoria";
+    const motoSlug = slugifySegment(`${form.nombre}-${form.modelo_codigo || "modelo"}`, slugifySegment(form.nombre, "modelo"));
+
+    const parsedPrice = Number(form.precio);
+    const parsedStock = Number(form.stock);
+
     const payload = {
       nombre: form.nombre.trim(),
       marca: form.marca.trim() || null,
@@ -693,38 +861,91 @@ const Inventario = () => {
       velocidades: form.velocidades ? Number(form.velocidades) : null,
       torque_max_nm: form.torque_max_nm ? Number(form.torque_max_nm) : null,
       motor_especificacion: form.motor_especificacion.trim() || null,
-      precio: Number(form.precio),
-      stock: Number(form.stock),
+      precio: parsedPrice,
+      stock: parsedStock,
       estado: form.estado,
       imagen_url: normalizeStorageUrl(form.imagen_url) || null,
       video_url: form.video_activo ? form.video_url.trim() || null : null,
       logo_url: normalizeStorageUrl(form.logo_url) || null,
       brand_logo_url: normalizeStorageUrl(form.brand_logo_url) || null,
-      galeria_destacada: form.galeria_destacada
+      galeria_destacada: form.galeria_activa
+        ? form.galeria_destacada
         .filter((item) => item.imagen_url && isValidUrl(item.imagen_url))
         .map((item) => ({
           imagen_url: normalizeStorageUrl(item.imagen_url.trim()),
           titulo: item.titulo?.trim() || "",
           descripcion: item.descripcion?.trim() || "",
-        })),
+        }))
+        : [],
     };
 
-    if (Number.isNaN(payload.precio) || Number.isNaN(payload.stock)) {
-      Swal.fire("Validación", "Precio y stock deben ser números válidos", "warning");
+    if (Number.isNaN(payload.precio)) {
+      Swal.fire("Validación", "El precio debe ser un número válido", "warning");
+      return;
+    }
+
+    if (!Number.isInteger(payload.stock) || payload.stock < 1) {
+      Swal.fire("Validación", "El stock debe ser un número entero mayor o igual a 1", "warning");
       return;
     }
 
     setSaving(true);
     try {
+      const motoIdForMedia = editingId || crypto.randomUUID();
+
       if (imageFile) {
         setUploading(true);
-        const publicUrl = await uploadMotoImage(imageFile);
+        const publicUrl = await uploadMotoImage(imageFile, {
+          categoriaId: motoTipoId,
+          categoriaNombre: tipoNombre,
+          subcategoriaId: selectedCategoriaId,
+          subcategoriaNombre,
+          motoId: motoIdForMedia,
+          motoSlug,
+          mediaType: "hero",
+        });
         payload.imagen_url = publicUrl;
+      }
+
+      if (logoFile) {
+        setUploading(true);
+        const publicUrl = await uploadMotoImage(logoFile, {
+          categoriaId: motoTipoId,
+          categoriaNombre: tipoNombre,
+          subcategoriaId: selectedCategoriaId,
+          subcategoriaNombre,
+          motoId: motoIdForMedia,
+          motoSlug,
+          mediaType: "logo_modelo",
+        });
+        payload.logo_url = publicUrl;
+      }
+
+      if (brandLogoFile) {
+        setUploading(true);
+        const publicUrl = await uploadMotoImage(brandLogoFile, {
+          categoriaId: motoTipoId,
+          categoriaNombre: tipoNombre,
+          subcategoriaId: selectedCategoriaId,
+          subcategoriaNombre,
+          motoId: motoIdForMedia,
+          motoSlug,
+          mediaType: "logo_marca",
+        });
+        payload.brand_logo_url = publicUrl;
       }
 
       if (form.video_activo && form.video_file) {
         setUploadingVideo(true);
-        const publicUrl = await uploadMotoVideo(form.video_file);
+        const publicUrl = await uploadMotoVideo(form.video_file, {
+          categoriaId: motoTipoId,
+          categoriaNombre: tipoNombre,
+          subcategoriaId: selectedCategoriaId,
+          subcategoriaNombre,
+          motoId: motoIdForMedia,
+          motoSlug,
+          mediaType: "video_principal",
+        });
         payload.video_url = publicUrl;
         setForm((prev) => ({ ...prev, video_file: null, video_url: publicUrl }));
       }
@@ -741,7 +962,13 @@ const Inventario = () => {
       resetForm();
     } catch (error) {
       console.error(error);
-      Swal.fire("Error", "No se pudo guardar el modelo", "error");
+      Swal.fire(
+        "Error",
+        isMotoStockConstraintError(error)
+          ? "No se pudo guardar el modelo: el stock debe ser mayor a 0 según la configuración de la base de datos."
+          : "No se pudo guardar el modelo",
+        "error"
+      );
     } finally {
       setSaving(false);
       setUploading(false);
@@ -752,7 +979,9 @@ const Inventario = () => {
   const handleRepuestoSubmit = async (e) => {
     e.preventDefault();
 
-    if (!repuestoForm.nombre.trim() || !repuestoForm.categoria_id) {
+    const selectedCategoriaId = repuestoSubcategoriaId || repuestoTipoId || repuestoForm.categoria_id;
+
+    if (!repuestoForm.nombre.trim() || !selectedCategoriaId) {
       Swal.fire("Validación", "Nombre y categoría son obligatorios", "warning");
       return;
     }
@@ -762,11 +991,26 @@ const Inventario = () => {
       return;
     }
 
-    const selectedCategoria = categoriasRepuestos.find((categoria) => categoria.id === repuestoForm.categoria_id);
+    const selectedSubcategoria = repuestoSubcategoriaId
+      ? categoriasRepuestos.find((categoria) => categoria.id === repuestoSubcategoriaId)
+      : null;
+    const selectedTipo = repuestoTipoId
+      ? categoriasRepuestos.find((categoria) => categoria.id === repuestoTipoId)
+      : null;
+    const selectedCategoria = selectedSubcategoria || selectedTipo;
+    const tipoNombre = selectedTipo?.nombre || selectedCategoria?.nombre || "sin-tipo";
+    const subcategoriaNombre = selectedSubcategoria?.nombre || selectedTipo?.nombre || "sin-subcategoria";
+    const repuestoSlug = slugifySegment(repuestoForm.nombre, "repuesto");
+
+    if (!selectedCategoria) {
+      Swal.fire("Validación", "Selecciona una categoría válida", "warning");
+      return;
+    }
+
     const payload = {
       nombre: repuestoForm.nombre.trim(),
-      categoria: selectedCategoria?.nombre || "",
-      categoria_id: repuestoForm.categoria_id,
+      categoria: selectedCategoria.nombre || "",
+      categoria_id: selectedCategoria.id,
       descripcion: repuestoForm.descripcion.trim() || null,
       precio: Number(repuestoForm.precio),
       stock: Number(repuestoForm.stock),
@@ -783,7 +1027,15 @@ const Inventario = () => {
     try {
       if (repuestoImageFile) {
         setUploading(true);
-        const publicUrl = await uploadRepuestoImage(repuestoImageFile);
+        const publicUrl = await uploadRepuestoImage(repuestoImageFile, {
+          categoriaPadreId: selectedTipo?.id || selectedCategoria?.id,
+          categoriaPadreNombre: tipoNombre,
+          subcategoriaId: selectedSubcategoria?.id || selectedTipo?.id,
+          subcategoriaNombre,
+          repuestoId: repuestoEditingId,
+          repuestoSlug,
+          mediaType: "principal",
+        });
         payload.imagen_url = publicUrl;
       }
 
@@ -862,21 +1114,60 @@ const Inventario = () => {
       return;
     }
 
+    if (!isCreatingRepuestoType && repuestoTipos.length > 0 && !categoriaForm.parent_id) {
+      Swal.fire("Validación", "Selecciona un tipo para la subcategoría", "warning");
+      return;
+    }
+
     setSaving(true);
     try {
+      const payload = {
+        ...categoriaForm,
+        parent_id: isCreatingRepuestoType ? null : categoriaForm.parent_id || null,
+      };
+
       if (categoriaEditingId) {
-        const updated = await updateCategoriaRepuesto(categoriaEditingId, categoriaForm);
+        const updated = await updateCategoriaRepuesto(categoriaEditingId, payload);
         setCategoriasRepuestos((prev) => prev.map((cat) => (cat.id === categoriaEditingId ? updated : cat)));
         Swal.fire("Actualizado", "Categoría actualizada correctamente", "success");
       } else {
-        const created = await addCategoriaRepuesto(categoriaForm);
+        const created = await addCategoriaRepuesto(payload);
         setCategoriasRepuestos((prev) => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
-        Swal.fire("Creado", "Categoría creada correctamente", "success");
+
+        try {
+          const folderResult = await ensureRepuestoCategoryFolder({
+            parentId: created.parent_id,
+            categoryId: created.id,
+          });
+          if (folderResult?.skipped) {
+            Swal.fire("Creado", "Categoría creada correctamente", "success");
+          } else {
+            Swal.fire("Creado", "Categoría creada correctamente y carpeta inicial generada", "success");
+          }
+        } catch (folderError) {
+          console.warn("No se pudo crear la carpeta de Storage para repuestos", folderError);
+          const bucketName = getConfiguredBucketName("repuestos");
+          Swal.fire(
+            "Creado con aviso",
+            isBucketMissingError(folderError)
+              ? `La categoría se creó, pero no se encontró el bucket "${bucketName}". Verifica VITE_SUPABASE_INVENTARIO_BUCKET.`
+              : isStoragePermissionError(folderError)
+                ? "La categoría se creó, pero tu política de Storage (RLS) no permite crear carpetas desde el cliente."
+              : "La categoría se creó, pero no se pudo crear su carpeta en Storage.",
+            "warning"
+          );
+        }
       }
       resetCategoriaForm();
     } catch (error) {
       console.error(error);
-      Swal.fire("Error", "No se pudo guardar la categoría", "error");
+      Swal.fire(
+        "Error",
+        isDuplicateNameError(error)
+          ? "Ya existe una categoría con ese nombre. Usa otro nombre para continuar."
+          : "No se pudo guardar la categoría",
+        "error"
+      );
     } finally {
       setSaving(false);
     }
@@ -908,12 +1199,41 @@ const Inventario = () => {
       } else {
         const created = await addCategoriaMoto(payload);
         setCategoriasMotos((prev) => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
-        Swal.fire("Creado", "Categoría creada correctamente", "success");
+
+        try {
+          const folderResult = await ensureMotoCategoryFolder({
+            parentId: created.parent_id,
+            categoryId: created.id,
+          });
+          if (folderResult?.skipped) {
+            Swal.fire("Creado", "Categoría creada correctamente", "success");
+          } else {
+            Swal.fire("Creado", "Categoría creada correctamente y carpeta inicial generada", "success");
+          }
+        } catch (folderError) {
+          console.warn("No se pudo crear la carpeta de Storage para motos", folderError);
+          const bucketName = getConfiguredBucketName("motos");
+          Swal.fire(
+            "Creado con aviso",
+            isBucketMissingError(folderError)
+              ? `La categoría se creó, pero no se encontró el bucket "${bucketName}". Verifica VITE_SUPABASE_INVENTARIO_BUCKET.`
+              : isStoragePermissionError(folderError)
+                ? "La categoría se creó, pero tu política de Storage (RLS) no permite crear carpetas desde el cliente."
+              : "La categoría se creó, pero no se pudo crear su carpeta en Storage.",
+            "warning"
+          );
+        }
       }
       resetCategoriaMotoForm();
     } catch (error) {
       console.error(error);
-      Swal.fire("Error", "No se pudo guardar la categoría", "error");
+      Swal.fire(
+        "Error",
+        isDuplicateNameError(error)
+          ? "Ya existe una categoría con ese nombre. Usa otro nombre para continuar."
+          : "No se pudo guardar la categoría",
+        "error"
+      );
     } finally {
       setSaving(false);
     }
@@ -921,6 +1241,31 @@ const Inventario = () => {
 
   const handleDeleteCategoriaMoto = async (id) => {
     const childCategorias = categoriasMotos.filter((categoria) => categoria.parent_id === id);
+    const currentCategoria = categoriasMotos.find((categoria) => categoria.id === id);
+    const categoriasObjetivo = [
+      ...(currentCategoria ? [currentCategoria] : []),
+      ...childCategorias,
+    ];
+    const prefixes = categoriasObjetivo.flatMap((categoria) =>
+      getMotoCategoryFolderPrefixes({ id: categoria.id, parentId: categoria.parent_id })
+    );
+
+    const linkedFiles = [];
+    for (const prefix of prefixes) {
+      const files = await listFolderFiles("motos", prefix);
+      linkedFiles.push(...files.filter(isRealFile));
+    }
+
+    if (linkedFiles.length > 0) {
+      const resumen = linkedFiles.slice(0, 8).map((file) => `• ${file}`).join("\n");
+      Swal.fire(
+        "No se puede eliminar",
+        `Hay ${linkedFiles.length} archivo(s) en la carpeta de esta categoría/subcategorías. Elimina primero esos archivos:\n\n${resumen}${linkedFiles.length > 8 ? "\n• ..." : ""}`,
+        "warning"
+      );
+      return;
+    }
+
     const result = await Swal.fire({
       title: "¿Eliminar categoría?",
       text: childCategorias.length
@@ -936,6 +1281,10 @@ const Inventario = () => {
     if (!result.isConfirmed) return;
 
     try {
+      for (const prefix of prefixes) {
+        await deleteFolder("motos", prefix);
+      }
+
       if (childCategorias.length > 0) {
         await Promise.all(childCategorias.map((child) => deleteCategoriaMoto(child.id)));
       }
@@ -951,10 +1300,79 @@ const Inventario = () => {
     }
   };
 
+
+
+  const collectRepuestoDescendantIds = (rootId) => {
+    const descendants = [];
+
+    const walk = (parentId) => {
+      const children = categoriasRepuestos.filter((categoria) => categoria.parent_id === parentId);
+      children.forEach((child) => {
+        walk(child.id);
+        descendants.push(child.id);
+      });
+    };
+
+    walk(rootId);
+    return descendants;
+  };
+
   const handleDeleteCategoria = async (id) => {
+    const descendantIds = collectRepuestoDescendantIds(id);
+    const categoryIdsToDelete = [id, ...descendantIds];
+
+    const categoriasRelacionadas = categoriasRepuestos.filter((categoria) =>
+      categoryIdsToDelete.includes(categoria.id)
+    );
+    const categoryNames = categoriasRelacionadas
+      .map((categoria) => (categoria.nombre || "").toLowerCase())
+      .filter(Boolean);
+
+    const linkedByForeignKey = repuestos.filter((repuesto) =>
+      repuesto.categoria_id && categoryIdsToDelete.includes(repuesto.categoria_id)
+    );
+
+    const linkedByLegacyText = repuestos.filter(
+      (repuesto) => !repuesto.categoria_id && categoryNames.includes((repuesto.categoria || "").toLowerCase())
+    );
+
+    const linkedRepuestos = [...new Map([...linkedByForeignKey, ...linkedByLegacyText].map((item) => [item.id, item])).values()];
+
+    if (linkedRepuestos.length > 0) {
+      Swal.fire(
+        "No se puede eliminar",
+        `Hay ${linkedRepuestos.length} repuesto(s) asociados a esta categoría o sus subcategorías. Reasígnalos antes de eliminar.`,
+        "warning"
+      );
+      return;
+    }
+
+    const categoriasObjetivo = categoriasRepuestos.filter((categoria) => categoryIdsToDelete.includes(categoria.id));
+    const prefixes = categoriasObjetivo.flatMap((categoria) =>
+      getRepuestoCategoryFolderPrefixes({ id: categoria.id, parentId: categoria.parent_id })
+    );
+
+    const linkedFiles = [];
+    for (const prefix of prefixes) {
+      const files = await listFolderFiles("repuestos", prefix);
+      linkedFiles.push(...files.filter(isRealFile));
+    }
+
+    if (linkedFiles.length > 0) {
+      const resumen = linkedFiles.slice(0, 8).map((file) => `• ${file}`).join("\n");
+      Swal.fire(
+        "No se puede eliminar",
+        `Hay ${linkedFiles.length} archivo(s) en la carpeta de esta categoría/subcategorías. Elimina primero esos archivos:\n\n${resumen}${linkedFiles.length > 8 ? "\n• ..." : ""}`,
+        "warning"
+      );
+      return;
+    }
+
     const result = await Swal.fire({
       title: "¿Eliminar categoría?",
-      text: "Esta acción no se puede deshacer",
+      text: descendantIds.length
+        ? `Esta categoría tiene ${descendantIds.length} subcategoría(s). Se eliminarán también.`
+        : "Esta acción no se puede deshacer",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Sí, eliminar",
@@ -965,12 +1383,21 @@ const Inventario = () => {
     if (!result.isConfirmed) return;
 
     try {
-      await deleteCategoriaRepuesto(id);
-      setCategoriasRepuestos((prev) => prev.filter((cat) => cat.id !== id));
-      if (repuestoForm.categoria_id === id) {
-        setRepuestoForm((prev) => ({ ...prev, categoria_id: categoriasRepuestos[0]?.id || "" }));
+      for (const prefix of prefixes) {
+        await deleteFolder("repuestos", prefix);
       }
-      if (categoriaEditingId === id) resetCategoriaForm();
+
+      if (descendantIds.length > 0) {
+        await Promise.all(descendantIds.map((categoriaId) => deleteCategoriaRepuesto(categoriaId)));
+      }
+      await deleteCategoriaRepuesto(id);
+      setCategoriasRepuestos((prev) => prev.filter((cat) => !categoryIdsToDelete.includes(cat.id)));
+      if (categoryIdsToDelete.includes(repuestoForm.categoria_id)) {
+        setRepuestoForm((prev) => ({ ...prev, categoria_id: "" }));
+        setRepuestoSubcategoriaId("");
+        setRepuestoTipoId("");
+      }
+      if (categoriaEditingId && categoryIdsToDelete.includes(categoriaEditingId)) resetCategoriaForm();
       Swal.fire("Eliminado", "Categoría eliminada", "success");
     } catch (error) {
       console.error(error);
@@ -1395,9 +1822,56 @@ const Inventario = () => {
                     name="nombre"
                     value={categoriaForm.nombre}
                     onChange={handleCategoriaChange}
-                    placeholder="Ej. Frenos"
+                    placeholder={isCreatingRepuestoType ? "Ej. Motor" : "Ej. Filtros"}
                     className="mt-2 w-full border rounded-xl px-3 py-2 bg-white"
                   />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    <span>Modo de creación</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingRepuestoType(false)}
+                      className={`px-3 py-1.5 rounded-full ${
+                        !isCreatingRepuestoType ? "bg-slate-900 text-white" : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      Subcategoría
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingRepuestoType(true)}
+                      className={`px-3 py-1.5 rounded-full ${
+                        isCreatingRepuestoType ? "bg-yellow-400 text-black" : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      Tipo principal
+                    </button>
+                  </div>
+                  <label className="text-sm font-semibold text-gray-700 block mt-3">
+                    {isCreatingRepuestoType ? "Tipo" : "Asignar tipo"}
+                  </label>
+                  <select
+                    name="parent_id"
+                    value={categoriaForm.parent_id}
+                    onChange={handleCategoriaChange}
+                    disabled={isCreatingRepuestoType}
+                    className="mt-2 w-full border rounded-xl px-3 py-2 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    <option value="">
+                      {isCreatingRepuestoType ? "Se creará como tipo principal" : "Selecciona un tipo"}
+                    </option>
+                    {repuestoTipos.map((tipo) => (
+                      <option key={tipo.id} value={tipo.id}>
+                        {tipo.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  {!isCreatingRepuestoType && repuestoTipos.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Crea un tipo principal primero para asignar subcategorías.
+                    </p>
+                  )}
                 </div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <input
@@ -1435,30 +1909,56 @@ const Inventario = () => {
                   {categoriasRepuestos.length === 0 ? (
                     <p className="text-sm text-gray-500">No hay categorías registradas.</p>
                   ) : (
-                    categoriasRepuestos.map((categoria) => (
-                      <div key={categoria.id} className="flex items-center justify-between gap-3 bg-gray-50 rounded-xl px-4 py-3">
-                        <div>
-                          <p className="text-sm font-bold text-slate-800">{categoria.nombre}</p>
-                          <p className="text-xs text-gray-400">ID: {categoria.id}</p>
+                    repuestoTipos.map((tipo) => (
+                      <div key={tipo.id} className="rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">{tipo.nombre}</p>
+                            <p className="text-xs text-gray-400">ID: {tipo.id}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold px-2 py-1 rounded-full ${tipo.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+                              {tipo.estado ? "Activa" : "Inactiva"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCategoriaCreateChild(tipo)}
+                              className="px-3 py-1.5 text-xs font-bold rounded-full bg-yellow-400 text-black"
+                            >
+                              + Subcategoría
+                            </button>
+                            <button type="button" onClick={() => handleCategoriaEdit(tipo)} className="p-2 rounded-lg border border-blue-200 text-blue-600">
+                              <Pencil size={14} />
+                            </button>
+                            <button type="button" onClick={() => handleDeleteCategoria(tipo.id)} className="p-2 rounded-lg border border-red-200 text-red-500">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs font-bold px-2 py-1 rounded-full ${categoria.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
-                            {categoria.estado ? "Activa" : "Inactiva"}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCategoriaEdit(categoria)}
-                            className="p-2 rounded-lg border border-blue-200 text-blue-600"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCategoria(categoria.id)}
-                            className="p-2 rounded-lg border border-red-200 text-red-500"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                        <div className="space-y-2 pl-2 border-l-2 border-yellow-200">
+                          {(repuestoSubcategoriasPorTipo[tipo.id] || []).length === 0 ? (
+                            <p className="text-xs text-gray-400">Sin subcategorías.</p>
+                          ) : (
+                            (repuestoSubcategoriasPorTipo[tipo.id] || []).map((categoria) => (
+                              <div key={categoria.id} className="flex items-center justify-between gap-3 bg-white rounded-lg px-3 py-2">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-700">{categoria.nombre}</p>
+                                  <p className="text-[11px] text-gray-400">ID: {categoria.id}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${categoria.estado ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+                                    {categoria.estado ? "Activa" : "Inactiva"}
+                                  </span>
+                                  <button type="button" onClick={() => handleCategoriaEdit(categoria)} className="p-1.5 rounded-lg border border-blue-200 text-blue-600">
+                                    <Pencil size={12} />
+                                  </button>
+                                  <button type="button" onClick={() => handleDeleteCategoria(categoria.id)} className="p-1.5 rounded-lg border border-red-200 text-red-500">
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
                     ))
@@ -1542,19 +2042,34 @@ const Inventario = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-semibold text-gray-700">Logo del modelo (URL)</label>
+                <label className="text-sm font-semibold text-gray-700">Logo del modelo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoFileChange}
+                  className="mt-2 w-full text-sm text-gray-600"
+                />
                 <input
                   name="logo_url"
                   value={form.logo_url}
                   onChange={handleChange}
-                  placeholder="https://..."
+                  placeholder="o pega una URL https://..."
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 />
                 {logoUrlError && <p className="text-xs text-red-500 mt-1">{logoUrlError}</p>}
-                {isValidUrl(form.logo_url) && (
+                {(logoFile || form.logo_url) && (
+                  <button
+                    type="button"
+                    onClick={handleClearLogoImage}
+                    className="text-xs font-semibold text-gray-500 hover:text-gray-700 mt-2"
+                  >
+                    Limpiar logo del modelo
+                  </button>
+                )}
+                {(logoPreview || isValidUrl(form.logo_url)) && (
                   <div className="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 flex items-center justify-center">
                     <img
-                      src={normalizeStorageUrl(form.logo_url)}
+                      src={logoPreview || normalizeStorageUrl(form.logo_url)}
                       alt="Preview logo del modelo"
                       className="h-14 object-contain"
                     />
@@ -1562,19 +2077,34 @@ const Inventario = () => {
                 )}
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-700">Logo de la empresa (URL)</label>
+                <label className="text-sm font-semibold text-gray-700">Logo de la empresa</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBrandLogoFileChange}
+                  className="mt-2 w-full text-sm text-gray-600"
+                />
                 <input
                   name="brand_logo_url"
                   value={form.brand_logo_url}
                   onChange={handleChange}
-                  placeholder="https://..."
+                  placeholder="o pega una URL https://..."
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 />
                 {brandLogoUrlError && <p className="text-xs text-red-500 mt-1">{brandLogoUrlError}</p>}
-                {isValidUrl(form.brand_logo_url) && (
+                {(brandLogoFile || form.brand_logo_url) && (
+                  <button
+                    type="button"
+                    onClick={handleClearBrandLogoImage}
+                    className="text-xs font-semibold text-gray-500 hover:text-gray-700 mt-2"
+                  >
+                    Limpiar logo de empresa
+                  </button>
+                )}
+                {(brandLogoPreview || isValidUrl(form.brand_logo_url)) && (
                   <div className="mt-3 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3 flex items-center justify-center">
                     <img
-                      src={normalizeStorageUrl(form.brand_logo_url)}
+                      src={brandLogoPreview || normalizeStorageUrl(form.brand_logo_url)}
                       alt="Preview logo de la empresa"
                       className="h-14 object-contain"
                     />
@@ -1726,14 +2256,25 @@ const Inventario = () => {
             </div>
 
             <div className="bg-[#f5f6f8] rounded-2xl p-4 border border-gray-100 space-y-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-700">Galería después de especificaciones</p>
-                <p className="text-xs text-gray-500">
-                  Agrega imágenes y su descripción para el slider que aparece después de las especificaciones técnicas.
-                </p>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">Galería después de especificaciones</p>
+                  <p className="text-xs text-gray-500">
+                    Activa para agregar imágenes y texto al slider después de las especificaciones técnicas.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleGaleriaToggle}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition ${
+                    form.galeria_activa ? "bg-yellow-400 text-black" : "bg-gray-200 text-gray-500"
+                  }`}
+                >
+                  {form.galeria_activa ? "Galería activa" : "Sin galería"}
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-4 items-start">
+              {form.galeria_activa && <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-4 items-start">
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm font-semibold text-gray-700">URL de la imagen</label>
@@ -1817,7 +2358,7 @@ const Inventario = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </div>}
             </div>
 
             <div>
@@ -1908,14 +2449,30 @@ const Inventario = () => {
                 <input name="nombre" value={repuestoForm.nombre} onChange={handleRepuestoChange} placeholder="Ej. Filtro de Aceite" className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50" />
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-700">Categoría</label>
+                <label className="text-sm font-semibold text-gray-700">Tipo</label>
                 <select
-                  name="categoria_id"
-                  value={repuestoForm.categoria_id}
-                  onChange={handleRepuestoChange}
+                  value={repuestoTipoId}
+                  onChange={(event) => handleRepuestoTipoChange(event.target.value)}
                   className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50"
                 >
-                  {categoriasRepuestos.map((category) => (
+                  <option value="">Selecciona un tipo</option>
+                  {repuestoTipos.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Subcategoría</label>
+                <select
+                  value={repuestoSubcategoriaId}
+                  onChange={(event) => handleRepuestoSubcategoriaChange(event.target.value)}
+                  disabled={!repuestoTipoId}
+                  className="mt-2 w-full border rounded-xl px-3 py-2 bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <option value="">Sin subcategoría (usar tipo)</option>
+                  {repuestoSubcategoriasVisibles.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.nombre}
                     </option>
