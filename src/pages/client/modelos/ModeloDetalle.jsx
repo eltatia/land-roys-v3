@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { BatteryFull, ChevronLeft, ChevronRight, Fuel, Gauge, Wrench, Zap } from "lucide-react";
 import Swal from "sweetalert2";
 import { getMotoById } from "../../../services/motos.service";
+import { resolveFichaTecnicaUrl } from "../../../util/fichaTecnica";
 import { createSolicitud } from "../../../services/Solicitudes.service";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -221,6 +222,7 @@ const ModeloDetalle = () => {
   const brandLogo = moto.brand_logo_url || "/vite.svg";
 
   const hasVideo = Boolean(moto.video_url);
+  const fichaTecnicaUrl = resolveFichaTecnicaUrl(moto);
   const heroAnimation = heroVisible
     ? "opacity-100 translate-x-0 blur-0"
     : "opacity-0 -translate-x-24 blur-md";
@@ -241,6 +243,14 @@ const ModeloDetalle = () => {
 
   return (
     <section className="bg-white text-slate-900">
+      <a
+        href="#agenda-asesoria"
+        className="fixed right-3 md:right-5 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-2 bg-yellow-400 text-black px-3 py-4 rounded-2xl shadow-xl border border-yellow-500 hover:bg-yellow-300 transition-all duration-300 hover:scale-105"
+      >
+        <span className="text-[10px] font-black tracking-[0.18em] [writing-mode:vertical-rl] rotate-180">
+          COTIZAR AHORA
+        </span>
+      </a>
       {hasVideo ? (
         <div className="relative h-screen w-full overflow-hidden">
           <video
@@ -257,23 +267,17 @@ const ModeloDetalle = () => {
           <div className="relative z-10 h-full w-full px-6 pb-12 text-white">
             <div
               ref={heroRef}
-              className={`absolute bottom-10 left-14 flex flex-col gap-4 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${heroAnimation}`}
+              className={`absolute bottom-28 left-8 md:left-14 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${heroAnimation}`}
             >
               {moto.logo_url ? (
                 <img
                   src={modelLogo}
                   alt={`${moto.nombre} logo`}
-                  className="h-32 md:h-40 w-auto max-w-[520px] object-contain"
+                  className="h-56 md:h-72 w-auto max-w-[820px] object-contain"
                 />
               ) : (
                 <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
               )}
-              <div>
-                <h1 className="text-4xl md:text-6xl font-black">{moto.nombre}</h1>
-                <p className="text-sm md:text-base mt-2 text-slate-200 max-w-2xl">
-                  {moto.descripcion || "Descubre cada detalle de esta moto diseñada para tu estilo de vida."}
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -305,6 +309,16 @@ const ModeloDetalle = () => {
               <div className="flex flex-col items-center lg:items-start gap-2">
                 <img src={brandLogo} alt="Logo empresa" className="h-16 w-auto object-contain" />
                 <p className="text-4xl font-black text-yellow-500">{currency.format(Number(moto.precio || 0))}</p>
+                {fichaTecnicaUrl && (
+                  <a
+                    href={fichaTecnicaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ficha-tecnica-btn text-sm"
+                  >
+                    Ver ficha técnica (PDF)
+                  </a>
+                )}
               </div>
             </div>
           </section>
@@ -343,6 +357,16 @@ const ModeloDetalle = () => {
               <div className="flex flex-col items-center lg:items-start gap-2">
                 <img src={brandLogo} alt="Logo empresa" className="h-14 w-auto object-contain" />
                 <p className="text-3xl font-black text-yellow-500">{currency.format(Number(moto.precio || 0))}</p>
+                {fichaTecnicaUrl && (
+                  <a
+                    href={fichaTecnicaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ficha-tecnica-btn text-sm"
+                  >
+                    Ver ficha técnica (PDF)
+                  </a>
+                )}
               </div>
             </div>
           </section>
@@ -457,7 +481,7 @@ const ModeloDetalle = () => {
           </section>
         )}
 
-        <section className="bg-[#f7f8fa] rounded-3xl p-8">
+        <section id="agenda-asesoria" className="bg-[#f7f8fa] rounded-3xl p-8 scroll-mt-24">
           <h2 className="text-2xl md:text-3xl font-black text-slate-800 text-center mb-6">
             Agenda tu asesoría
           </h2>

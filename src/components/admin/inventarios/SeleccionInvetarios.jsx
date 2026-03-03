@@ -8,17 +8,23 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getTotalUnidadesMotos } from "../../../services/motos.service";
+import { getTotalUnidadesRepuestos } from "../../../services/Repuestos.service";
 
 const SeleccionInventarios = () => {
     const [totalMotos, setTotalMotos] = useState(0);
+    const [totalRepuestos, setTotalRepuestos] = useState(0);
 
     useEffect(() => {
         const cargarTotal = async () => {
             try {
-                const total = await getTotalUnidadesMotos();
-                setTotalMotos(total);
+                const [totalMotosValue, totalRepuestosValue] = await Promise.all([
+                    getTotalUnidadesMotos(),
+                    getTotalUnidadesRepuestos(),
+                ]);
+                setTotalMotos(totalMotosValue);
+                setTotalRepuestos(totalRepuestosValue);
             } catch (e) {
-                console.error("Error al cargar total de motos", e);
+                console.error("Error al cargar totales de inventario", e);
             }
         };
         cargarTotal();
@@ -41,7 +47,7 @@ const SeleccionInventarios = () => {
                 "Control de stock de piezas originales, componentes mecánicos y accesorios de mantenimiento.",
             icon: <Wrench size={64} />,
             actionIcon: <RefreshCcw size={14} />,
-            link: "/admin/inventraios/repuestos",
+            link: "/admin/inventario",
         },
     ];
 
@@ -82,7 +88,7 @@ const SeleccionInventarios = () => {
                         </span>
                         <div className="flex items-center justify-between mt-2">
                             <span className="text-3xl font-black text-slate-900">
-                                2850
+                                {totalRepuestos}
                             </span>
                             <div className="p-3 rounded-2xl bg-slate-50 text-slate-500">
                                 <Package size={22} />

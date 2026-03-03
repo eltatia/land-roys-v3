@@ -58,6 +58,7 @@ const initialForm = {
   imagen_url: "",
   logo_url: "",
   brand_logo_url: "",
+  ficha_tecnica_url: "",
   video_url: "",
   video_activo: false,
   video_file: null,
@@ -189,6 +190,53 @@ const isMotoStockConstraintError = (error) => {
   return error?.code === "23514" && message.includes("motos_stock_check");
 };
 
+const getMotoSaveErrorMessage = (error) => {
+  if (isMotoStockConstraintError(error)) {
+    return "No se pudo guardar el modelo: el stock debe ser mayor a 0 según la configuración de la base de datos.";
+  }
+
+  const details = [error?.message, error?.details, error?.hint]
+    .filter(Boolean)
+    .map((item) => String(item).trim())
+    .join(" | ");
+
+  if (!details) return "No se pudo guardar el modelo. Revisa los campos obligatorios e intenta nuevamente.";
+
+  const normalized = details.toLowerCase();
+
+  if (error?.code === "42703" && normalized.includes("updated_at")) {
+    return "No se pudo guardar porque la base de datos espera el campo updated_at. Aplica la migración de compatibilidad (updated_at) y vuelve a intentar.";
+  }
+
+  if (normalized.includes("400")) {
+    return `No se pudo guardar el modelo por un dato inválido. Detalle: ${details}`;
+  }
+
+  return `No se pudo guardar el modelo. Detalle: ${details}`;
+};
+
+const getMotoDeleteErrorMessage = (error) => {
+  const details = [error?.message, error?.details, error?.hint]
+    .filter(Boolean)
+    .map((item) => String(item).trim())
+    .join(" | ");
+
+  if (!details) {
+    return "No se pudo eliminar el modelo. Verifica permisos o relaciones activas.";
+  }
+
+  const lower = details.toLowerCase();
+  if (error?.code === "23503" || lower.includes("foreign key") || lower.includes("violates")) {
+    return "No se pudo eliminar porque el modelo está relacionado con otros registros (por ejemplo ofertas o media). Se intentó liberar dependencias, pero aún hay una relación pendiente.";
+  }
+
+  if (error?.status === 409 || lower.includes("409")) {
+    return `Conflicto al eliminar (409). Detalle: ${details}`;
+  }
+
+  return `No se pudo eliminar el modelo. Detalle: ${details}`;
+};
+
 const emptyGaleriaItem = { imagen_url: "", titulo: "", descripcion: "" };
 
 const Inventario = () => {
@@ -211,6 +259,7 @@ const Inventario = () => {
   const [imageUrlError, setImageUrlError] = useState("");
   const [logoUrlError, setLogoUrlError] = useState("");
   const [brandLogoUrlError, setBrandLogoUrlError] = useState("");
+  const [fichaTecnicaUrlError, setFichaTecnicaUrlError] = useState("");
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [brandLogoFile, setBrandLogoFile] = useState(null);
@@ -229,6 +278,10 @@ const Inventario = () => {
   const [repuestoTipoId, setRepuestoTipoId] = useState("");
   const [repuestoSubcategoriaId, setRepuestoSubcategoriaId] = useState("");
   const [categoriasMotos, setCategoriasMotos] = useState([]);
+  const [categoriasMotosLoaded, setCategoriasMotosLoaded] = useState(false);
+  const [categoriasRepuestosLoaded, setCategoriasRepuestosLoaded] = useState(false);
+  const [motosLoaded, setMotosLoaded] = useState(false);
+  const [repuestosLoaded, setRepuestosLoaded] = useState(false);
   const [categoriaMotoForm, setCategoriaMotoForm] = useState(initialCategoriaMotoForm);
   const [categoriaMotoEditingId, setCategoriaMotoEditingId] = useState(null);
   const [isCreatingMotoType, setIsCreatingMotoType] = useState(false);
@@ -239,6 +292,7 @@ const Inventario = () => {
     try {
       const data = await getMotos();
       setMotos(data);
+      setMotosLoaded(true);
     } catch (error) {
       console.error(error);
       Swal.fire("Error", "No se pudo cargar el inventario", "error");
@@ -252,6 +306,7 @@ const Inventario = () => {
     try {
       const data = await getRepuestos();
       setRepuestos(data);
+      setRepuestosLoaded(true);
     } catch (error) {
       console.error(error);
       Swal.fire("Error", "No se pudo cargar los repuestos", "error");
@@ -264,6 +319,7 @@ const Inventario = () => {
     try {
       const data = await getCategoriasRepuestos();
       setCategoriasRepuestos(data);
+      setCategoriasRepuestosLoaded(true);
     } catch (error) {
       console.error(error);
       Swal.fire("Error", "No se pudo cargar las categorías de repuestos", "error");
@@ -274,6 +330,7 @@ const Inventario = () => {
     try {
       const data = await getCategoriasMotos();
       setCategoriasMotos(data);
+      setCategoriasMotosLoaded(true);
     } catch (error) {
       console.error(error);
       Swal.fire("Error", "No se pudo cargar las categorías de motos", "error");
@@ -282,10 +339,20 @@ const Inventario = () => {
 
   useEffect(() => {
     fetchMotos();
-    fetchRepuestos();
-    fetchCategoriasRepuestos();
     fetchCategoriasMotos();
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== "repuestos") return;
+
+    if (!repuestosLoaded) {
+      fetchRepuestos();
+    }
+
+    if (!categoriasRepuestosLoaded) {
+      fetchCategoriasRepuestos();
+    }
+  }, [activeTab, repuestosLoaded, categoriasRepuestosLoaded]);
 
   const motoTipos = useMemo(
     () => categoriasMotos.filter((categoria) => !categoria.parent_id),
@@ -442,6 +509,21 @@ const Inventario = () => {
 
       setBrandLogoUrlError("");
     }
+
+    if (name === "ficha_tecnica_url") {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        setFichaTecnicaUrlError("");
+        return;
+      }
+
+      if (!isValidUrl(trimmed)) {
+        setFichaTecnicaUrlError("La URL debe empezar con http:// o https://");
+        return;
+      }
+
+      setFichaTecnicaUrlError("");
+    }
   };
 
   const handleRepuestoChange = (e) => {
@@ -531,6 +613,7 @@ const Inventario = () => {
     setLogoPreview("");
     setBrandLogoFile(null);
     setBrandLogoPreview("");
+    setFichaTecnicaUrlError("");
     setGaleriaItem(emptyGaleriaItem);
   };
 
@@ -567,6 +650,7 @@ const Inventario = () => {
     setLogoPreview("");
     setBrandLogoFile(null);
     setBrandLogoPreview("");
+    setFichaTecnicaUrlError("");
     setGaleriaItem(emptyGaleriaItem);
   };
 
@@ -631,6 +715,7 @@ const Inventario = () => {
       imagen_url: moto.imagen_url || "",
       logo_url: moto.logo_url || "",
       brand_logo_url: moto.brand_logo_url || "",
+      ficha_tecnica_url: moto.ficha_tecnica_url || "",
       video_url: moto.video_url || "",
       video_activo: Boolean(moto.video_url),
       galeria_activa: normalizeGaleria(moto.galeria_destacada).length > 0,
@@ -645,6 +730,7 @@ const Inventario = () => {
     setLogoPreview("");
     setBrandLogoFile(null);
     setBrandLogoPreview("");
+    setFichaTecnicaUrlError("");
     setGaleriaItem(emptyGaleriaItem);
     setModalOpen(true);
   };
@@ -830,8 +916,13 @@ const Inventario = () => {
       return;
     }
 
-    if (logoUrlError || brandLogoUrlError) {
-      Swal.fire("Validación", "Revisa las URLs de logos antes de guardar", "warning");
+    if (!imageFile && !form.imagen_url.trim()) {
+      Swal.fire("Imagen faltante", "Falta la imagen principal de la moto. Sube una imagen o pega una URL válida antes de guardar.", "warning");
+      return;
+    }
+
+    if (logoUrlError || brandLogoUrlError || fichaTecnicaUrlError) {
+      Swal.fire("Validación", "Revisa las URLs de logos y de ficha técnica antes de guardar", "warning");
       return;
     }
 
@@ -868,6 +959,7 @@ const Inventario = () => {
       video_url: form.video_activo ? form.video_url.trim() || null : null,
       logo_url: normalizeStorageUrl(form.logo_url) || null,
       brand_logo_url: normalizeStorageUrl(form.brand_logo_url) || null,
+      ficha_tecnica_url: normalizeStorageUrl(form.ficha_tecnica_url) || null,
       galeria_destacada: form.galeria_activa
         ? form.galeria_destacada
         .filter((item) => item.imagen_url && isValidUrl(item.imagen_url))
@@ -964,9 +1056,7 @@ const Inventario = () => {
       console.error(error);
       Swal.fire(
         "Error",
-        isMotoStockConstraintError(error)
-          ? "No se pudo guardar el modelo: el stock debe ser mayor a 0 según la configuración de la base de datos."
-          : "No se pudo guardar el modelo",
+        getMotoSaveErrorMessage(error),
         "error"
       );
     } finally {
@@ -1078,7 +1168,7 @@ const Inventario = () => {
       if (editingId === id) resetForm();
     } catch (error) {
       console.error(error);
-      Swal.fire("Error", "No se pudo eliminar el modelo", "error");
+      Swal.fire("Error", getMotoDeleteErrorMessage(error), "error");
     }
   };
 
@@ -2038,6 +2128,22 @@ const Inventario = () => {
                   Limpiar imagen
                 </button>
               )}
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Ficha técnica (PDF)</label>
+              <div className="mt-2 flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+                <Link2 size={16} className="text-gray-400" />
+                <input
+                  name="ficha_tecnica_url"
+                  value={form.ficha_tecnica_url}
+                  onChange={handleChange}
+                  placeholder="https://.../ficha-tecnica"
+                  className="w-full bg-transparent outline-none"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Opcional: URL pública de la ficha técnica (idealmente PDF).</p>
+              {fichaTecnicaUrlError && <p className="text-xs text-red-500 mt-1">{fichaTecnicaUrlError}</p>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

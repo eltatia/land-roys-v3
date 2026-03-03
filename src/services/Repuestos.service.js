@@ -88,3 +88,14 @@ export const deleteRepuesto = async (id) => {
   const { error } = await supabase.from("repuestos").delete().eq("id", id);
   if (error) throw error;
 };
+
+
+export const getTotalUnidadesRepuestos = async () => {
+  const { data, error } = await supabase
+    .from("repuestos")
+    .select("stock");
+
+  if (error) throw error;
+
+  return (data || []).reduce((acc, item) => acc + Number(item.stock || 0), 0);
+};

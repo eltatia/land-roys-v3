@@ -1,33 +1,28 @@
-// services/uploadService.js
 import { supabase } from "../api/Supabase.provider";
+
+const getRankingBucket = () => import.meta.env.VITE_SUPABASE_RANKING_BUCKET || "ranking_3";
 
 export const subirImagen = async (file) => {
   if (!file) return null;
 
   try {
+    const bucket = getRankingBucket();
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `ranking_3/${fileName}`;
+    const filePath = `ranking/${fileName}`;
 
-    // Subir archivo
-    const { data, error } = await supabase.storage
-      .from("ranking_3")
-      .upload(filePath, file);
+    const { error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, { cacheControl: "3600", upsert: false });
 
     if (error) {
       console.error("Error al subir la imagen:", error.message);
       return null;
     }
 
-    // Obtener URL pública
-    const { data: publicData, error: urlError } = supabase.storage
-      .from("ranking_3")
+    const { data: publicData } = supabase.storage
+      .from(bucket)
       .getPublicUrl(filePath);
-
-    if (urlError) {
-      console.error("Error al obtener la URL pública:", urlError.message);
-      return null;
-    }
 
     return publicData.publicUrl;
   } catch (err) {
@@ -35,3 +30,5 @@ export const subirImagen = async (file) => {
     return null;
   }
 };
+
+export const getRankingBucketName = () => getRankingBucket();

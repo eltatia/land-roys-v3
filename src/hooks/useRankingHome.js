@@ -1,12 +1,12 @@
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { getRankingHomePublic, saveRankingHome } from "../services/rankingHome.service";
-import { subirImagen } from "../services/upload.service"; // asegúrate de la ruta correcta
+import { getRankingBucketName, subirImagen } from "../services/upload.service";
 import { supabase } from "../api/Supabase.provider"; // cliente Supabase
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 
 export const useRankingHome = () => {
-  const { user, role } = useAuth(); // role debe ser "admin" o "asistente"
+  const { role } = useAuth(); // role debe ser "admin" o "asistente"
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,8 +65,11 @@ export const useRankingHome = () => {
       if (productoActual.image && productoActual.image.startsWith("https://")) {
         try {
           const url = new URL(productoActual.image);
-          const bucketPath = url.pathname.split("/").slice(2).join("/"); // extrae "carpeta/imagen.jpg"
-          const { error } = await supabase.storage.from("ranking_3").remove([bucketPath]);
+          const marker = `/object/public/${getRankingBucketName()}/`;
+          const bucketPath = url.pathname.includes(marker)
+            ? url.pathname.split(marker)[1]
+            : url.pathname.split("/").slice(-2).join("/");
+          const { error } = await supabase.storage.from(getRankingBucketName()).remove([bucketPath]);
           if (error) console.warn("No se pudo eliminar imagen anterior:", error.message);
         } catch (err) {
           console.warn("Error parseando URL de la imagen anterior:", err);

@@ -13,12 +13,11 @@ const Seccion_Slider = () => {
   useEffect(() => {
     const fetchSlides = async () => {
       try {
-        const data = await getSlides(); // trae todos los slides activos
+        const data = await getSlides();
 
-        // convertir el path de Storage en URL pública
-        const slidesWithUrl = data.map(slide => ({
+        const slidesWithUrl = data.map((slide) => ({
           ...slide,
-          url_image: getPublicImageUrl(slide.url_image)
+          url_image: getPublicImageUrl(slide.url_image),
         }));
 
         setSlides(slidesWithUrl);
@@ -41,7 +40,7 @@ const Seccion_Slider = () => {
       pagination={{ clickable: true }}
       className="h-[600px] md:h-[85vh] w-full"
     >
-      {slides.map(slide => (
+      {slides.map((slide) => (
         <SwiperSlide key={slide.id}>
           <div
             className="w-full h-full bg-cover bg-center"

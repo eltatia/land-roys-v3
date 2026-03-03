@@ -17,7 +17,9 @@ import autoTable from 'jspdf-autotable';
 
 const Reportes = () => {
     const [activeTab, setActiveTab] = useState('ventas'); // ventas, inventario, leads
-    const [loading, setLoading] = useState(true);
+    const [loadingStats, setLoadingStats] = useState(true);
+    const [loadingTab, setLoadingTab] = useState(false);
+    const [loadedTabs, setLoadedTabs] = useState({ ventas: false, inventario: false, leads: false });
     const [data, setData] = useState({
         ventas: [],
         inventario: [],
@@ -66,31 +68,55 @@ const Reportes = () => {
         return { startDate: start.toISOString(), endDate: end.toISOString() };
     };
 
+    const rangeKey = `${dateFilter}:${customRange.start}:${customRange.end}`;
+
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
+        const fetchStats = async () => {
+            setLoadingStats(true);
             try {
                 const range = getDateRange();
-                const [general, ventasData, inventarioData, leadsData] = await Promise.all([
-                    getGeneralStats(range),
-                    getAllSales(range),
-                    getInventoryReport(), // No date filter for inventory
-                    getAllLeads(range)
-                ]);
+                const general = await getGeneralStats(range);
                 setStats(general);
-                setData({
-                    ventas: ventasData,
-                    inventario: inventarioData,
-                    leads: leadsData
-                });
+                setLoadedTabs({ ventas: false, inventario: false, leads: false });
+                setData({ ventas: [], inventario: [], leads: [] });
             } catch (error) {
                 console.error("Error loading reports:", error);
             } finally {
-                setLoading(false);
+                setLoadingStats(false);
             }
         };
-        fetchData();
-    }, [dateFilter, customRange.start, customRange.end]);
+
+        fetchStats();
+    }, [rangeKey]);
+
+    useEffect(() => {
+        const fetchTabData = async () => {
+            if (loadedTabs[activeTab]) return;
+
+            setLoadingTab(true);
+            try {
+                const range = getDateRange();
+                let response = [];
+
+                if (activeTab === 'ventas') {
+                    response = await getAllSales(range);
+                } else if (activeTab === 'inventario') {
+                    response = await getInventoryReport();
+                } else if (activeTab === 'leads') {
+                    response = await getAllLeads(range);
+                }
+
+                setData((prev) => ({ ...prev, [activeTab]: response }));
+                setLoadedTabs((prev) => ({ ...prev, [activeTab]: true }));
+            } catch (error) {
+                console.error("Error loading tab report:", error);
+            } finally {
+                setLoadingTab(false);
+            }
+        };
+
+        fetchTabData();
+    }, [activeTab, loadedTabs, rangeKey]);
 
     const currency = new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -208,7 +234,7 @@ const Reportes = () => {
         doc.save(`Reporte_${type}_${date}.pdf`);
     };
 
-    if (loading) return (
+    if (loadingStats) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
         </div>
@@ -344,6 +370,10 @@ const Reportes = () => {
                     </div>
                 </div>
 
+                {loadingTab && (
+                    <div className="px-6 py-3 text-sm text-gray-500 border-b border-gray-100">Cargando datos de {activeTab}...</div>
+                )}
+
                 {/* Data Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -426,13 +456,13 @@ const Reportes = () => {
                     </table>
 
                     {/* Empty States */}
-                    {activeTab === 'ventas' && data.ventas.length === 0 && (
+                    {activeTab === 'ventas' && !loadingTab && data.ventas.length === 0 && (
                         <div className="p-12 text-center text-gray-400">No hay ventas registradas.</div>
                     )}
-                    {activeTab === 'inventario' && data.inventario.length === 0 && (
+                    {activeTab === 'inventario' && !loadingTab && data.inventario.length === 0 && (
                         <div className="p-12 text-center text-gray-400">Inventario vacío.</div>
                     )}
-                    {activeTab === 'leads' && data.leads.length === 0 && (
+                    {activeTab === 'leads' && !loadingTab && data.leads.length === 0 && (
                         <div className="p-12 text-center text-gray-400">No hay leads registrados.</div>
                     )}
                 </div>

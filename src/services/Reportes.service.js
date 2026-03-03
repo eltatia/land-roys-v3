@@ -64,8 +64,6 @@ export const getSalesTimeline = async (dateRange = {}) => {
         const grouped = data.reduce((acc, curr) => {
             const date = new Date(curr.fecha_venta);
             // If range is < 32 days, group by Day. Else Month.
-            const isShortRange = startDate && endDate && (new Date(endDate) - new Date(startDate)) < 2800000000; // approx 32 days
-
             const key = date.toLocaleString('default', { month: 'short' });
             // For now, let's keep it simple and just return the filtered data's aggregation
             if (!acc[key]) acc[key] = 0;
@@ -116,11 +114,13 @@ export const getAllSales = async (dateRange = {}) => {
             .from("ventas")
             .select(`
                 *,
-                solicitud:solicitud_id (
+                solicitud:solicitud_id!left (
+                    id,
                     nombre,
                     email,
                     telefono,
-                    ciudad
+                    ciudad,
+                    estado
                 )
             `)
             .order("fecha_venta", { ascending: false });
@@ -130,7 +130,15 @@ export const getAllSales = async (dateRange = {}) => {
 
         const { data, error } = await query;
         if (error) throw error;
-        return data;
+        return (data || []).map((item) => ({
+            ...item,
+            solicitud: item.solicitud || {
+                nombre: item.cliente_nombre || "",
+                email: item.cliente_email || "",
+                telefono: "",
+                ciudad: "",
+            },
+        }));
     } catch (error) {
         console.error("Error fetching all sales:", error);
         return [];

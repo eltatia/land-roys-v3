@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 /* Context */
@@ -8,83 +9,84 @@ import ProtectedRoute from "./util/ProtectedRoute";
 import Layout from "./layout/Layout";
 import AdminLayout from "./layout/AdminLayout";
 
-/* Páginas cliente */
-import Home from "./pages/client/home/Home";
-import Nosotros from "./pages/client/nosotros/Nosotros"; 
-import Consulta from "./pages/client/consulta/Consulta";
+/* Lazy Pages / Components */
+const Home = lazy(() => import("./pages/client/home/Home"));
+const Nosotros = lazy(() => import("./pages/client/nosotros/Nosotros"));
+const Consulta = lazy(() => import("./pages/client/consulta/Consulta"));
+const Modelos = lazy(() => import("./pages/client/modelos/Modelos"));
+const ModeloDetalle = lazy(() => import("./pages/client/modelos/ModeloDetalle"));
+const Repuestos = lazy(() => import("./pages/client/repuestos/Repuestos"));
 
-/* Páginas admin */
-import Login from "./pages/admin/auth/Login";
-import Dashboard from "./pages/admin/dashboard/Dashboard";
-import Slider from "./pages/admin/slider/Slider";
-import Home_secciones from "./pages/admin/home_secciones/Home_secciones";
-import Ranking from "./components/admin/home_secciones/Ranking";
-import Ofertas from "./components/admin/home_secciones/Ofertas";
-import Experiencia from "./components/admin/home_secciones/Experiencia";
+const Login = lazy(() => import("./pages/admin/auth/Login"));
+const Dashboard = lazy(() => import("./pages/admin/dashboard/Dashboard"));
+const Slider = lazy(() => import("./pages/admin/slider/Slider"));
+const Home_secciones = lazy(() => import("./pages/admin/home_secciones/Home_secciones"));
+const Ranking = lazy(() => import("./components/admin/home_secciones/Ranking"));
+const Ofertas = lazy(() => import("./components/admin/home_secciones/Ofertas"));
+const Experiencia = lazy(() => import("./components/admin/home_secciones/Experiencia"));
+const Inventarios = lazy(() => import("./pages/admin/inventarios/Inventarios"));
+const GestionInventarioMoto = lazy(() => import("./components/admin/inventarios/motos/GestionInventarioMoto"));
+const Inventario = lazy(() => import("./pages/admin/inventario/Inventario"));
+const Ventas = lazy(() => import("./pages/admin/ventas/Ventas"));
+const Reportes = lazy(() => import("./pages/admin/reportes/Reportes"));
+const Clientes = lazy(() => import("./pages/admin/clientes/Clientes"));
 
-import Inventarios from "./pages/admin/inventarios/Inventarios";
-import GestionInventarioMoto from "./components/admin/inventarios/motos/GestionInventarioMoto";
-import Inventario from "./pages/admin/inventario/Inventario";
-import Ventas from "./pages/admin/ventas/Ventas";
-import Reportes from "./pages/admin/reportes/Reportes";
-import Clientes from "./pages/admin/clientes/Clientes";
-import Modelos from "./pages/client/modelos/Modelos";
-import ModeloDetalle from "./pages/client/modelos/ModeloDetalle";
-import Repuestos from "./pages/client/repuestos/Repuestos";
-
-
-
-
+const AppLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-white text-gray-600">
+    Cargando...
+  </div>
+);
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          {/* Rutas cliente */}
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/modelos" element={<Modelos />} />
-            <Route path="/modelos/:id" element={<ModeloDetalle />} />
-            <Route path="/repuestos" element={<Repuestos />} />
-            <Route path="/nosotros" element={<Nosotros />} />
-            <Route path="/consulta" element={<Consulta />} />
-          </Route>
-
-          {/* Login admin */}
-          <Route path="/login/admin" element={<Login />} />
-
-          {/* Rutas admin protegidas */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="slider_gestion" element={<Slider />} />
-            <Route path="inventario" element={<Inventario />} />
-            <Route path="ventas" element={<Ventas />} />
-            <Route path="clientes" element={<Clientes />} />
-            <Route path="reportes" element={<Reportes />} />
-
-            {/* Home secciones como padre */}
-            <Route path="home_secciones" element={<Home_secciones />}>
-              <Route path="ranking" element={<Ranking />} />
-              <Route path="ofertas" element={<Ofertas />} />
-              <Route path="experiencia" element={<Experiencia />} />
+        <Suspense fallback={<AppLoader />}>
+          <Routes>
+            {/* Rutas cliente */}
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/modelos" element={<Modelos />} />
+              <Route path="/modelos/:id" element={<ModeloDetalle />} />
+              <Route path="/repuestos" element={<Repuestos />} />
+              <Route path="/nosotros" element={<Nosotros />} />
+              <Route path="/consulta" element={<Consulta />} />
             </Route>
 
-            {/* Inventarios como padre */}
-            <Route path="inventarios" element={<Inventarios />} >
-              <Route path="gestion_motos" element={<GestionInventarioMoto />} />
-            </Route>
+            {/* Login admin */}
+            <Route path="/login/admin" element={<Login />} />
 
-          </Route>
-        </Routes>
+            {/* Rutas admin protegidas */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="slider_gestion" element={<Slider />} />
+              <Route path="inventario" element={<Inventario />} />
+              <Route path="ventas" element={<Ventas />} />
+              <Route path="clientes" element={<Clientes />} />
+              <Route path="reportes" element={<Reportes />} />
+
+              {/* Home secciones como padre */}
+              <Route path="home_secciones" element={<Home_secciones />}>
+                <Route path="ranking" element={<Ranking />} />
+                <Route path="ofertas" element={<Ofertas />} />
+                <Route path="experiencia" element={<Experiencia />} />
+              </Route>
+
+              {/* Inventarios como padre */}
+              <Route path="inventarios" element={<Inventarios />}>
+                <Route path="gestion_motos" element={<GestionInventarioMoto />} />
+              </Route>
+            </Route>
+          </Routes>
+        </Suspense>
       </Router>
     </AuthProvider>
   );

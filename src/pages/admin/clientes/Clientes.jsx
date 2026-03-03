@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getSolicitudes, updateSolicitud } from "../../../services/Solicitudes.service";
-import { createVenta } from "../../../services/Ventas.service";
-import { getMotos, updateMotoStock } from "../../../services/motos.service";
+import { closeSaleTransaction } from "../../../services/Ventas.service";
+import { getMotos } from "../../../services/motos.service";
 import Swal from "sweetalert2";
 import {
     Mail,
@@ -123,26 +123,29 @@ const Clientes = () => {
 
             const fullNotes = `${saleForm.notas}${discountNote}`;
 
-            // 1. Create Sale
-            await createVenta({
+            const ventaPayload = {
                 solicitud_id: selectedLead.id,
                 cliente_nombre: selectedLead.nombre,
                 cliente_email: selectedLead.email,
-                producto: selectedMoto.nombre, // Use backend name
-                monto: finalPrice, // SAVE FINAL PRICE
+                producto: selectedMoto.nombre,
+                monto: finalPrice,
                 metodo_pago: saleForm.metodo_pago,
                 fecha_entrega: saleForm.fecha_entrega || null,
                 notas: fullNotes,
                 estado: "completado"
-            });
+            };
 
-            // 2. Decrement Stock
-            await updateMotoStock(selectedMoto.id, selectedMoto.stock - 1);
-
-            // 3. Update Lead Status
-            await updateSolicitud(selectedLead.id, {
+            const solicitudPayload = {
                 estado: 'vendido',
                 notas_admin: `Venta cerrada por $${finalPrice}. Producto: ${selectedMoto.nombre}. ${fullNotes}`
+            };
+
+            await closeSaleTransaction({
+                ventaPayload,
+                motoId: selectedMoto.id,
+                stockActual: selectedMoto.stock,
+                solicitudId: selectedLead.id,
+                solicitudPayload,
             });
 
             Swal.fire("¡Venta Registrada!", "Inventario actualizado y venta creada.", "success");
@@ -208,11 +211,6 @@ const Clientes = () => {
         const matchesFilter = filterStatus === 'all' || s.estado === filterStatus;
         return matchesSearch && matchesFilter;
     });
-
-    const getSelectedMotoStock = () => {
-        const m = motos.find(moto => moto.id === Number(saleForm.moto_id));
-        return m ? m.stock : null;
-    }
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">

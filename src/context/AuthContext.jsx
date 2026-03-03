@@ -1,17 +1,15 @@
-// src/context/AuthContext.jsx
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { supabase } from "../api/Supabase.provider";
 import Landing from "../components/ui/Landing";
 
-const AuthContext = createContext(null);
+import { AuthContext } from "./AuthContextBase";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Función para cargar rol
-  const loadRole = async (userId) => {
+  const loadRole = useCallback(async (userId) => {
     try {
       const { data, error } = await supabase
         .from("usuario_rol")
@@ -28,10 +26,9 @@ export const AuthProvider = ({ children }) => {
       console.error("Error cargando rol:", err);
       setRole(null);
     }
-  };
+  }, []);
 
-  // Inicializar sesión
-  const initAuth = async () => {
+  const initAuth = useCallback(async () => {
     setLoading(true);
     try {
       const {
@@ -55,9 +52,8 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadRole]);
 
-  // Login
   const login = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -70,7 +66,6 @@ export const AuthProvider = ({ children }) => {
     return loggedUser;
   };
 
-  // Logout
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -79,9 +74,8 @@ export const AuthProvider = ({ children }) => {
     setRole(null);
   };
 
-  // Escuchar cambios de sesión
   useEffect(() => {
-    initAuth(); // cargar sesión al montar
+    initAuth();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
@@ -94,7 +88,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => listener.subscription.unsubscribe();
-  }, []);
+  }, [initAuth, loadRole]);
 
   return (
     <AuthContext.Provider value={{ user, role, login, logout, loading }}>
@@ -102,5 +96,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);
