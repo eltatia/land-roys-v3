@@ -201,7 +201,7 @@ export const reorderSlides = async (slides) => {
 
 export const uploadFileAndGetUrl = async (file) => {
   const fileName = `${Date.now()}_${file.name}`;
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from("Slides_home_img")
     .upload(fileName, file);
 

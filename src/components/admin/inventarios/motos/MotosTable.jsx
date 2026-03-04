@@ -7,7 +7,9 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const MotosTable = ({ motos = [] }) => {
+const EMPTY_MOTOS = [];
+
+const MotosTable = ({ motos = EMPTY_MOTOS }) => {
   return (
     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
       {/* Filtros */}

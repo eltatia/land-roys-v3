@@ -18,6 +18,8 @@ const stateColors = {
   preventa: "bg-blue-100 text-blue-700",
 };
 
+const normalizeText = (value) => String(value || "").trim().toLowerCase();
+
 const Modelos = () => {
   const [motos, setMotos] = useState([]);
   const [categoriasMotos, setCategoriasMotos] = useState([]);
@@ -85,29 +87,63 @@ const Modelos = () => {
     return subcategoriasPorTipo[tipoActivo] || [];
   }, [tipoActivo, tipos.length, subcategoriasPorTipo]);
 
+  const categoriasById = useMemo(() => {
+    return categoriasMotos.reduce((acc, categoria) => {
+      acc[String(categoria.id)] = categoria;
+      return acc;
+    }, {});
+  }, [categoriasMotos]);
+
+
   const motosFiltradas = useMemo(() => {
     if (tipoActivo === "all" && subcategoriaActiva === "all") return motos;
 
+    const motoMatches = (moto, { ids = [], names = [] }) => {
+      const motoIds = new Set([
+        String(moto.categoria_id || ""),
+        String(moto.categoria_parent_id || ""),
+      ]);
+      const motoCategoria = normalizeText(moto.categoria);
+
+      const byId = ids.some((id) => motoIds.has(String(id)));
+      const byName = names.some((name) => motoCategoria === normalizeText(name));
+      return byId || byName;
+    };
+
     if (subcategoriaActiva !== "all") {
-      return motos.filter((m) => String(m.categoria_id || "") === String(subcategoriaActiva));
+      const subcategoria = categoriasById[String(subcategoriaActiva)];
+      return motos.filter((moto) =>
+        motoMatches(moto, {
+          ids: [subcategoriaActiva],
+          names: [subcategoria?.nombre],
+        })
+      );
     }
 
     if (tipoActivo !== "all") {
+      const tipo = categoriasById[String(tipoActivo)];
       const children = subcategoriasPorTipo[tipoActivo] || [];
+
       if (children.length > 0) {
-        const childIds = new Set(children.map((child) => String(child.id)));
-        return motos.filter((m) => childIds.has(String(m.categoria_id || "")));
+        return motos.filter((moto) =>
+          motoMatches(moto, {
+            ids: [tipoActivo, ...children.map((child) => child.id)],
+            names: [tipo?.nombre, ...children.map((child) => child.nombre)],
+          })
+        );
       }
 
-      return motos.filter((m) => String(m.categoria_id || "") === String(tipoActivo));
+      return motos.filter((moto) =>
+        motoMatches(moto, {
+          ids: [tipoActivo],
+          names: [tipo?.nombre],
+        })
+      );
     }
 
     return motos;
-  }, [motos, tipoActivo, subcategoriaActiva, subcategoriasPorTipo]);
+  }, [motos, tipoActivo, subcategoriaActiva, subcategoriasPorTipo, categoriasById]);
 
-  useEffect(() => {
-    setSubcategoriaActiva("all");
-  }, [tipoActivo]);
 
   return (
     <section className="bg-[#f7f8fa] pb-16">
@@ -147,7 +183,7 @@ const Modelos = () => {
                 return (
                   <button
                     key={tipo.id}
-                    onClick={() => setTipoActivo(tipo.id)}
+                    onClick={() => { setTipoActivo(tipo.id); setSubcategoriaActiva("all"); }}
                     className={`px-6 py-2.5 rounded-full text-sm font-extrabold tracking-wide transition ${
                       active
                         ? "bg-yellow-400 text-black shadow-[0_10px_20px_rgba(250,204,21,0.35)]"

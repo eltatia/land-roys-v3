@@ -51,6 +51,7 @@ const Ofertas = () => {
             </h2>
 
             <OfertaForm
+              key={ofertaEditar?.id || "nueva-oferta"}
               onSubmit={handleSubmit}
               ofertaExistente={ofertaEditar}
             />

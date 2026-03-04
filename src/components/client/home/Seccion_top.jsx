@@ -84,7 +84,7 @@ const Seccion_top = () => {
                   <div className="text-right">
                     <div className="flex text-yellow-400 mb-1">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} fill="currentColor" />
+                        <Star key={`${item.id || item.name}-star-${i}`} size={14} fill="currentColor" />
                       ))}
                     </div>
                     <span className="text-[9px] font-bold text-gray-400">{item.stats}</span>
@@ -120,10 +120,10 @@ const Seccion_top = () => {
                       RESERVAR
                     </a>
                   ) : (
-                    <a href="#" className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-black transition-colors group">
+                    <button type="button" className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-black transition-colors group">
                       EXPLORAR
                       <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                    </a>
+                    </button>
                   )}
                 </div>
               </div>

@@ -46,7 +46,7 @@ const Ranking = () => {
               <h3 className="font-black text-lg">{p.name}</h3>
               <div className="flex justify-center text-yellow-400 my-1">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={14} fill="currentColor" />
+                  <Star key={`${p.id || p.name}-star-${i}`} size={14} fill="currentColor" />
                 ))}
               </div>
               <p className="font-black text-yellow-500">{p.price}</p>

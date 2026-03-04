@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { getGeneralStats, getSalesTimeline, getLeadsDistribution } from "../../../services/Reportes.service";
 import { APP_CONFIG } from "../../../config";
 import Swal from "sweetalert2";
@@ -28,6 +28,22 @@ import {
   Legend
 } from 'recharts';
 
+const DashboardTooltip = ({ active, payload, label, currencyFormatter }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-black text-white p-3 rounded-xl shadow-xl border border-gray-800">
+        <p className="text-xs text-gray-400 mb-1">{label}</p>
+        <p className="text-lg font-bold">
+          {payload[0].name === 'total'
+            ? currencyFormatter.format(payload[0].value)
+            : payload[0].value}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 /**
  * Page: Dashboard
  * Description: Premium Analytics with Recharts and Config.
@@ -53,7 +69,7 @@ const Dashboard = () => {
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
 
   // Helper to get date dates
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const end = new Date();
     let start = new Date();
 
@@ -64,11 +80,12 @@ const Dashboard = () => {
     switch (dateFilter) {
       case 'today':
         break; // start is already today 00:00
-      case 'week':
+      case 'week': {
         const day = start.getDay();
         const diff = start.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
         start.setDate(diff); // Monday
         break;
+      }
       case 'month':
         start.setDate(1); // 1st of month
         break;
@@ -84,7 +101,7 @@ const Dashboard = () => {
         start.setDate(1); // Default to month
     }
     return { startDate: start.toISOString(), endDate: end.toISOString() };
-  };
+  }, [dateFilter, customRange.start, customRange.end]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -106,7 +123,7 @@ const Dashboard = () => {
       }
     };
     fetchAllData();
-  }, [dateFilter, customRange.start, customRange.end]);
+  }, [getDateRange]);
 
   const handleSaveConfig = () => {
     localStorage.setItem("whatsapp_number", whatsappNumber);
@@ -132,22 +149,6 @@ const Dashboard = () => {
     currency: "USD",
     maximumFractionDigits: 0
   });
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-black text-white p-3 rounded-xl shadow-xl border border-gray-800">
-          <p className="text-xs text-gray-400 mb-1">{label}</p>
-          <p className="text-lg font-bold">
-            {payload[0].name === 'total'
-              ? currency.format(payload[0].value)
-              : payload[0].value}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="p-8 space-y-10 bg-gray-50/50 min-h-full">
@@ -302,7 +303,7 @@ const Dashboard = () => {
                     tick={{ fill: '#9CA3AF', fontSize: 12 }}
                     tickFormatter={(value) => `$${value / 1000}k`}
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<DashboardTooltip currencyFormatter={currency} />} />
                   <Area
                     type="monotone"
                     dataKey="total"
@@ -345,8 +346,8 @@ const Dashboard = () => {
                       dataKey="value"
                       stroke="none"
                     >
-                      {leadsData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {leadsData.map((entry) => (
+                        <Cell key={`cell-${entry.name || entry.label || entry.color || "lead"}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -354,7 +355,7 @@ const Dashboard = () => {
                       verticalAlign="bottom"
                       height={36}
                       iconType="circle"
-                      formatter={(value, entry) => (
+                      formatter={(value) => (
                         <span className="text-sm font-medium text-gray-600 ml-2">{value}</span>
                       )}
                     />
@@ -392,12 +393,13 @@ const Dashboard = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+                <label htmlFor="dashboard-whatsapp" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
                   Número de WhatsApp (Header)
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-4 top-3.5 text-gray-400" size={20} />
                   <input
+                    id="dashboard-whatsapp"
                     type="text"
                     value={whatsappNumber}
                     onChange={(e) => setWhatsappNumber(e.target.value)}

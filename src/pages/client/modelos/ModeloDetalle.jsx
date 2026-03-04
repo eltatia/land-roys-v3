@@ -267,13 +267,13 @@ const ModeloDetalle = () => {
           <div className="relative z-10 h-full w-full px-6 pb-12 text-white">
             <div
               ref={heroRef}
-              className={`absolute bottom-28 left-8 md:left-14 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${heroAnimation}`}
+              className={`absolute bottom-20 left-4 md:left-8 transition-[opacity,transform,filter] duration-[1400ms] ease-out transform-gpu will-change-[opacity,transform,filter] ${heroAnimation}`}
             >
               {moto.logo_url ? (
                 <img
                   src={modelLogo}
                   alt={`${moto.nombre} logo`}
-                  className="h-56 md:h-72 w-auto max-w-[820px] object-contain"
+                  className="h-44 md:h-56 w-auto max-w-[760px] object-contain"
                 />
               ) : (
                 <p className="uppercase tracking-[0.3em] text-yellow-300 text-xs">Modelo</p>
@@ -349,7 +349,7 @@ const ModeloDetalle = () => {
               <img
                 src={modelLogo}
                 alt={`${moto.nombre} logo`}
-                className="h-24 md:h-28 w-auto max-w-[240px] object-contain mx-auto lg:mx-0"
+                className="h-28 md:h-32 w-auto max-w-[280px] object-contain mx-auto lg:mx-0"
               />
               <p className="text-lg text-slate-600">
                 {moto.descripcion || "Potencia, estilo y tecnología pensados para el conductor exigente."}

@@ -69,8 +69,8 @@ const Nosotros = () => {
                                 { icon: <Gem size={24} />, title: "Confianza", desc: "Transparencia total en cada proceso de venta." },
                                 { icon: <Award size={24} />, title: "Experiencia", desc: "Décadas de conocimiento acumulado para ti." },
                                 { icon: <Zap size={24} />, title: "Innovación", desc: "Evolucionamos hacia la movilidad del futuro." },
-                            ].map((val, idx) => (
-                                <article key={idx} className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            ].map((val) => (
+                                <article key={val.title} className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                                     <div className="text-yellow-500 mb-4 bg-yellow-50 w-fit p-3 rounded-lg">{val.icon}</div>
                                     <h3 className="font-bold text-lg mb-2">{val.title}</h3>
                                     <p className="text-gray-500 text-sm">{val.desc}</p>

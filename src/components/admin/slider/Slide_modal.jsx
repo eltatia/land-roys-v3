@@ -48,10 +48,18 @@ const Slide_modal = ({ onClose, onSave }) => {
         <div className="flex flex-col gap-4">
           {/* Drag & Drop Input */}
           <div
+            role="button"
+            tabIndex={0}
             className="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition"
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
-            onClick={() => inputRef.current.click()}
+            onClick={() => inputRef.current?.click()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                inputRef.current?.click();
+              }
+            }}
           >
             <input
               ref={inputRef}
@@ -78,17 +86,19 @@ const Slide_modal = ({ onClose, onSave }) => {
           </div>
 
           {/* Checkbox de estado más visual */}
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <div
+          <div className="flex items-center gap-3 select-none">
+            <button
+              type="button"
+              aria-label="Cambiar estado"
               className={`w-10 h-5 rounded-full p-1 flex items-center transition ${
                 estado ? "bg-green-500 justify-end" : "bg-gray-300 justify-start"
               }`}
               onClick={() => setEstado(!estado)}
             >
               <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
-            </div>
+            </button>
             <span className="text-gray-700 font-medium">{estado ? "Activo" : "Inactivo"}</span>
-          </label>
+          </div>
 
           {/* Botón guardar */}
           <button

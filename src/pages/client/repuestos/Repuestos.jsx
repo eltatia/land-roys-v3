@@ -569,7 +569,7 @@ const Repuestos = () => {
 
       {checkoutOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={resetCheckout} />
+          <button type="button" aria-label="Cerrar checkout" className="absolute inset-0 bg-black/50" onClick={resetCheckout} />
           <div className="relative bg-white w-full max-w-lg rounded-2xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-slate-800">Datos para tu pedido</h3>

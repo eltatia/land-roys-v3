@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { Menu, X, MessageSquareQuote } from "lucide-react";
 import HorarioDropdown from "./HorarioDropdown";
 import logoHeaderLandRoys from "../../assets/LogoHeaderCompleto.png";
@@ -7,17 +7,11 @@ import logoHeaderLandRoys from "../../assets/LogoHeaderCompleto.png";
 const Header = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
-    const location = useLocation();
-
-    useEffect(() => {
-        setMenuOpen(false);
-    }, [location]);
-
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
         };
-        window.addEventListener("scroll", handleScroll);
+        window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -106,7 +100,9 @@ const Header = () => {
 
             {/* OVERLAY */}
             {menuOpen && (
-                <div
+                <button
+                    type="button"
+                    aria-label="Cerrar menú móvil"
                     className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity"
                     onClick={() => setMenuOpen(false)}
                 />
@@ -133,6 +129,7 @@ const Header = () => {
                             <NavLink
                                 key={link.name}
                                 to={link.path}
+                                onClick={() => setMenuOpen(false)}
                                 className={({ isActive }) =>
                                     `block px-5 py-3 rounded-xl text-lg font-semibold transition-all duration-300 ${
                                         isActive
@@ -149,6 +146,7 @@ const Header = () => {
                     {/* CONSULTA BUTTON MOBILE */}
                     <NavLink
                         to="/consulta"
+                        onClick={() => setMenuOpen(false)}
                         className="flex justify-center items-center gap-2 px-6 py-3 rounded-full font-bold text-sm bg-black text-white hover:bg-gray-900 transition-all"
                     >
                         <MessageSquareQuote size={18} className="text-yellow-400" />

@@ -12,12 +12,12 @@ import {
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER;
 
 const Compra_modal_oferta = ({ open, onClose, oferta }) => {
-    if (!open || !oferta) return null;
-
     const [nombre, setNombre] = useState("");
     const [telefono, setTelefono] = useState("");
     const [email, setEmail] = useState("");
     const [verMensaje, setVerMensaje] = useState(false);
+
+    if (!open || !oferta) return null;
 
     const mensajePlano = `Hola, estoy interesado en esta oferta:
 
@@ -125,56 +125,53 @@ Email: ${email || "No especificado"}
                         </div>
                     </div>
 
-                    {/* VER MENSAJE */}
-                    <button
-                        onClick={() => setVerMensaje(true)}
-                        className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition"
-                    >
-                        <Eye size={14} />
-                        Ver mensaje antes de enviar
-                    </button>
-
-                    {/* CTA */}
-                    <a
-                        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${mensajeWhatsapp}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full bg-gradient-to-r from-cyan-400 to-sky-400 hover:from-cyan-500 hover:to-sky-500 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 uppercase text-xs tracking-[0.25em] shadow-lg transition"
-                    >
-                        <MessageCircle size={18} fill="currentColor" />
-                        Consultar por WhatsApp
-                    </a>
+                    {/* BENEFICIOS */}
+                    <div className="grid grid-cols-2 gap-3 text-xs text-slate-500">
+                        <div className="flex items-center gap-2"><ShieldCheck size={16} /> Pago seguro</div>
+                        <div className="flex items-center gap-2"><Lock size={16} /> Datos protegidos</div>
+                        <div className="flex items-center gap-2"><CreditCard size={16} /> Varias formas de pago</div>
+                        <div className="flex items-center gap-2"><Headphones size={16} /> Atención personalizada</div>
+                    </div>
                 </div>
 
                 {/* FOOTER */}
-                <div className="bg-slate-50/80 px-8 py-4 flex justify-between items-center shrink-0 ">
-                    <div className="flex gap-4 text-slate-400">
-                        <CreditCard size={18} />
-                        <ShieldCheck size={18} />
-                        <Headphones size={18} />
-                    </div>
-                    <div className="flex items-center gap-2 text-[9px] font-bold text-slate-400 uppercase tracking-[0.25em]">
-                        <Lock size={12} />
-                        Comunicación segura
-                    </div>
+                <div className="px-8 py-5 border-t bg-white shrink-0 space-y-3">
+                    <button
+                        onClick={() => setVerMensaje(true)}
+                        className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 transition"
+                    >
+                        <MessageCircle size={18} /> Continuar a WhatsApp
+                    </button>
+
+                    <p className="text-[10px] text-slate-400 text-center">
+                        Al continuar aceptas recibir contacto para gestionar tu consulta.
+                    </p>
                 </div>
 
-                {/* OVERLAY MENSAJE */}
+                {/* PREVIEW MENSAJE */}
                 {verMensaje && (
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4">
-                        <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-                            <div className="flex justify-between items-center mb-4">
-                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-700">
-                                    Mensaje a enviar
-                                </h4>
-                                <button onClick={() => setVerMensaje(false)}>
-                                    <X size={18} className="text-slate-400" />
-                                </button>
-                            </div>
-
-                            <p className="text-xs text-slate-600 whitespace-pre-line italic leading-relaxed">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-5">
+                        <div className="bg-white rounded-3xl p-5 w-full max-w-md shadow-xl space-y-4">
+                            <h5 className="text-sm font-black text-slate-800 flex items-center gap-2">
+                                <Eye size={16} /> Vista previa del mensaje
+                            </h5>
+                            <pre className="text-[11px] whitespace-pre-wrap bg-slate-50 border rounded-xl p-3 max-h-64 overflow-auto">
                                 {mensajePlano}
-                            </p>
+                            </pre>
+
+                            <div className="flex gap-2">
+                                <button onClick={() => setVerMensaje(false)} className="flex-1 py-2 rounded-xl border text-sm font-bold">
+                                    Cancelar
+                                </button>
+                                <a
+                                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${mensajeWhatsapp}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 py-2 rounded-xl bg-green-500 text-white text-sm font-bold text-center"
+                                >
+                                    Enviar
+                                </a>
+                            </div>
                         </div>
                     </div>
                 )}

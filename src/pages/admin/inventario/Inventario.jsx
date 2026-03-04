@@ -39,6 +39,44 @@ import {
   listFolderFiles,
 } from "../../../services/storageFolders.service";
 
+const TableHeader = () => (
+  <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.9fr_0.9fr_120px] items-center bg-[#f5f6f8] text-[#556786] font-semibold text-[15px] rounded-t-2xl px-5 py-3 border border-gray-100">
+    <span>Imagen</span>
+    <span>Moto</span>
+    <span>Año / CC</span>
+    <span>Precio</span>
+    <span>Estado</span>
+    <span className="text-right">Acciones</span>
+  </div>
+);
+
+const MotoRow = ({ moto, onEdit, onDelete, estadoClass }) => (
+  <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.9fr_0.9fr_120px] items-center bg-white px-5 py-3 border-x border-b border-gray-100">
+    <img
+      src={moto.imagen_url || "https://images.unsplash.com/photo-1511994298241-608e28f14fde?q=80&w=600&auto=format&fit=crop"}
+      alt={moto.nombre}
+      className="w-[70px] h-[48px] object-cover rounded-xl bg-gray-100"
+    />
+    <div>
+      <p className="font-bold text-lg leading-tight text-[#1d2b44]">{moto.nombre}</p>
+      <p className="text-xs text-gray-400">ID: {moto.id}</p>
+    </div>
+    <p className="text-[#334b68] text-sm">{moto.anio || "-"} / {moto.cilindrada_cc || "-"}</p>
+    <p className="text-green-600 text-lg font-bold">${Number(moto.precio || 0).toLocaleString()}</p>
+    <span className={`inline-flex w-fit px-3 py-1 rounded-full font-bold text-[11px] uppercase ${estadoClass[(moto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
+      {(moto.estado || "disponible").toUpperCase()}
+    </span>
+    <div className="flex justify-end gap-3">
+      <button onClick={() => onEdit(moto)} className="p-2 rounded-lg border border-blue-200 text-blue-600">
+        <Pencil size={16} />
+      </button>
+      <button onClick={() => onDelete(moto.id)} className="p-2 rounded-lg border border-red-200 text-red-500">
+        <Trash2 size={16} />
+      </button>
+    </div>
+  </div>
+);
+
 const initialForm = {
   nombre: "",
   marca: "",
@@ -278,9 +316,9 @@ const Inventario = () => {
   const [repuestoTipoId, setRepuestoTipoId] = useState("");
   const [repuestoSubcategoriaId, setRepuestoSubcategoriaId] = useState("");
   const [categoriasMotos, setCategoriasMotos] = useState([]);
-  const [categoriasMotosLoaded, setCategoriasMotosLoaded] = useState(false);
+  const [_categoriasMotosLoaded, setCategoriasMotosLoaded] = useState(false);
   const [categoriasRepuestosLoaded, setCategoriasRepuestosLoaded] = useState(false);
-  const [motosLoaded, setMotosLoaded] = useState(false);
+  const [_motosLoaded, setMotosLoaded] = useState(false);
   const [repuestosLoaded, setRepuestosLoaded] = useState(false);
   const [categoriaMotoForm, setCategoriaMotoForm] = useState(initialCategoriaMotoForm);
   const [categoriaMotoEditingId, setCategoriaMotoEditingId] = useState(null);
@@ -1495,44 +1533,6 @@ const Inventario = () => {
     }
   };
 
-  const TableHeader = () => (
-    <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.9fr_0.9fr_120px] items-center bg-[#f5f6f8] text-[#556786] font-semibold text-[15px] rounded-t-2xl px-5 py-3 border border-gray-100">
-      <span>Imagen</span>
-      <span>Moto</span>
-      <span>Año / CC</span>
-      <span>Precio</span>
-      <span>Estado</span>
-      <span className="text-right">Acciones</span>
-    </div>
-  );
-
-  const MotoRow = ({ moto }) => (
-    <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.9fr_0.9fr_120px] items-center bg-white px-5 py-3 border-x border-b border-gray-100">
-      <img
-        src={moto.imagen_url || "https://images.unsplash.com/photo-1511994298241-608e28f14fde?q=80&w=600&auto=format&fit=crop"}
-        alt={moto.nombre}
-        className="w-[70px] h-[48px] object-cover rounded-xl bg-gray-100"
-      />
-      <div>
-        <p className="font-bold text-lg leading-tight text-[#1d2b44]">{moto.nombre}</p>
-        <p className="text-xs text-gray-400">ID: {moto.id}</p>
-      </div>
-      <p className="text-[#334b68] text-sm">{moto.anio || "-"} / {moto.cilindrada_cc || "-"}</p>
-      <p className="text-green-600 text-lg font-bold">${Number(moto.precio || 0).toLocaleString()}</p>
-      <span className={`inline-flex w-fit px-3 py-1 rounded-full font-bold text-[11px] uppercase ${estadoClass[(moto.estado || "disponible").toLowerCase()] || "bg-gray-100 text-gray-600"}`}>
-        {(moto.estado || "disponible").toUpperCase()}
-      </span>
-      <div className="flex justify-end gap-3">
-        <button onClick={() => handleEdit(moto)} className="p-2 rounded-lg border border-blue-200 text-blue-600">
-          <Pencil size={16} />
-        </button>
-        <button onClick={() => handleDelete(moto.id)} className="p-2 rounded-lg border border-red-200 text-red-500">
-          <Trash2 size={16} />
-        </button>
-      </div>
-    </div>
-  );
-
   const RepuestoHeader = () => (
     <div className="grid grid-cols-[100px_1.1fr_0.9fr_0.7fr_0.7fr_120px] items-center bg-[#f5f6f8] text-[#556786] font-semibold text-[15px] rounded-t-2xl px-5 py-3 border border-gray-100">
       <span>Imagen</span>
@@ -1896,7 +1896,7 @@ const Inventario = () => {
             ) : (
               <div className="rounded-b-2xl overflow-hidden">
                 {motosFiltradas.map((moto) => (
-                  <MotoRow key={moto.id} moto={moto} />
+                  <MotoRow key={moto.id} moto={moto} onEdit={handleEdit} onDelete={handleDelete} estadoClass={estadoClass} />
                 ))}
               </div>
             )}
@@ -2429,7 +2429,7 @@ const Inventario = () => {
                   ) : (
                     <div className="space-y-4 max-h-72 overflow-auto pr-1">
                       {form.galeria_destacada.map((item, index) => (
-                        <div key={`${item.imagen_url}-${index}`} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
+                        <div key={`${item.imagen_url}-${item.titulo || "item"}-${item.descripcion || ""}`} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
                           <input
                             value={item.imagen_url}
                             onChange={(event) => handleGaleriaUpdate(index, "imagen_url", event.target.value)}

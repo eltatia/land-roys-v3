@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Swal from "sweetalert2";
 import { useMotos } from "../../../hooks/useMotos";
 import { PlusCircle, Save } from "lucide-react";
@@ -10,31 +10,22 @@ const input =
 const label =
     "block text-sm font-semibold text-slate-600 mb-1";
 
+const getInitialForm = (ofertaExistente) => ({
+    titulo: ofertaExistente?.titulo || "",
+    descripcion: ofertaExistente?.descripcion || "",
+    textoboton: ofertaExistente?.textoboton || "Comprar",
+    imagen_url: ofertaExistente?.imagen_url || "",
+    descuento: ofertaExistente?.descuento || 0,
+    moto_id: ofertaExistente?.moto_id || "",
+    precio_original: ofertaExistente?.precio_original || 0,
+    precio_especial: ofertaExistente?.precio_especial || 0,
+    expiracion: ofertaExistente?.expiracion || "",
+    moto_seleccionada: ofertaExistente?.moto_seleccionada || "",
+});
+
 const OfertaForm = ({ onSubmit, ofertaExistente }) => {
     const { motos, loading: loadingMotos } = useMotos();
-
-    const [form, setForm] = useState({
-        titulo: "",
-        descripcion: "",
-        textoboton: "Comprar",
-        imagen_url: "",
-        descuento: 0,
-        moto_id: "",
-        precio_original: 0,
-        precio_especial: 0,
-        expiracion: "",
-        moto_seleccionada: "",
-    });
-
-    useEffect(() => {
-        if (ofertaExistente) {
-            setForm({
-                ...ofertaExistente,
-                moto_id: ofertaExistente.moto_id || "",
-                moto_seleccionada: ofertaExistente.moto_seleccionada || "",
-            });
-        }
-    }, [ofertaExistente]);
+    const [form, setForm] = useState(() => getInitialForm(ofertaExistente));
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -105,23 +96,23 @@ const OfertaForm = ({ onSubmit, ofertaExistente }) => {
             className="bg-white rounded-[28px] p-7 space-y-5 border border-slate-100 shadow-lg shadow-slate-200/40"
         >
             <div>
-                <label className={label}>Título</label>
-                <input name="titulo" value={form.titulo} onChange={handleChange} className={input} required />
+                <label htmlFor="oferta-titulo" className={label}>Título</label>
+                <input id="oferta-titulo" name="titulo" value={form.titulo} onChange={handleChange} className={input} required />
             </div>
 
             <div>
-                <label className={label}>Descripción</label>
-                <textarea name="descripcion" value={form.descripcion} onChange={handleChange} className={input} rows={3} required />
+                <label htmlFor="oferta-descripcion" className={label}>Descripción</label>
+                <textarea id="oferta-descripcion" name="descripcion" value={form.descripcion} onChange={handleChange} className={input} rows={3} required />
             </div>
 
             <div>
-                <label className={label}>Texto del botón</label>
-                <input name="textoboton" value={form.textoboton} onChange={handleChange} className={input} />
+                <label htmlFor="oferta-boton" className={label}>Texto del botón</label>
+                <input id="oferta-boton" name="textoboton" value={form.textoboton} onChange={handleChange} className={input} />
             </div>
 
             <div>
-                <label className={label}>Moto</label>
-                <select name="moto_id" value={form.moto_id} onChange={handleChange} className={input} required>
+                <label htmlFor="oferta-moto" className={label}>Moto</label>
+                <select id="oferta-moto" name="moto_id" value={form.moto_id} onChange={handleChange} className={input} required>
                     <option value="">Seleccionar moto</option>
                     {motos.map((m) => (
                         <option key={m.id} value={m.id}>
@@ -132,30 +123,30 @@ const OfertaForm = ({ onSubmit, ofertaExistente }) => {
             </div>
 
             <div>
-                <label className={label}>Imagen</label>
-                <input value={form.imagen_url} readOnly className={`${input} bg-slate-100`} />
+                <label htmlFor="oferta-imagen" className={label}>Imagen</label>
+                <input id="oferta-imagen" value={form.imagen_url} readOnly className={`${input} bg-slate-100`} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className={label}>Precio original</label>
-                    <input value={form.precio_original} readOnly className={`${input} bg-slate-100`} />
+                    <label htmlFor="oferta-precio-original" className={label}>Precio original</label>
+                    <input id="oferta-precio-original" value={form.precio_original} readOnly className={`${input} bg-slate-100`} />
                 </div>
 
                 <div>
-                    <label className={label}>Descuento (%)</label>
-                    <input type="number" name="descuento" value={form.descuento} onChange={handleChange} className={input} min={0} max={100} />
+                    <label htmlFor="oferta-descuento" className={label}>Descuento (%)</label>
+                    <input id="oferta-descuento" type="number" name="descuento" value={form.descuento} onChange={handleChange} className={input} min={0} max={100} />
                 </div>
             </div>
 
             <div>
-                <label className={label}>Precio especial</label>
-                <input value={form.precio_especial} readOnly className={`${input} bg-emerald-50 ring-emerald-300`} />
+                <label htmlFor="oferta-precio-especial" className={label}>Precio especial</label>
+                <input id="oferta-precio-especial" value={form.precio_especial} readOnly className={`${input} bg-emerald-50 ring-emerald-300`} />
             </div>
 
             <div>
-                <label className={label}>Expiración</label>
-                <input type="datetime-local" name="expiracion" value={form.expiracion} onChange={handleChange} className={input} required />
+                <label htmlFor="oferta-expiracion" className={label}>Expiración</label>
+                <input id="oferta-expiracion" type="datetime-local" name="expiracion" value={form.expiracion} onChange={handleChange} className={input} required />
             </div>
 
             <button

@@ -1,16 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { MessageCircle, Phone } from 'lucide-react';
 import caferacer from '../../../assets/img/CafeRacer_250.webp';
 import './Consulta.css';
 
 const Consulta = () => {
-    const [animate, setAnimate] = useState(false);
+    const animate = true;
     const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
 
-    useEffect(() => {
-        // Activa animación al montar el componente
-        setAnimate(true);
-    }, []);
 
     return (
         <section className="bg-[#fcfcf9] py-20 px-6">
