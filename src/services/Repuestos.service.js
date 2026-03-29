@@ -1,5 +1,19 @@
 import { supabase } from "../api/Supabase.provider";
 
+const normalizeGallery = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+};
+
 const normalizeRepuesto = (repuesto = {}) => ({
   id: repuesto.id,
   nombre: repuesto.nombre ?? "",
@@ -12,6 +26,11 @@ const normalizeRepuesto = (repuesto = {}) => ({
   estado: repuesto.estado || "disponible",
   imagen_url: repuesto.imagen_url ?? null,
   stock: repuesto.stock ?? 0,
+  unidad_medida: repuesto.unidad_medida ?? null,
+  modelo: repuesto.modelo ?? null,
+  cantidad_por_paquete: repuesto.cantidad_por_paquete ?? null,
+  marca_logo_url: repuesto.marca_logo_url ?? null,
+  galeria_imagenes: normalizeGallery(repuesto.galeria_imagenes),
 });
 
 const pickRepuestoPayload = (repuesto = {}) => ({
@@ -23,6 +42,13 @@ const pickRepuestoPayload = (repuesto = {}) => ({
   estado: repuesto.estado || "disponible",
   imagen_url: repuesto.imagen_url ?? null,
   stock: repuesto.stock ?? 0,
+  unidad_medida: repuesto.unidad_medida?.trim() || null,
+  modelo: repuesto.modelo?.trim() || null,
+  cantidad_por_paquete: repuesto.cantidad_por_paquete ? Number(repuesto.cantidad_por_paquete) : null,
+  marca_logo_url: repuesto.marca_logo_url?.trim() || null,
+  galeria_imagenes: Array.isArray(repuesto.galeria_imagenes)
+    ? repuesto.galeria_imagenes.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim())
+    : [],
 });
 
 const getRepuestosBucket = () => import.meta.env.VITE_SUPABASE_INVENTARIO_BUCKET || "Inventario";
@@ -98,4 +124,16 @@ export const getTotalUnidadesRepuestos = async () => {
   if (error) throw error;
 
   return (data || []).reduce((acc, item) => acc + Number(item.stock || 0), 0);
+};
+
+
+export const getRepuestoById = async (id) => {
+  const { data, error } = await supabase
+    .from("repuestos")
+    .select("*, categorias_repuestos ( id, nombre, parent_id )")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return normalizeRepuesto(data);
 };

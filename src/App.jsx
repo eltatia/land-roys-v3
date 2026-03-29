@@ -1,7 +1,5 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { HelmetProvider } from 'react-helmet-async';
-
 /* Context */
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./util/ProtectedRoute";
@@ -17,6 +15,7 @@ const Consulta = lazy(() => import("./pages/client/consulta/Consulta"));
 const Modelos = lazy(() => import("./pages/client/modelos/Modelos"));
 const ModeloDetalle = lazy(() => import("./pages/client/modelos/ModeloDetalle"));
 const Repuestos = lazy(() => import("./pages/client/repuestos/Repuestos"));
+const RepuestoDetalle = lazy(() => import("./pages/client/repuestos/RepuestoDetalle"));
 const Blog = lazy(() => import("./pages/client/blog/Blog"));
 const BlogPost = lazy(() => import("./pages/client/blog/BlogPost"));
 
@@ -41,8 +40,7 @@ const AppLoader = () => (
 
 function App() {
   return (
-    <HelmetProvider>
-      <AuthProvider>
+    <AuthProvider>
         <Router>
           <Suspense fallback={<AppLoader />}>
             <Routes>
@@ -52,6 +50,7 @@ function App() {
                 <Route path="/modelos" element={<Modelos />} />
                 <Route path="/modelos/:id" element={<ModeloDetalle />} />
                 <Route path="/repuestos" element={<Repuestos />} />
+                <Route path="/repuestos/:id" element={<RepuestoDetalle />} />
                 <Route path="/nosotros" element={<Nosotros />} />
                 <Route path="/consulta" element={<Consulta />} />
                 <Route path="/blog" element={<Blog />} />
@@ -91,8 +90,7 @@ function App() {
             </Routes>
           </Suspense>
         </Router>
-      </AuthProvider>
-    </HelmetProvider>
+    </AuthProvider>
   );
 }
 

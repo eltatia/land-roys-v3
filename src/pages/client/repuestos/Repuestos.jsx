@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Search, ShoppingCart, ChevronDown } from "lucide-react";
 import Swal from "sweetalert2";
 import { getRepuestos } from "../../../services/Repuestos.service";
@@ -12,10 +13,18 @@ const currency = new Intl.NumberFormat("es-PE", {
 
 const getCategoryLabel = (categories, key) => {
   if (key === "otros") return "Otros";
-  const current = categories.find((cat) => cat.id === key);
+  const byId = categories.reduce((acc, item) => {
+    acc[item.id] = item;
+    return acc;
+  }, {});
+  let current = byId[key];
   if (!current) return "Otros";
-  const parent = current.parent_id ? categories.find((cat) => cat.id === current.parent_id) : null;
-  return parent ? `${parent.nombre} / ${current.nombre}` : current.nombre;
+  const trail = [];
+  while (current) {
+    trail.unshift(current.nombre);
+    current = current.parent_id ? byId[current.parent_id] : null;
+  }
+  return trail.join(" / ");
 };
 
 const Repuestos = () => {
@@ -97,6 +106,18 @@ const Repuestos = () => {
       }, {});
   }, [categorias]);
 
+  const descendantIdsByCategory = useMemo(() => {
+    const map = {};
+    const visit = (parentId) => {
+      const children = subcategoriasPorPadre[parentId] || [];
+      return children.flatMap((child) => [child.id, ...visit(child.id)]);
+    };
+    categorias.forEach((categoria) => {
+      map[categoria.id] = visit(categoria.id);
+    });
+    return map;
+  }, [categorias, subcategoriasPorPadre]);
+
   const categories = useMemo(() => {
     const base = [{ key: "all", label: "Todos" }, ...categoriasPadre.map((cat) => ({ key: cat.id, label: cat.nombre }))];
     if (repuestos.some((item) => !item.categoria_id)) {
@@ -112,7 +133,14 @@ const Repuestos = () => {
     }, {});
   }, [categorias]);
 
-  const getCategoryKeyForItem = (item) => item.categoria_parent_id || item.categoria_id || "otros";
+  const getCategoryKeyForItem = (item) => {
+    if (!item.categoria_id) return "otros";
+    let current = categoriasById[item.categoria_id];
+    while (current?.parent_id && categoriasById[current.parent_id]) {
+      current = categoriasById[current.parent_id];
+    }
+    return current?.id || item.categoria_parent_id || item.categoria_id || "otros";
+  };
   const getImageSrc = (item) => (imageFallback[item.id] ? repuestoPlaceholder : item.imagen_url || repuestoPlaceholder);
 
   const countsByCategory = useMemo(() => {
@@ -130,12 +158,12 @@ const Repuestos = () => {
     let data = [...repuestos];
 
     if (activeCategory !== "all") {
-      const childrenIds = new Set((subcategoriasPorPadre[activeCategory] || []).map((item) => item.id));
+      const validCategoryIds = new Set([activeCategory, ...(descendantIdsByCategory[activeCategory] || [])]);
       data = data.filter((item) => {
         const categoriaId = item.categoria_id || "otros";
         const parentKey = getCategoryKeyForItem(item);
-        if (childrenIds.size === 0) return parentKey === activeCategory;
-        return childrenIds.has(categoriaId);
+        if (validCategoryIds.size === 0) return parentKey === activeCategory;
+        return validCategoryIds.has(categoriaId) || validCategoryIds.has(parentKey);
       });
     }
 
@@ -166,7 +194,7 @@ const Repuestos = () => {
     }
 
     return data;
-  }, [repuestos, activeCategory, estadoFiltro, soloStock, search, sortOrder, categoriasById, subcategoriasPorPadre]);
+  }, [repuestos, activeCategory, estadoFiltro, soloStock, search, sortOrder, categoriasById, descendantIdsByCategory]);
 
   const cartTotal = useMemo(
     () => cartItems.reduce((acc, item) => acc + Number(item.precio || 0) * item.cantidad, 0),
@@ -436,7 +464,7 @@ const Repuestos = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredRepuestos.map((item) => (
-                <article key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <Link to={`/repuestos/${item.id}`} key={item.id} className="block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:-translate-y-1 hover:shadow-lg transition">
                   <div className="relative">
                     <img
                       src={getImageSrc(item)}
@@ -446,7 +474,7 @@ const Repuestos = () => {
                       onError={() => setImageFallback((prev) => ({ ...prev, [item.id]: true }))}
                     />
                     <button
-                      onClick={(event) => handleAddToCartClick(item, event)}
+                      onClick={(event) => { event.preventDefault(); handleAddToCartClick(item, event); }}
                       className="absolute right-4 bottom-4 bg-white p-2 rounded-full shadow-sm hover:scale-105 transition"
                     >
                       <ShoppingCart size={18} className="text-slate-700" />
@@ -466,14 +494,14 @@ const Repuestos = () => {
                     <div className="flex items-center justify-between pt-2">
                       <p className="text-lg font-black text-slate-900">{currency.format(Number(item.precio || 0))}</p>
                       <button
-                        onClick={(event) => handleAddToCartClick(item, event)}
+                        onClick={(event) => { event.preventDefault(); handleAddToCartClick(item, event); }}
                         className="text-xs font-bold text-yellow-500"
                       >
                         Agregar
                       </button>
                     </div>
                   </div>
-                </article>
+                </Link>
               ))}
             </div>
           )}
